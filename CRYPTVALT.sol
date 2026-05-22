@@ -689,3 +689,4 @@ contract CryptValt {
         platformWallet = newWallet;
     }
 }
+
