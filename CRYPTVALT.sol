@@ -684,7 +684,6 @@ contract CryptValt {
         require(platformFrozen, "Platform must be frozen first");
         payable(owner).transfer(address(this).balance);
     }
-
     function updatePlatformWallet(address newWallet) external onlyOwner {
         require(newWallet != address(0), "Invalid address");
         platformWallet = newWallet;
