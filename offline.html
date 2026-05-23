@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Offline</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #020408;
+  color: #e8f4ff;
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  letter-spacing: 6px;
+  color: #00c8ff;
+  text-shadow: 0 0 20px rgba(0,200,255,0.4);
+  margin-bottom: 8px;
+}
+.logo span { color: #f0a500; }
+.icon { font-size: 72px; margin: 32px 0; }
+.title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 4px;
+  margin-bottom: 16px;
+  color: #e8f4ff;
+}
+.sub {
+  font-size: 16px;
+  color: rgba(232,244,255,0.5);
+  line-height: 1.7;
+  max-width: 400px;
+  margin-bottom: 40px;
+  letter-spacing: 0.5px;
+}
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 400px;
+}
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,200,255,0.05);
+  border: 1px solid rgba(0,200,255,0.1);
+  padding: 12px 16px;
+  text-align: left;
+}
+.feature-icon { font-size: 20px; flex-shrink:0; }
+.feature-text { font-size: 14px; color: rgba(232,244,255,0.7); }
+.feature-text strong { color: #00c8ff; display: block; font-size: 13px; letter-spacing: 1px; }
+.btn {
+  background: #00c8ff;
+  color: #020408;
+  border: none;
+  padding: 14px 32px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover { background: #33d4ff; }
+.status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: rgba(232,244,255,0.25);
+  letter-spacing: 2px;
+  margin-top: 32px;
+}
+</style>
+</head>
+<body>
+  <div class="logo">CRYPT<span>VALT</span></div>
+  <div class="icon">🔐</div>
+  <div class="title">YOU'RE OFFLINE</div>
+  <p class="sub">No internet connection detected. Some features require connectivity — but your encrypted data is safe.</p>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">✓</div>
+      <div class="feature-text">
+        <strong>Available Offline</strong>
+        Browse your saved listings, view AI reports, manage your ideas
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✓</div>
+      <div class="feature-text">
+        <strong>Available Offline</strong>
+        Read your dashboard, view bid history, check auction status
+      </div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✗</div>
+      <div class="feature-text">
+        <strong style="color:rgba(255,59,107,0.8)">Requires Connection</strong>
+        Submit new ideas, place bids, AI scoring, IPFS upload, blockchain transactions
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="window.location.reload()">Try Again</button>
+  <button class="btn" style="background:transparent;color:#00c8ff;border:1px solid #00c8ff;margin-top:12px" onclick="goToApp()">Open Saved Data</button>
+
+  <div class="status" id="status">CHECKING CONNECTION...</div>
+
+  <script>
+    function goToApp() {
+      window.location.href = '/CryptValt/';
+    }
+
+    // Check connection status
+    function updateStatus() {
+      const el = document.getElementById('status');
+      if (navigator.onLine) {
+        el.textContent = '● CONNECTION RESTORED — REDIRECTING...';
+        el.style.color = '#00ff9d';
+        setTimeout(() => window.location.href = '/CryptValt/', 1500);
+      } else {
+        el.textContent = '● NO CONNECTION — WAITING...';
+        el.style.color = 'rgba(255,59,107,0.6)';
+      }
+    }
+
+    updateStatus();
+    window.addEventListener('online', updateStatus);
+    setInterval(updateStatus, 3000);
+  </script>
+</body>
+</html>
