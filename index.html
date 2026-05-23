@@ -1772,7 +1772,469 @@ const CONFIG = {
   OWNER_WALLET: '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504',
   PLATFORM_FEE: 0.20,
   INVENTOR_SHARE: 0.80,
+
+  // ── Contract Addresses ─────────────────────────────────────
+  // Paste your deployed addresses here after deployment
+  // Leave as null until deployed — app uses localStorage fallback
+  CONTRACTS: {
+    CRYPTVALT:   null, // e.g. '0xABC...123'
+    GOVERNOR:    null,
+    VALUATION:   null,
+  },
+
+  // ── Network ────────────────────────────────────────────────
+  // 1 = Ethereum Mainnet, 11155111 = Sepolia Testnet
+  CHAIN_ID: 11155111,
+  CHAIN_NAME: 'Sepolia Testnet',
+  RPC_URL: 'https://rpc.sepolia.org',
 };
+
+// ============================================================
+// CONTRACT ABIs — Minimal ABIs for frontend interaction
+// ============================================================
+const ABIS = {
+
+  CRYPTVALT: [
+    // Read
+    'function getListing(uint256 listingId) view returns (tuple(uint128 reservePrice, uint64 startTime, uint64 endTime, uint128 winningBid, uint64 revealDeadline, uint64 keyDeadline, uint96 royaltyBps, uint96 aiScore, uint64 dollarValueMid, address inventor, uint32 bidCount, address winner, uint8 status, bool keyDelivered, bool fundsReleased, bool disputed, string ipfsCid, string keyHash, string encryptedKeyForWinner, string category))',
+    'function getBidders(uint256 listingId) view returns (address[])',
+    'function getBid(uint256 listingId, address bidder) view returns (bytes32, uint256, uint256, uint256, bool, bool, bool)',
+    'function getWinnerKey(uint256 listingId) view returns (string)',
+    'function getInventorListings(address inventor) view returns (uint256[])',
+    'function getBidderHistory(address bidder) view returns (uint256[])',
+    'function getPlatformStats() view returns (uint256, uint256, uint256, uint256, bool)',
+    'function getNonce(address account) view returns (uint256)',
+    'function pendingWithdrawals(address) view returns (uint256)',
+    'function listingCount() view returns (uint256)',
+    'function paused() view returns (bool)',
+    // Write
+    'function listIdea(string ipfsCid, string keyHash, string category, uint256 aiScore, uint256 dollarValueMidUSD, uint256 reservePrice, uint256 durationSeconds, uint256 royaltyBps, bytes signature) returns (uint256)',
+    'function commitBid(uint256 listingId, bytes32 commitment) payable',
+    'function revealBid(uint256 listingId, uint256 amount, bytes32 salt)',
+    'function settleAuction(uint256 listingId)',
+    'function deliverKey(uint256 listingId, string encryptedKey, bytes signature)',
+    'function claimKeyDeadlineRefund(uint256 listingId)',
+    'function raiseDispute(uint256 listingId, string reason)',
+    'function withdraw()',
+    'function listSecondary(uint256 originalListingId, uint256 price)',
+    'function buySecondary(uint256 originalListingId) payable',
+    // Events
+    'event IdeaListed(uint256 indexed listingId, address indexed inventor, string ipfsCid, string category, uint256 reservePrice, uint256 aiScore, uint256 dollarValueMid, uint256 endTime)',
+    'event BidCommitted(uint256 indexed listingId, address indexed bidder, bytes32 commitment, uint256 depositAmount, uint256 timestamp)',
+    'event AuctionSettled(uint256 indexed listingId, address indexed winner, uint256 winningBid, uint256 inventorShare, uint256 platformShare, uint256 timestamp)',
+    'event FundsReleased(uint256 indexed listingId, address indexed inventor, uint256 inventorAmount, address platformWallet, uint256 platformAmount)',
+  ],
+
+  GOVERNOR: [
+    'function getProfile(address wallet) view returns (tuple(uint256 reputation, uint256 firstSeen, uint256 lastActive, uint256 totalBids, uint256 totalListings, uint256 completedPurchases, uint256 completedSales, uint256 disputesRaised, uint256 disputesWon, uint256 disputesLost, uint256 flagCount, uint256 bidVelocityCount, uint256 bidVelocityWindow, bool verified, bool frozen, address[] linkedWallets))',
+    'function canBid(address wallet) view returns (bool, string)',
+    'function canList(address wallet) view returns (bool, string)',
+    'function getTrustTier(address wallet) view returns (string)',
+    'function getReputationScore(address wallet) view returns (uint256)',
+    'function getGovernanceStats() view returns (uint256, uint256, uint256, bool)',
+    'function getListingFlags(uint256 listingId) view returns (tuple(address wallet, uint256 listingId, uint8 fraudType, uint8 severity, string evidence, uint256 timestamp, bool confirmed, bool resolved, address reviewedBy)[])',
+  ],
+
+  VALUATION: [
+    'function quickEstimate(uint256 aiScore, string category, uint256 marketSizeUSD) view returns (uint256, uint256, uint256)',
+    'function getValuation(uint256 listingId) view returns (tuple(uint256 listingId, uint256 dollarValueMin, uint256 dollarValueMid, uint256 dollarValueMax, uint256 confidenceScore, uint256 volatilityScore, uint256 timestamp))',
+    'function getCategoryProfile(string category) view returns (uint256, uint256, uint256, uint256, uint256, uint256, uint256)',
+    'function getModelStats() view returns (uint256, uint256, uint256, uint256, uint256)',
+  ],
+
+};
+
+// ============================================================
+// ON-CHAIN INTEGRATION LAYER
+// Handles all smart contract interactions.
+// Falls back to localStorage when contracts not deployed yet.
+// ============================================================
+const Chain = (() => {
+
+  let provider = null;
+  let signer   = null;
+  let contracts = { cryptvalt: null, governor: null, valuation: null };
+  let isConnected = false;
+
+  // Initialize ethers + contracts
+  async function init() {
+    if (!window.ethereum) {
+      notify('info', 'No Web3 Provider', 'Install MetaMask to use on-chain features.');
+      return false;
+    }
+
+    try {
+      // Dynamically load ethers from CDN
+      if (!window.ethers) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js');
+      }
+
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer   = await provider.getSigner();
+
+      // Verify correct network
+      const network = await provider.getNetwork();
+      if (Number(network.chainId) !== CONFIG.CHAIN_ID) {
+        await switchNetwork();
+      }
+
+      // Connect contracts if addresses available
+      if (CONFIG.CONTRACTS.CRYPTVALT) {
+        contracts.cryptvalt = new ethers.Contract(
+          CONFIG.CONTRACTS.CRYPTVALT,
+          ABIS.CRYPTVALT,
+          signer
+        );
+      }
+      if (CONFIG.CONTRACTS.GOVERNOR) {
+        contracts.governor = new ethers.Contract(
+          CONFIG.CONTRACTS.GOVERNOR,
+          ABIS.GOVERNOR,
+          provider
+        );
+      }
+      if (CONFIG.CONTRACTS.VALUATION) {
+        contracts.valuation = new ethers.Contract(
+          CONFIG.CONTRACTS.VALUATION,
+          ABIS.VALUATION,
+          provider
+        );
+      }
+
+      isConnected = true;
+      const deployed = CONFIG.CONTRACTS.CRYPTVALT !== null;
+      notify('success', deployed ? '⬡ Contracts Connected' : '⬡ Wallet Connected',
+        deployed ? 'On-chain mode active' : 'Contracts not deployed yet — using local mode');
+
+      return true;
+    } catch(e) {
+      console.error('Chain init error:', e);
+      notify('info', 'Chain Init', 'Running in local mode — contracts not deployed yet.');
+      return false;
+    }
+  }
+
+  async function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function switchNetwork() {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x' + CONFIG.CHAIN_ID.toString(16) }]
+      });
+    } catch(e) {
+      // Add network if not found
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0x' + CONFIG.CHAIN_ID.toString(16),
+          chainName: CONFIG.CHAIN_NAME,
+          rpcUrls: [CONFIG.RPC_URL],
+          nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+          blockExplorerUrls: ['https://sepolia.etherscan.io']
+        }]
+      });
+    }
+  }
+
+  // ── EIP-712 Signature ────────────────────────────────────────
+  async function signListing(listingId, action) {
+    if (!signer || !contracts.cryptvalt) return 'local_sig_' + Date.now();
+    try {
+      const nonce = await contracts.cryptvalt.getNonce(await signer.getAddress());
+      const domain = {
+        name: 'CryptValt',
+        version: '2',
+        chainId: CONFIG.CHAIN_ID,
+        verifyingContract: CONFIG.CONTRACTS.CRYPTVALT
+      };
+      const types = {
+        CryptValt: [
+          { name: 'action',    type: 'string'  },
+          { name: 'listingId', type: 'uint256' },
+          { name: 'signer',    type: 'address' },
+          { name: 'nonce',     type: 'uint256' }
+        ]
+      };
+      const value = {
+        action:    action,
+        listingId: listingId || 0,
+        signer:    await signer.getAddress(),
+        nonce:     nonce
+      };
+      return await signer.signTypedData(domain, types, value);
+    } catch(e) {
+      return 'local_sig_' + Date.now();
+    }
+  }
+
+  // ── List Idea On-Chain ────────────────────────────────────────
+  async function listIdea(params) {
+    if (!contracts.cryptvalt) {
+      // LocalStorage fallback
+      return { onChain: false, id: 'CV-' + Date.now().toString(36).toUpperCase() };
+    }
+
+    try {
+      notify('info', '⬡ Submitting On-Chain', 'Confirm the transaction in MetaMask...');
+
+      const sig = await signListing(0, 'LIST_IDEA');
+      const tx  = await contracts.cryptvalt.listIdea(
+        params.ipfsCid,
+        params.keyHash,
+        params.category,
+        params.aiScore,
+        params.dollarValueMidUSD,
+        ethers.parseEther(params.reserveETH.toString()),
+        params.durationSeconds,
+        params.royaltyBps,
+        sig
+      );
+
+      notify('info', '⬡ Transaction Sent', 'Waiting for confirmation...');
+      const receipt = await tx.wait();
+
+      // Extract listing ID from event
+      const event = receipt.logs
+        .map(log => { try { return contracts.cryptvalt.interface.parseLog(log); } catch { return null; } })
+        .find(e => e && e.name === 'IdeaListed');
+
+      const listingId = event ? Number(event.args.listingId) : null;
+
+      notify('success', '✓ Listed On-Chain', `Listing #${listingId} confirmed. TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, listingId, txHash: receipt.hash };
+
+    } catch(e) {
+      notify('error', 'Transaction Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  // ── Commit Bid On-Chain ───────────────────────────────────────
+  async function commitBid(listingId, commitment, depositETH) {
+    if (!contracts.cryptvalt) {
+      return { onChain: false };
+    }
+
+    try {
+      notify('info', '⬡ Sealing Bid', 'Confirm the transaction in MetaMask...');
+
+      const tx = await contracts.cryptvalt.commitBid(
+        listingId,
+        commitment,
+        { value: ethers.parseEther(depositETH.toString()) }
+      );
+
+      const receipt = await tx.wait();
+      notify('success', '✓ Bid Sealed On-Chain', `TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+
+    } catch(e) {
+      notify('error', 'Bid Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  // ── Reveal Bid On-Chain ───────────────────────────────────────
+  async function revealBid(listingId, amount, salt) {
+    if (!contracts.cryptvalt) return { onChain: false };
+
+    try {
+      notify('info', '⬡ Revealing Bid', 'Confirm in MetaMask...');
+
+      const amountWei = ethers.parseEther(amount.toString());
+      const tx = await contracts.cryptvalt.revealBid(listingId, amountWei, salt);
+      const receipt = await tx.wait();
+
+      notify('success', '✓ Bid Revealed', `TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+    } catch(e) {
+      notify('error', 'Reveal Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  // ── Settle Auction On-Chain ───────────────────────────────────
+  async function settleAuction(listingId) {
+    if (!contracts.cryptvalt) return { onChain: false };
+
+    try {
+      const tx = await contracts.cryptvalt.settleAuction(listingId);
+      const receipt = await tx.wait();
+      notify('success', '✓ Auction Settled', `Funds distributed. TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+    } catch(e) {
+      notify('error', 'Settlement Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  // ── Deliver Key On-Chain ──────────────────────────────────────
+  async function deliverKey(listingId, encryptedKey) {
+    if (!contracts.cryptvalt) return { onChain: false };
+
+    try {
+      notify('info', '⬡ Delivering Key', 'Confirm in MetaMask...');
+      const sig = await signListing(listingId, 'DELIVER_KEY');
+      const tx  = await contracts.cryptvalt.deliverKey(listingId, encryptedKey, sig);
+      const receipt = await tx.wait();
+      notify('success', '✓ Key Delivered — Funds Released', `TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+    } catch(e) {
+      notify('error', 'Key Delivery Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  // ── Withdraw Pending Funds ────────────────────────────────────
+  async function withdraw() {
+    if (!contracts.cryptvalt) return { onChain: false };
+
+    try {
+      const pending = await contracts.cryptvalt.pendingWithdrawals(state.wallet);
+      if (pending === 0n) {
+        notify('info', 'Nothing to Withdraw', 'No pending funds.');
+        return;
+      }
+      const tx = await contracts.cryptvalt.withdraw();
+      const receipt = await tx.wait();
+      notify('success', '✓ Withdrawal Complete', `TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+    } catch(e) {
+      notify('error', 'Withdrawal Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  // ── Get On-Chain Listings ─────────────────────────────────────
+  async function fetchOnChainListings() {
+    if (!contracts.cryptvalt) return [];
+
+    try {
+      const count = await contracts.cryptvalt.listingCount();
+      const listings = [];
+
+      for (let i = 1; i <= Number(count); i++) {
+        try {
+          const l = await contracts.cryptvalt.getListing(i);
+          listings.push({
+            id: 'CV-' + i,
+            onChainId: i,
+            title: l.ipfsCid,  // Will be resolved from IPFS
+            category: l.category,
+            cid: l.ipfsCid,
+            keyHash: l.keyHash,
+            reserve: Number(ethers.formatEther(l.reservePrice)),
+            aiScore: Number(l.aiScore),
+            royalty: Number(l.royaltyBps) / 100,
+            created: Number(l.startTime) * 1000,
+            endsAt: Number(l.endTime) * 1000,
+            status: _statusString(Number(l.status)),
+            wallet: l.inventor,
+            winner: l.winner,
+            winningBid: Number(ethers.formatEther(l.winningBid)),
+            bidCount: Number(l.bidCount),
+            keyDelivered: l.keyDelivered,
+            fundsReleased: l.fundsReleased,
+            score: {
+              overallScore: Number(l.aiScore),
+              dollarValueMid: Number(l.dollarValueMid),
+              dollarValueMin: Number(l.dollarValueMid) * 0.7,
+              dollarValueMax: Number(l.dollarValueMid) * 1.4,
+              scores: {
+                marketability: Number(l.aiScore),
+                scalability: Number(l.aiScore),
+                consumerPotential: Number(l.aiScore),
+                competitiveMoat: Number(l.aiScore),
+                executionFeasibility: Number(l.aiScore),
+                revenueClarity: Number(l.aiScore),
+              }
+            },
+            bids: [],
+          });
+        } catch(e) { continue; }
+      }
+
+      return listings;
+    } catch(e) {
+      console.error('fetchOnChainListings error:', e);
+      return [];
+    }
+  }
+
+  // ── Get Wallet Reputation from Governor ──────────────────────
+  async function getWalletReputation(wallet) {
+    if (!contracts.governor) return null;
+    try {
+      const rep   = await contracts.governor.getReputationScore(wallet);
+      const tier  = await contracts.governor.getTrustTier(wallet);
+      return { reputation: Number(rep), tier };
+    } catch(e) { return null; }
+  }
+
+  // ── Get Quick Valuation Estimate ─────────────────────────────
+  async function getValuationEstimate(aiScore, category, marketSizeUSD) {
+    if (!contracts.valuation) return null;
+    try {
+      const [min_, mid, max_] = await contracts.valuation.quickEstimate(
+        aiScore, category, marketSizeUSD
+      );
+      return {
+        min: Number(min_),
+        mid: Number(mid),
+        max: Number(max_)
+      };
+    } catch(e) { return null; }
+  }
+
+  // ── Listen to Contract Events ─────────────────────────────────
+  function startEventListeners() {
+    if (!contracts.cryptvalt) return;
+
+    contracts.cryptvalt.on('IdeaListed', (listingId, inventor, ipfsCid, category, reservePrice, aiScore, dollarValueMid, endTime) => {
+      addClaudeEntry('ok', 'On-Chain: Idea Listed', `Listing #${listingId} by ${shortenAddr(inventor)}. Category: ${category}. AI Score: ${aiScore}.`);
+      updateStats();
+    });
+
+    contracts.cryptvalt.on('BidCommitted', (listingId, bidder, commitment, depositAmount) => {
+      addClaudeEntry('info', 'On-Chain: Bid Sealed', `Listing #${listingId}. Bidder: ${shortenAddr(bidder)}. Deposit: ${ethers.formatEther(depositAmount)} ETH.`);
+    });
+
+    contracts.cryptvalt.on('AuctionSettled', (listingId, winner, winningBid, inventorShare, platformShare) => {
+      addClaudeEntry('ok', 'On-Chain: Auction Settled', `Listing #${listingId} sold for ${ethers.formatEther(winningBid)} ETH. Inventor receives ${ethers.formatEther(inventorShare)} ETH.`);
+      updateStats();
+    });
+
+    contracts.cryptvalt.on('FundsReleased', (listingId, inventor, inventorAmount) => {
+      addClaudeEntry('ok', 'On-Chain: Funds Released', `${ethers.formatEther(inventorAmount)} ETH sent to inventor for listing #${listingId}.`);
+    });
+  }
+
+  function _statusString(n) {
+    const map = ['live','reveal','awaiting_key','key_delivered','complete','disputed','cancelled','frozen'];
+    return map[n] || 'unknown';
+  }
+
+  function isDeployed() {
+    return CONFIG.CONTRACTS.CRYPTVALT !== null;
+  }
+
+  return {
+    init, listIdea, commitBid, revealBid, settleAuction,
+    deliverKey, withdraw, fetchOnChainListings,
+    getWalletReputation, getValuationEstimate,
+    startEventListeners, isDeployed, signListing
+  };
+
+})();
 
 // ============================================================
 // STATE
@@ -1789,12 +2251,38 @@ let state = {
 // ============================================================
 // INIT
 // ============================================================
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   updateStats();
   renderListings();
   document.getElementById('initTime').textContent = timeNow();
   startClaudeMonitor();
   checkSavedWallet();
+
+  // Show on-chain status
+  const deployed = Chain.isDeployed();
+  addClaudeEntry(
+    deployed ? 'ok' : 'info',
+    deployed ? 'On-Chain Mode Active' : 'Local Mode Active',
+    deployed
+      ? 'Contracts connected. On-chain mode active.'
+      : 'Contracts not deployed yet. Running in local mode. Add contract addresses to CONFIG to activate on-chain mode.'
+  );
+
+  // Account change listener
+  if (window.ethereum) {
+    window.ethereum.on('accountsChanged', (accounts) => {
+      if (accounts.length === 0) {
+        state.wallet = null;
+        document.getElementById('walletBadge').style.display = 'none';
+        document.getElementById('connectBtn').style.display = 'block';
+        notify('info', 'Wallet Disconnected', 'Connect your wallet to continue.');
+      } else {
+        setWallet(accounts[0]);
+        localStorage.setItem('cv_wallet', accounts[0]);
+      }
+    });
+    window.ethereum.on('chainChanged', () => window.location.reload());
+  }
 });
 
 function checkSavedWallet() {
@@ -1846,17 +2334,33 @@ async function connectWallet() {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setWallet(accounts[0]);
-      notify('success', '⬡ Wallet Connected', shortenAddr(accounts[0]));
       localStorage.setItem('cv_wallet', accounts[0]);
+      // Initialize on-chain layer
+      await Chain.init();
+      // Start contract event listeners
+      if (Chain.isDeployed()) Chain.startEventListeners();
+      // Load on-chain listings if deployed
+      if (Chain.isDeployed()) {
+        const onChainListings = await Chain.fetchOnChainListings();
+        if (onChainListings.length > 0) {
+          state.listings = onChainListings;
+          renderListings();
+          updateStats();
+        }
+      }
+      // Load wallet reputation from governor
+      if (Chain.isDeployed() && CONFIG.CONTRACTS.GOVERNOR) {
+        const rep = await Chain.getWalletReputation(accounts[0]);
+        if (rep) {
+          addClaudeEntry('info', 'Wallet Trust Score',
+            `${shortenAddr(accounts[0])} — Reputation: ${rep.reputation}/1000 — Tier: ${rep.tier}`);
+        }
+      }
     } catch(e) {
       notify('error', 'Connection Failed', e.message);
     }
   } else {
-    // Demo mode for testing without MetaMask
-    const demoWallet = '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
-    setWallet(demoWallet);
-    notify('info', 'Demo Mode', 'MetaMask not detected. Using demo wallet.');
-    localStorage.setItem('cv_wallet', demoWallet);
+    notify('error', 'MetaMask Required', 'Install MetaMask to use CryptValt.');
   }
 }
 
@@ -2209,12 +2713,11 @@ async function goToStep5() {
   document.getElementById('submitStep4').style.display = 'none';
   document.getElementById('submitStep5').style.display = 'block';
 
-  const legalMsg = `I, ${state.wallet}, hereby list idea "${document.getElementById('ideaTitle').value}" on CryptValt. IPFS CID: ${state.currentEncryption.cid}. I agree to all platform terms. Timestamp: ${new Date().toISOString()}`;
-  const sig = await signMessage(legalMsg);
+  const durationDays = parseInt(document.getElementById('auctionDuration').value);
+  const royaltyBps   = parseInt(document.getElementById('royaltyPct').value) * 100;
+  const reserveETH   = parseFloat(reserve) / 3000; // Convert USD to ETH estimate
 
-  await sleep(1500);
-
-  // Create listing object
+  // Build listing object for local state
   const listing = {
     id: 'CV-' + Date.now().toString(36).toUpperCase(),
     title: document.getElementById('ideaTitle').value,
@@ -2222,29 +2725,71 @@ async function goToStep5() {
     teaser: document.getElementById('ideaTeaser').value,
     cid: state.currentEncryption.cid,
     keyHash: state.currentEncryption.keyHashStr,
-    encData: state.currentEncryption.encB64.slice(0, 100),
     score: state.currentScore,
     reserve: parseInt(reserve),
-    duration: parseInt(document.getElementById('auctionDuration').value),
+    duration: durationDays,
     royalty: parseInt(document.getElementById('royaltyPct').value),
     wallet: state.wallet,
-    sig: sig,
     created: Date.now(),
-    endsAt: Date.now() + (parseInt(document.getElementById('auctionDuration').value) * 86400000),
+    endsAt: Date.now() + (durationDays * 86400000),
     bids: [],
-    status: 'live'
+    status: 'live',
+    onChain: false,
+    onChainId: null,
+    txHash: null,
   };
+
+  // Attempt on-chain submission if contracts deployed
+  if (Chain.isDeployed()) {
+    try {
+      document.querySelector('#launchLoading .loading-sub').textContent =
+        'Confirm transaction in MetaMask...';
+      const result = await Chain.listIdea({
+        ipfsCid:          state.currentEncryption.cid,
+        keyHash:          state.currentEncryption.keyHashStr,
+        category:         listing.category,
+        aiScore:          Math.round(state.currentScore.overallScore),
+        dollarValueMidUSD: state.currentScore.dollarValueMid,
+        reserveETH:       reserveETH,
+        durationSeconds:  durationDays * 86400,
+        royaltyBps:       royaltyBps,
+      });
+      listing.onChain   = true;
+      listing.onChainId = result.listingId;
+      listing.txHash    = result.txHash;
+      listing.id        = 'CV-' + result.listingId;
+    } catch(e) {
+      // On-chain failed — fall back to local
+      listing.onChain = false;
+      notify('info', 'Saved Locally', 'On-chain submission failed. Listing saved locally.');
+    }
+  }
 
   state.listings.push(listing);
   localStorage.setItem('cv_listings', JSON.stringify(state.listings));
 
   document.getElementById('launchLoading').style.display = 'none';
   document.getElementById('launchSuccess').style.display = 'block';
+
+  // Show tx hash if on-chain
+  if (listing.onChain) {
+    document.getElementById('launchSuccess').innerHTML += `
+      <div style="margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px">
+        ✓ ON-CHAIN TX: <a href="https://sepolia.etherscan.io/tx/${listing.txHash}" target="_blank"
+        style="color:var(--cyan)">${listing.txHash.slice(0,20)}...</a>
+      </div>`;
+  }
+
   updateStats();
   renderListings();
 
-  addClaudeEntry('ok', 'New Listing Detected', `Idea "${listing.title}" listed by ${shortenAddr(listing.wallet)}. AI score: ${listing.score.overallScore}/100. Reserve: $${listing.reserve.toLocaleString()}. CID: ${listing.cid.slice(0,20)}... Monitoring for bid activity.`);
-  notify('success', '🚀 Idea Listed', 'Your encrypted idea is now live on CryptValt.');
+  addClaudeEntry(
+    listing.onChain ? 'ok' : 'info',
+    listing.onChain ? 'On-Chain Listing Confirmed' : 'New Local Listing',
+    `Idea "${listing.title}" listed. AI score: ${listing.score.overallScore}/100. ` +
+    (listing.onChain ? `TX confirmed on-chain. ID: #${listing.onChainId}.` : 'Saved locally — deploy contracts for on-chain.')
+  );
+  notify('success', '🚀 Idea Listed', listing.onChain ? 'Confirmed on Ethereum!' : 'Live on CryptValt.');
 }
 
 // ============================================================
@@ -2566,6 +3111,24 @@ async function submitBid(listingId) {
     timestamp: Date.now()
   };
 
+  // Attempt on-chain bid if deployed
+  if (Chain.isDeployed() && listing.onChainId) {
+    try {
+      // Build on-chain commitment: keccak256(amount + salt + bidder + listingId)
+      const amountETH    = amount / 3000; // USD to ETH estimate
+      const saltBytes    = ethers.id(salt).slice(0, 66);
+      const onChainCommit = ethers.solidityPackedKeccak256(
+        ['uint256', 'bytes32', 'address', 'uint256'],
+        [ethers.parseEther(amountETH.toString()), saltBytes, state.wallet, listing.onChainId]
+      );
+      await Chain.commitBid(listing.onChainId, onChainCommit, amountETH);
+      bid.onChain   = true;
+      bid.commitment = onChainCommit;
+    } catch(e) {
+      bid.onChain = false;
+    }
+  }
+
   listing.bids.push(bid);
   state.bids.push(bid);
   localStorage.setItem('cv_listings', JSON.stringify(state.listings));
@@ -2573,9 +3136,11 @@ async function submitBid(listingId) {
 
   closeModal('bidModal');
   renderListings();
-  notify('success', '🎯 Sealed Bid Submitted', `Bid of $${amount.toLocaleString()} USDC sealed for "${listing.title}"`);
+  notify('success', '🎯 Sealed Bid Submitted', `Bid sealed for "${listing.title}"${bid.onChain ? ' — confirmed on-chain' : ''}`);
 
-  addClaudeEntry('info', 'New Sealed Bid', `Bid received on "${listing.title}" (${listingId}). Amount sealed. Bid hash: ${bidHash.slice(0,16)}... Running bid pattern analysis...`);
+  addClaudeEntry('info', 'New Sealed Bid',
+    `Bid received on "${listing.title}" (${listingId}). ${bid.onChain ? 'On-chain confirmed.' : 'Local mode.'} ` +
+    `Bid hash: ${bidHash.slice(0,16)}... Running bid pattern analysis...`);
 }
 
 // ============================================================
@@ -2776,6 +3341,618 @@ Respond concisely as a platform oversight AI. Focus on security, integrity, anom
     addClaudeEntry('ok', 'Claude Assist Response', `Platform state is nominal. ${state.listings.length} listings active, ${state.bids.length} total bids. No anomalies detected in recent activity. All escrow contracts showing expected state.`);
   }
 }
+
+
+// ============================================================
+// AUTONOMOUS MAINTENANCE SYSTEM
+// ============================================================
+/**
+ * CryptValt Autonomous Maintenance System (AMS)
+ * 
+ * Drop this script into index.html — it runs silently in the background.
+ * Monitors all platform functions, detects issues, applies fixes,
+ * enhances features, and keeps all systems working together.
+ * 
+ * No human intervention required after initialization.
+ */
+
+const CryptValtAMS = (() => {
+
+  // ============================================================
+  // AMS CONFIG
+  // ============================================================
+  const AMS_CONFIG = {
+    CHECK_INTERVAL_MS: 30000,         // Check every 30 seconds
+    DEEP_CHECK_INTERVAL_MS: 300000,   // Deep check every 5 minutes
+    MAX_LOG_ENTRIES: 500,
+    ANTHROPIC_API_KEY: '%%ANTHROPIC_API_KEY%%',
+    VERSION: '1.0.0',
+  };
+
+  // ============================================================
+  // AMS STATE
+  // ============================================================
+  let amsState = {
+    initialized: false,
+    lastCheck: null,
+    lastDeepCheck: null,
+    issuesDetected: 0,
+    issuesFixed: 0,
+    checksRun: 0,
+    log: [],
+    systemHealth: {
+      encryption: 'unknown',
+      ipfs: 'unknown',
+      ai: 'unknown',
+      wallet: 'unknown',
+      contracts: 'unknown',
+      storage: 'unknown',
+      auctions: 'unknown',
+    },
+    metrics: {
+      avgAIResponseTime: 0,
+      avgIPFSResponseTime: 0,
+      failedTransactions: 0,
+      successfulTransactions: 0,
+      activeAuctions: 0,
+      totalBidsProcessed: 0,
+    }
+  };
+
+  // ============================================================
+  // LOGGING
+  // ============================================================
+  function log(level, system, message, data = null) {
+    const entry = {
+      timestamp: new Date().toISOString(),
+      level,
+      system,
+      message,
+      data,
+    };
+    amsState.log.unshift(entry);
+    if (amsState.log.length > AMS_CONFIG.MAX_LOG_ENTRIES) {
+      amsState.log = amsState.log.slice(0, AMS_CONFIG.MAX_LOG_ENTRIES);
+    }
+
+    // Push to Claude Assist oversight feed if available
+    if (typeof addClaudeEntry === 'function') {
+      const typeMap = { INFO: 'info', WARN: 'warn', ERROR: 'alert', FIX: 'ok', ENHANCE: 'ok' };
+      addClaudeEntry(typeMap[level] || 'info', `[AMS] ${system}`, message);
+    }
+
+    // Store in localStorage
+    try {
+      const stored = JSON.parse(localStorage.getItem('cv_ams_log') || '[]');
+      stored.unshift(entry);
+      localStorage.setItem('cv_ams_log', JSON.stringify(stored.slice(0, 100)));
+    } catch(e) {}
+  }
+
+  // ============================================================
+  // HEALTH CHECKS
+  // ============================================================
+  async function checkEncryption() {
+    try {
+      // Test real AES-256-GCM encryption
+      const key = await window.crypto.subtle.generateKey(
+        { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']
+      );
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const testData = new TextEncoder().encode('AMS_TEST_' + Date.now());
+      const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, testData);
+      const decrypted = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted);
+      const decoded = new TextDecoder().decode(decrypted);
+
+      if (decoded.startsWith('AMS_TEST_')) {
+        amsState.systemHealth.encryption = 'healthy';
+        return { ok: true };
+      } else {
+        throw new Error('Decryption mismatch');
+      }
+    } catch(e) {
+      amsState.systemHealth.encryption = 'degraded';
+      log('ERROR', 'ENCRYPTION', `Encryption test failed: ${e.message}`);
+      return { ok: false, error: e.message };
+    }
+  }
+
+  async function checkIPFS() {
+    try {
+      const start = Date.now();
+      const response = await fetch('https://api.pinata.cloud/data/testAuthentication', {
+        headers: {
+          'pinata_api_key': typeof CONFIG !== 'undefined' ? CONFIG.PINATA_API_KEY : '%%PINATA_API_KEY%%',
+          'pinata_secret_api_key': typeof CONFIG !== 'undefined' ? CONFIG.PINATA_API_SECRET : '%%PINATA_API_SECRET%%',
+        }
+      });
+      const latency = Date.now() - start;
+      amsState.metrics.avgIPFSResponseTime = latency;
+
+      if (response.ok) {
+        amsState.systemHealth.ipfs = 'healthy';
+        return { ok: true, latency };
+      } else {
+        amsState.systemHealth.ipfs = 'degraded';
+        return { ok: false, status: response.status };
+      }
+    } catch(e) {
+      amsState.systemHealth.ipfs = 'offline';
+      log('ERROR', 'IPFS', `Pinata unreachable: ${e.message}`);
+      return { ok: false, error: e.message };
+    }
+  }
+
+  async function checkAIEngine() {
+    try {
+      const start = Date.now();
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': AMS_CONFIG.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'ping' }]
+        })
+      });
+      const latency = Date.now() - start;
+      amsState.metrics.avgAIResponseTime = latency;
+
+      if (response.ok) {
+        amsState.systemHealth.ai = 'healthy';
+        return { ok: true, latency };
+      } else {
+        amsState.systemHealth.ai = 'degraded';
+        return { ok: false, status: response.status };
+      }
+    } catch(e) {
+      amsState.systemHealth.ai = 'offline';
+      log('ERROR', 'AI_ENGINE', `Anthropic API unreachable: ${e.message}`);
+      return { ok: false, error: e.message };
+    }
+  }
+
+  function checkWallet() {
+    try {
+      const hasEthereum = typeof window.ethereum !== 'undefined';
+      const isConnected = typeof state !== 'undefined' && state.wallet !== null;
+      amsState.systemHealth.wallet = hasEthereum ? 'healthy' : 'no_provider';
+      return { ok: hasEthereum, connected: isConnected };
+    } catch(e) {
+      amsState.systemHealth.wallet = 'error';
+      return { ok: false, error: e.message };
+    }
+  }
+
+  function checkStorage() {
+    try {
+      const testKey = 'cv_ams_storage_test';
+      localStorage.setItem(testKey, '1');
+      const val = localStorage.getItem(testKey);
+      localStorage.removeItem(testKey);
+      if (val === '1') {
+        amsState.systemHealth.storage = 'healthy';
+        return { ok: true };
+      }
+      throw new Error('Storage read/write failed');
+    } catch(e) {
+      amsState.systemHealth.storage = 'degraded';
+      log('ERROR', 'STORAGE', `localStorage unavailable: ${e.message}`);
+      return { ok: false, error: e.message };
+    }
+  }
+
+  function checkAuctions() {
+    try {
+      if (typeof state === 'undefined') return { ok: false, error: 'State not initialized' };
+
+      const listings = state.listings || [];
+      const now = Date.now();
+      let active = 0;
+      let expired = 0;
+      let issues = [];
+
+      listings.forEach(listing => {
+        if (listing.status === 'live') {
+          if (listing.endsAt < now) {
+            expired++;
+            issues.push(`Listing ${listing.id} past end time but still marked live`);
+          } else {
+            active++;
+          }
+        }
+
+        // Check for missing required fields
+        if (!listing.cid || !listing.score || !listing.reserve) {
+          issues.push(`Listing ${listing.id} has missing required fields`);
+        }
+      });
+
+      amsState.metrics.activeAuctions = active;
+
+      if (expired > 0) {
+        log('WARN', 'AUCTIONS', `${expired} auctions past end time — auto-settling`);
+        _autoSettleExpiredAuctions(listings, now);
+      }
+
+      amsState.systemHealth.auctions = issues.length === 0 ? 'healthy' : 'degraded';
+      return { ok: issues.length === 0, active, expired, issues };
+    } catch(e) {
+      amsState.systemHealth.auctions = 'error';
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // ============================================================
+  // AUTO-FIX ENGINE
+  // ============================================================
+  function _autoSettleExpiredAuctions(listings, now) {
+    listings.forEach(listing => {
+      if (listing.status === 'live' && listing.endsAt < now) {
+        // Move to reveal phase
+        listing.status = 'reveal';
+        log('FIX', 'AUCTIONS', `Auto-moved listing ${listing.id} to reveal phase`);
+        amsState.issuesFixed++;
+      }
+    });
+
+    if (typeof state !== 'undefined') {
+      try {
+        localStorage.setItem('cv_listings', JSON.stringify(listings));
+      } catch(e) {}
+    }
+  }
+
+  function _repairCorruptedListing(listing) {
+    const required = ['id', 'title', 'category', 'cid', 'score', 'reserve', 'status', 'created', 'endsAt'];
+    let repaired = false;
+
+    required.forEach(field => {
+      if (listing[field] === undefined || listing[field] === null) {
+        switch(field) {
+          case 'status': listing[field] = 'live'; break;
+          case 'created': listing[field] = Date.now(); break;
+          case 'endsAt': listing[field] = Date.now() + (5 * 86400000); break;
+          case 'reserve': listing[field] = 0; break;
+          case 'score': listing[field] = { overallScore: 0, dollarValueMid: 0, scores: {} }; break;
+        }
+        repaired = true;
+      }
+    });
+
+    if (repaired) {
+      log('FIX', 'DATA', `Repaired corrupted listing ${listing.id}`);
+      amsState.issuesFixed++;
+    }
+    return listing;
+  }
+
+  function _cleanDuplicateListings() {
+    if (typeof state === 'undefined') return;
+
+    const seen = new Set();
+    const deduped = state.listings.filter(l => {
+      if (seen.has(l.id)) {
+        log('FIX', 'DATA', `Removed duplicate listing ${l.id}`);
+        amsState.issuesFixed++;
+        return false;
+      }
+      seen.add(l.id);
+      return true;
+    });
+
+    if (deduped.length !== state.listings.length) {
+      state.listings = deduped;
+      localStorage.setItem('cv_listings', JSON.stringify(deduped));
+    }
+  }
+
+  // ============================================================
+  // DEEP ANALYSIS (runs less frequently)
+  // ============================================================
+  async function runDeepAnalysis() {
+    log('INFO', 'AMS', 'Running deep platform analysis...');
+
+    // Analyze listing data integrity
+    if (typeof state !== 'undefined') {
+      state.listings = state.listings.map(l => _repairCorruptedListing(l));
+      _cleanDuplicateListings();
+    }
+
+    // Analyze bid patterns for fraud
+    _analyzeBidPatterns();
+
+    // Check for stale data
+    _checkDataFreshness();
+
+    // Run AI health analysis
+    await _aiHealthAnalysis();
+
+    amsState.lastDeepCheck = Date.now();
+    log('INFO', 'AMS', 'Deep analysis complete');
+  }
+
+  function _analyzeBidPatterns() {
+    if (typeof state === 'undefined') return;
+
+    const bidsByWallet = {};
+    state.bids.forEach(bid => {
+      if (!bidsByWallet[bid.wallet]) bidsByWallet[bid.wallet] = [];
+      bidsByWallet[bid.wallet].push(bid);
+    });
+
+    // Flag wallets with suspicious bid counts
+    Object.entries(bidsByWallet).forEach(([wallet, bids]) => {
+      if (bids.length > 20) {
+        log('WARN', 'FRAUD_DETECT', `Wallet ${wallet.slice(0,8)}... has ${bids.length} bids — reviewing for manipulation`);
+      }
+
+      // Check for same wallet bidding multiple times on same listing
+      const listingBids = {};
+      bids.forEach(b => {
+        listingBids[b.listingId] = (listingBids[b.listingId] || 0) + 1;
+      });
+      Object.entries(listingBids).forEach(([listingId, count]) => {
+        if (count > 1) {
+          log('WARN', 'FRAUD_DETECT', `Wallet ${wallet.slice(0,8)}... placed ${count} bids on listing ${listingId} — flagged`);
+          amsState.issuesDetected++;
+        }
+      });
+    });
+  }
+
+  function _checkDataFreshness() {
+    if (typeof state === 'undefined') return;
+
+    const now = Date.now();
+    const staleThreshold = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+    state.listings.forEach(listing => {
+      if (listing.status === 'live' && (now - listing.created) > staleThreshold) {
+        log('WARN', 'DATA', `Listing ${listing.id} is over 30 days old and still live — may need review`);
+      }
+    });
+  }
+
+  async function _aiHealthAnalysis() {
+    try {
+      if (typeof state === 'undefined') return;
+
+      const platformData = {
+        totalListings: state.listings.length,
+        activeAuctions: amsState.metrics.activeAuctions,
+        totalBids: state.bids.length,
+        systemHealth: amsState.systemHealth,
+        issuesDetected: amsState.issuesDetected,
+        issuesFixed: amsState.issuesFixed,
+        checksRun: amsState.checksRun,
+      };
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': AMS_CONFIG.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 200,
+          messages: [{
+            role: 'user',
+            content: `You are CryptValt's autonomous maintenance AI. Analyze this platform health data and respond with ONE specific actionable insight in under 50 words. No preamble. Data: ${JSON.stringify(platformData)}`
+          }]
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const insight = data.content[0].text;
+        log('INFO', 'AI_ANALYSIS', insight);
+      }
+    } catch(e) {
+      // Silent fail on deep analysis
+    }
+  }
+
+  // ============================================================
+  // ENHANCEMENT ENGINE
+  // ============================================================
+  function runEnhancements() {
+    _enhanceTimers();
+    _enhanceFormValidation();
+    _enhanceErrorMessages();
+    _optimizeStorage();
+  }
+
+  function _enhanceTimers() {
+    // Make sure all auction timers are updating
+    if (typeof state === 'undefined') return;
+    const liveListings = state.listings.filter(l => l.status === 'live');
+    liveListings.forEach(listing => {
+      const timerEl = document.getElementById('timer-' + listing.id);
+      if (!timerEl && listing.endsAt > Date.now()) {
+        log('WARN', 'UI', `Timer missing for live listing ${listing.id}`);
+      }
+    });
+  }
+
+  function _enhanceFormValidation() {
+    // Dynamically strengthen form inputs
+    const inputs = document.querySelectorAll('.form-input, .form-textarea');
+    inputs.forEach(input => {
+      if (!input.dataset.amsEnhanced) {
+        input.dataset.amsEnhanced = 'true';
+        input.addEventListener('blur', () => {
+          if (input.required && !input.value.trim()) {
+            input.style.borderColor = 'var(--red)';
+          } else {
+            input.style.borderColor = '';
+          }
+        });
+      }
+    });
+  }
+
+  function _enhanceErrorMessages() {
+    // Make sure error notifications are visible
+    const notifContainer = document.getElementById('notifications');
+    if (!notifContainer) {
+      const div = document.createElement('div');
+      div.id = 'notifications';
+      div.className = 'notifications';
+      document.body.appendChild(div);
+      log('FIX', 'UI', 'Recreated missing notifications container');
+      amsState.issuesFixed++;
+    }
+  }
+
+  function _optimizeStorage() {
+    try {
+      // Clean up old AMS logs to prevent storage bloat
+      const logs = JSON.parse(localStorage.getItem('cv_ams_log') || '[]');
+      if (logs.length > 100) {
+        localStorage.setItem('cv_ams_log', JSON.stringify(logs.slice(0, 100)));
+      }
+
+      // Verify listings data is valid JSON
+      const listingsRaw = localStorage.getItem('cv_listings');
+      if (listingsRaw) {
+        try {
+          JSON.parse(listingsRaw);
+        } catch(e) {
+          log('FIX', 'STORAGE', 'Corrupted listings data detected — resetting to empty');
+          localStorage.setItem('cv_listings', '[]');
+          amsState.issuesFixed++;
+        }
+      }
+
+      // Verify bids data
+      const bidsRaw = localStorage.getItem('cv_bids');
+      if (bidsRaw) {
+        try {
+          JSON.parse(bidsRaw);
+        } catch(e) {
+          log('FIX', 'STORAGE', 'Corrupted bids data detected — resetting to empty');
+          localStorage.setItem('cv_bids', '[]');
+          amsState.issuesFixed++;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // ============================================================
+  // MAIN CHECK CYCLE
+  // ============================================================
+  async function runHealthCheck() {
+    amsState.checksRun++;
+    amsState.lastCheck = Date.now();
+
+    const results = await Promise.allSettled([
+      checkEncryption(),
+      checkStorage(),
+      checkWallet(),
+      checkAuctions(),
+    ]);
+
+    runEnhancements();
+
+    // Count issues
+    const failures = results.filter(r => r.status === 'fulfilled' && r.value && !r.value.ok);
+    if (failures.length > 0) {
+      amsState.issuesDetected += failures.length;
+    }
+
+    // Update oversight dashboard if visible
+    _updateOversightDashboard();
+  }
+
+  async function runDeepCheck() {
+    // Check services that cost API calls less frequently
+    await checkIPFS();
+    await checkAIEngine();
+    await runDeepAnalysis();
+    _updateOversightDashboard();
+  }
+
+  function _updateOversightDashboard() {
+    const txEl = document.getElementById('txMonitored');
+    const anomalyEl = document.getElementById('anomalyCount');
+    const flagEl = document.getElementById('flagCount');
+
+    if (txEl) txEl.textContent = amsState.checksRun;
+    if (anomalyEl) anomalyEl.textContent = amsState.issuesDetected;
+    if (flagEl) flagEl.textContent = amsState.issuesFixed;
+  }
+
+  // ============================================================
+  // PUBLIC API
+  // ============================================================
+  function getStatus() {
+    return {
+      version: AMS_CONFIG.VERSION,
+      initialized: amsState.initialized,
+      lastCheck: amsState.lastCheck,
+      systemHealth: amsState.systemHealth,
+      metrics: amsState.metrics,
+      issuesDetected: amsState.issuesDetected,
+      issuesFixed: amsState.issuesFixed,
+      checksRun: amsState.checksRun,
+    };
+  }
+
+  function getLog(count = 50) {
+    return amsState.log.slice(0, count);
+  }
+
+  function forceCheck() {
+    return runHealthCheck();
+  }
+
+  function forceDeepCheck() {
+    return runDeepCheck();
+  }
+
+  // ============================================================
+  // INITIALIZE
+  // ============================================================
+  async function init() {
+    if (amsState.initialized) return;
+    amsState.initialized = true;
+
+    log('INFO', 'AMS', `CryptValt Autonomous Maintenance System v${AMS_CONFIG.VERSION} initialized`);
+
+    // Initial check on load
+    await runHealthCheck();
+
+    // Periodic light checks
+    setInterval(runHealthCheck, AMS_CONFIG.CHECK_INTERVAL_MS);
+
+    // Periodic deep checks
+    setInterval(runDeepCheck, AMS_CONFIG.DEEP_CHECK_INTERVAL_MS);
+
+    log('INFO', 'AMS', 'All monitoring loops active. Platform under autonomous oversight.');
+  }
+
+  // Start after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    setTimeout(init, 2000); // Give main app time to initialize first
+  }
+
+  return { getStatus, getLog, forceCheck, forceDeepCheck, init };
+
+})();
+
+// Make available globally
+window.CryptValtAMS = CryptValtAMS;
 </script>
 </body>
 </html>
