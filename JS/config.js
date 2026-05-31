@@ -18,6 +18,7 @@ const CONFIG = {
   },
 
   CHAIN_ID:   11155111,
+  BACKEND_URL: 'https://crypt-valt-backend-jkak.vercel.app',
   CHAIN_NAME: 'Sepolia Testnet',
   RPC_URL:    'https://rpc.sepolia.org',
 };
