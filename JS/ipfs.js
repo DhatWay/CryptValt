@@ -1,45 +1,42 @@
 /**
- * CryptValt — IPFS Storage
- * Real Pinata uploads — no mocks, no fallbacks
+ * CryptValt — IPFS Storage v3.0
+ * Routes through secure backend proxy
  */
 
 async function uploadToIPFS(data, filename) {
-  const blob     = new Blob([JSON.stringify(data)], { type: 'application/json' });
-  const formData = new FormData();
-  formData.append('file', blob, filename);
-  formData.append('pinataOptions',  JSON.stringify({ cidVersion: 1 }));
-  formData.append('pinataMetadata', JSON.stringify({ name: filename }));
-
-  const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+  const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/upload', {
     method: 'POST',
     headers: {
-      'pinata_api_key':        CONFIG.PINATA_API_KEY,
-      'pinata_secret_api_key': CONFIG.PINATA_API_SECRET,
+      'Content-Type':     'application/json',
+      'X-Wallet-Address': state.wallet || '0x0000000000000000000000000000000000000000',
+      'X-Timestamp':      Date.now().toString(),
     },
-    body: formData
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
-    const err = await response.text();
-    throw new Error('IPFS upload failed: ' + response.status + ' — ' + err);
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || 'IPFS upload failed: ' + response.status);
   }
 
   const result = await response.json();
-  return result.IpfsHash;
+  if (!result.success) throw new Error('IPFS upload failed');
+  return result.data.cid;
 }
 
 async function fetchFromIPFS(cid) {
-  const response = await fetch('https://gateway.pinata.cloud/ipfs/' + cid);
+  const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/fetch/' + cid);
   if (!response.ok) throw new Error('IPFS fetch failed: ' + response.status);
-  return await response.json();
+  const result = await response.json();
+  return result.data;
 }
 
 async function checkIPFSHealth() {
-  const response = await fetch('https://api.pinata.cloud/data/testAuthentication', {
-    headers: {
-      'pinata_api_key':        CONFIG.PINATA_API_KEY,
-      'pinata_secret_api_key': CONFIG.PINATA_API_SECRET,
-    }
-  });
-  return response.ok;
+  try {
+    const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/status');
+    const result   = await response.json();
+    return result.data?.pinata === 'online';
+  } catch {
+    return false;
+  }
 }
