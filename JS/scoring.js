@@ -1,66 +1,77 @@
 /**
- * CryptValt — AI Scoring Engine
- * Real Anthropic API calls only
+ * CryptValt — AI Scoring Engine v3.0
+ * Routes through secure backend proxy
  */
 
-async function scoreIdea(ideaData) {
-  const prompt = `You are CryptValt's AI scoring engine. Analyze this idea and return ONLY a valid JSON object with no markdown, no preamble.
+const ScoringEngine = (() => {
 
-IDEA:
-Title: ${ideaData.title}
-Category: ${ideaData.category}
-Teaser: ${ideaData.teaser}
-Problem: ${ideaData.problem}
-Target Market: ${ideaData.market}
-Market Size: ${ideaData.marketSize}
-Description: ${ideaData.description}
-
-Return this exact JSON structure:
-{
-  "overallScore": <0-100>,
-  "dollarValueMin": <number>,
-  "dollarValueMax": <number>,
-  "dollarValueMid": <number>,
-  "scores": {
-    "marketability": <0-100>,
-    "scalability": <0-100>,
-    "consumerPotential": <0-100>,
-    "competitiveMoat": <0-100>,
-    "executionFeasibility": <0-100>,
-    "revenueClarity": <0-100>
-  },
-  "executiveSummary": "<string>",
-  "marketability": "<string>",
-  "scalability": "<string>",
-  "consumerPotential": "<string>",
-  "competitiveMoat": "<string>",
-  "revenueModel": "<string>",
-  "riskFactors": "<string>",
-  "investorVerdict": "<string>"
-}`;
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type':    'application/json',
-      'x-api-key':       CONFIG.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
+  const rateLimit = {
+    requests: [],
+    maxPerMin: 10,
+    isAllowed() {
+      const now = Date.now();
+      this.requests = this.requests.filter(t => now - t < 60_000);
+      if (this.requests.length >= this.maxPerMin) return false;
+      this.requests.push(now);
+      return true;
     },
-    body: JSON.stringify({
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      messages:   [{ role: 'user', content: prompt }]
-    })
-  });
+  };
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error('AI scoring failed: ' + response.status + ' — ' + err);
+  function validateInputs(data) {
+    const errors = [];
+    if (!data.title       || data.title.trim().length       < 3)  errors.push('Title too short');
+    if (!data.category)                                             errors.push('Category required');
+    if (!data.description || data.description.trim().length < 50)  errors.push('Description too short (min 50 chars)');
+    if (!data.problem     || data.problem.trim().length     < 20)  errors.push('Problem statement too short');
+    if (!data.market      || data.market.trim().length      < 5)   errors.push('Target market required');
+    return errors;
   }
 
-  const data  = await response.json();
-  const text  = data.content[0].text;
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  async function scoreIdea(ideaData) {
+    const errors = validateInputs(ideaData);
+    if (errors.length > 0) throw new Error('Validation failed: ' + errors.join(', '));
+    if (!rateLimit.isAllowed()) throw new Error('Rate limit exceeded — wait 60 seconds');
+
+    const response = await fetch(CONFIG.BACKEND_URL + '/api/score', {
+      method: 'POST',
+      headers: {
+        'Content-Type':       'application/json',
+        'X-Wallet-Address':   state.wallet || '0x0000000000000000000000000000000000000000',
+        'X-Timestamp':        Date.now().toString(),
+      },
+      body: JSON.stringify(ideaData),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (response.status === 503) throw new Error('AI temporarily overloaded. Please retry in 30 seconds.');
+      throw new Error(err.message || 'Scoring failed: ' + response.status);
+    }
+
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || 'Scoring failed');
+    return result.data;
+  }
+
+  async function queryClaudeAssist(query, platformContext) {
+    const response = await fetch(CONFIG.BACKEND_URL + '/api/score/assist', {
+      method: 'POST',
+      headers: {
+        'Content-Type':     'application/json',
+        'X-Wallet-Address': state.wallet || '0x0000000000000000000000000000000000000000',
+      },
+      body: JSON.stringify({ query, platformContext }),
+    });
+
+    if (!response.ok) throw new Error('Claude Assist unavailable');
+    const result = await response.json();
+    return result.data?.response || '';
+  }
+
+  return { scoreIdea, queryClaudeAssist, validateInputs };
+
+})();
+
+async function scoreIdea(ideaData) {
+  return ScoringEngine.scoreIdea(ideaData);
 }
