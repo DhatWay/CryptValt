@@ -3,7 +3,7 @@
  * Handles offline support, caching, and PWA install
  */
 
-const CACHE_NAME = 'cryptvalt-v2';
+const CACHE_NAME = 'cryptvalt-v3';
 const OFFLINE_URL = '/CryptValt/offline.html';
 
 // Assets to cache immediately on install
