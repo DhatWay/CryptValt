@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Autonomous Promotion System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #020408;
+  --surface: #060c14;
+  --surface2: #0a1520;
+  --surface3: #0f1e2e;
+  --border: rgba(0,200,255,0.08);
+  --border-bright: rgba(0,200,255,0.2);
+  --cyan: #00c8ff;
+  --cyan-dim: rgba(0,200,255,0.1);
+  --gold: #f0a500;
+  --gold-dim: rgba(240,165,0,0.1);
+  --green: #00ff9d;
+  --green-dim: rgba(0,255,157,0.1);
+  --red: #ff3b6b;
+  --text: #e8f4ff;
+  --text-dim: rgba(232,244,255,0.55);
+  --text-muted: rgba(232,244,255,0.25);
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+  --body: 'Rajdhani', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--body); min-height:100vh; }
+
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image: linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px), linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);
+  background-size:50px 50px;
+}
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* NAV */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 32px; height:60px;
+  background:rgba(2,4,8,0.9); border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+.nav-logo { font-family:var(--display); font-size:22px; letter-spacing:4px; color:var(--cyan); }
+.nav-logo span { color:var(--gold); }
+.nav-back { font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-decoration:none; padding:6px 14px; border:1px solid var(--border); transition:all 0.2s; }
+.nav-back:hover { color:var(--cyan); border-color:var(--cyan); }
+
+/* LAYOUT */
+main { position:relative; z-index:1; padding:80px 24px 40px; max-width:1200px; margin:0 auto; }
+
+/* HEADER */
+.page-header { margin-bottom:40px; }
+.page-eyebrow { font-family:var(--mono); font-size:10px; letter-spacing:4px; color:var(--cyan); margin-bottom:8px; text-transform:uppercase; }
+.page-title { font-family:var(--display); font-size:52px; letter-spacing:4px; line-height:1; margin-bottom:12px; }
+.page-sub { font-size:15px; color:var(--text-dim); line-height:1.6; max-width:600px; }
+
+/* STATS BAR */
+.stats-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:40px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); padding:16px 20px; }
+.stat-label { font-family:var(--mono); font-size:9px; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+.stat-value { font-family:var(--display); font-size:32px; letter-spacing:2px; }
+
+/* TABS */
+.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:32px; overflow-x:auto; }
+.tab { font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:12px 20px; color:var(--text-muted); cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent; transition:all 0.2s; white-space:nowrap; }
+.tab:hover { color:var(--text-dim); }
+.tab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+/* PANEL */
+.panel { display:none; animation:fadeIn 0.3s ease; }
+.panel.active { display:block; }
+
+/* CARDS */
+.card { background:var(--surface); border:1px solid var(--border); padding:24px; margin-bottom:16px; transition:all 0.2s; }
+.card:hover { border-color:var(--border-bright); }
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+.card-title { font-size:16px; font-weight:700; letter-spacing:1px; }
+.card-sub { font-family:var(--mono); font-size:10px; color:var(--text-muted); letter-spacing:1px; margin-top:4px; }
+
+/* FORM */
+.form-group { margin-bottom:20px; }
+.form-label { display:block; font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px; }
+.form-input, .form-select, .form-textarea {
+  width:100%; background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); font-family:var(--body); font-size:14px;
+  padding:12px 14px; outline:none; transition:border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--cyan); }
+.form-textarea { min-height:100px; resize:vertical; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+/* BUTTONS */
+.btn { font-family:var(--body); font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase; padding:12px 28px; border:none; cursor:pointer; transition:all 0.2s; }
+.btn-primary { background:var(--cyan); color:var(--bg); }
+.btn-primary:hover { background:#33d4ff; box-shadow:0 0 24px rgba(0,200,255,0.3); }
+.btn-secondary { background:transparent; color:var(--cyan); border:1px solid var(--cyan); }
+.btn-secondary:hover { background:var(--cyan-dim); }
+.btn-gold { background:var(--gold); color:var(--bg); }
+.btn-gold:hover { background:#ffb820; }
+.btn-sm { padding:8px 16px; font-size:11px; }
+.btn-full { width:100%; }
+.btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* RESULT BOX */
+.result-box {
+  background:var(--surface2); border:1px solid var(--border-bright);
+  border-left:3px solid var(--cyan); padding:20px; margin-top:20px;
+  display:none; animation:fadeIn 0.3s ease;
+}
+.result-box.visible { display:block; }
+.result-label { font-family:var(--mono); font-size:9px; letter-spacing:3px; color:var(--cyan); text-transform:uppercase; margin-bottom:12px; }
+.result-content { font-size:14px; color:var(--text-dim); line-height:1.8; white-space:pre-wrap; }
+
+/* COPY BUTTON */
+.copy-btn { font-family:var(--mono); font-size:9px; letter-spacing:2px; padding:6px 12px; background:var(--surface3); border:1px solid var(--border); color:var(--text-muted); cursor:pointer; transition:all 0.2s; margin-top:12px; }
+.copy-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.copy-btn.copied { border-color:var(--green); color:var(--green); }
+
+/* LOADING */
+.loading { display:none; align-items:center; gap:12px; padding:16px 0; }
+.loading.visible { display:flex; }
+.spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--cyan); border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0; }
+.loading-text { font-family:var(--mono); font-size:11px; color:var(--text-muted); letter-spacing:2px; }
+
+/* FEED */
+.feed { max-height:400px; overflow-y:auto; }
+.feed-item { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); animation:fadeIn 0.3s ease; }
+.feed-item:last-child { border-bottom:none; }
+.feed-time { font-family:var(--mono); font-size:9px; color:var(--text-muted); letter-spacing:1px; flex-shrink:0; padding-top:2px; min-width:55px; }
+.feed-body { flex:1; }
+.feed-title { font-size:13px; font-weight:700; letter-spacing:1px; margin-bottom:3px; }
+.feed-msg { font-size:12px; color:var(--text-dim); line-height:1.5; }
+.feed-item.success .feed-title { color:var(--green); }
+.feed-item.info .feed-title { color:var(--cyan); }
+.feed-item.warn .feed-title { color:var(--gold); }
+
+/* PLATFORM BADGES */
+.platform-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; font-family:var(--mono); font-size:9px; letter-spacing:2px; border:1px solid; margin-right:6px; margin-bottom:6px; cursor:pointer; transition:all 0.2s; }
+.platform-badge.selected { background:var(--cyan-dim); border-color:var(--cyan); color:var(--cyan); }
+.platform-badge:not(.selected) { border-color:var(--border); color:var(--text-muted); }
+.platform-badge:hover { border-color:var(--cyan); color:var(--cyan); }
+
+/* QUEUE */
+.queue-item { display:flex; align-items:center; gap:16px; padding:14px 16px; background:var(--surface2); border:1px solid var(--border); margin-bottom:8px; }
+.queue-platform { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--cyan); width:80px; flex-shrink:0; text-transform:uppercase; }
+.queue-content { flex:1; font-size:13px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.queue-status { font-family:var(--mono); font-size:9px; letter-spacing:1px; flex-shrink:0; }
+.queue-status.pending { color:var(--gold); }
+.queue-status.sent { color:var(--green); }
+.queue-status.failed { color:var(--red); }
+
+/* NOTIFICATIONS */
+.notifs { position:fixed; top:70px; right:16px; z-index:300; display:flex; flex-direction:column; gap:8px; max-width:320px; }
+.notif { background:var(--surface2); border:1px solid var(--border-bright); padding:12px 16px; animation:slideIn 0.3s ease; }
+.notif.success { border-color:rgba(0,255,157,0.3); }
+.notif.error { border-color:rgba(255,59,107,0.3); }
+.notif-title { font-weight:700; font-size:13px; margin-bottom:3px; }
+.notif-msg { font-size:12px; color:var(--text-dim); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:var(--surface); }
+::-webkit-scrollbar-thumb { background:var(--border-bright); }
+
+@media(max-width:768px) {
+  .stats-bar { grid-template-columns:1fr 1fr; }
+  .form-grid { grid-template-columns:1fr; }
+  nav { padding:0 16px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
+</nav>
+
+<div class="notifs" id="notifs"></div>
+
+<main>
+  <div class="page-header">
+    <div class="page-eyebrow">⬡ Autonomous Promotion System</div>
+    <h1 class="page-title">OUTREACH<br>ENGINE</h1>
+    <p class="page-sub">Scout inventors, generate personalized pitches, create platform-optimized social content, and track all outreach — all powered by Claude AI.</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Scouts Run</div>
+      <div class="stat-value" id="statScouts" style="color:var(--cyan)">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pitches Generated</div>
+      <div class="stat-value" id="statPitches" style="color:var(--gold)">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Posts Created</div>
+      <div class="stat-value" id="statPosts" style="color:var(--green)">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Queue</div>
+      <div class="stat-value" id="statQueue" style="color:var(--text)">0</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('scout', this)">Inventor Scout</button>
+    <button class="tab" onclick="switchTab('pitch', this)">Pitch Generator</button>
+    <button class="tab" onclick="switchTab('social', this)">Social Content</button>
+    <button class="tab" onclick="switchTab('queue', this)">Outreach Queue</button>
+    <button class="tab" onclick="switchTab('feed', this)">Activity Feed</button>
+  </div>
+
+  <!-- SCOUT PANEL -->
+  <div id="panel-scout" class="panel active">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Inventor Scout</div>
+          <div class="card-sub">Find inventors to pitch CryptValt to by category and keyword</div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Idea Category</label>
+          <select class="form-select" id="scoutCategory">
+            <option value="tech">Technology</option>
+            <option value="health">Healthcare</option>
+            <option value="finance">Finance / Fintech</option>
+            <option value="consumer">Consumer Products</option>
+            <option value="energy">Energy / Sustainability</option>
+            <option value="other">General / Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Keywords</label>
+          <input type="text" class="form-input" id="scoutKeywords" placeholder="e.g. patent, invention, idea, startup">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="runScout()">Scout Inventors →</button>
+
+      <div class="loading" id="scoutLoading">
+        <div class="spinner"></div>
+        <div class="loading-text">Scouting inventors...</div>
+      </div>
+
+      <div class="result-box" id="scoutResult">
+        <div class="result-label">Scout Results</div>
+        <div id="scoutResultContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PITCH PANEL -->
+  <div id="panel-pitch" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Pitch Generator</div>
+          <div class="card-sub">Generate a personalized outreach message for a specific inventor</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Inventor Name (optional)</label>
+        <input type="text" class="form-input" id="pitchName" placeholder="e.g. John Smith">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Inventor Description *</label>
+        <textarea class="form-textarea" id="pitchDescription" placeholder="Describe who this person is and what they work on. e.g. 'Software developer who posts about building SaaS products and has mentioned wanting to monetize side project ideas. Active on r/entrepreneur and Twitter.'"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Platform</label>
+          <select class="form-select" id="pitchPlatform">
+            <option value="email">Email</option>
+            <option value="reddit">Reddit DM</option>
+            <option value="twitter">Twitter/X DM</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="discord">Discord</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Idea Category</label>
+          <select class="form-select" id="pitchCategory">
+            <option value="tech">Technology</option>
+            <option value="health">Healthcare</option>
+            <option value="finance">Finance</option>
+            <option value="consumer">Consumer</option>
+            <option value="energy">Energy</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="generatePitch()">Generate Pitch →</button>
+
+      <div class="loading" id="pitchLoading">
+        <div class="spinner"></div>
+        <div class="loading-text">Generating personalized pitch...</div>
+      </div>
+
+      <div class="result-box" id="pitchResult">
+        <div class="result-label">Generated Pitch</div>
+        <div id="pitchSubject" style="font-family:var(--mono);font-size:11px;color:var(--gold);margin-bottom:12px;letter-spacing:1px"></div>
+        <div class="result-content" id="pitchContent"></div>
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px">FOLLOW-UP MESSAGE</div>
+          <div class="result-content" id="pitchFollowUp" style="font-size:13px;color:var(--text-muted)"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="copy-btn" id="pitchCopyBtn" onclick="copyPitch()">COPY MESSAGE</button>
+          <button class="copy-btn" onclick="addToQueue('pitch')">ADD TO QUEUE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIAL PANEL -->
+  <div id="panel-social" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Social Content Generator</div>
+          <div class="card-sub">Generate platform-optimized content ready to post</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Platform</label>
+        <div>
+          <span class="platform-badge selected" data-platform="reddit" onclick="togglePlatform(this)">Reddit</span>
+          <span class="platform-badge" data-platform="linkedin" onclick="togglePlatform(this)">LinkedIn</span>
+          <span class="platform-badge" data-platform="discord" onclick="togglePlatform(this)">Discord</span>
+          <span class="platform-badge" data-platform="telegram" onclick="togglePlatform(this)">Telegram</span>
+          <span class="platform-badge" data-platform="twitter" onclick="togglePlatform(this)">Twitter/X</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Content Type</label>
+        <select class="form-select" id="socialContentType">
+          <option value="awareness">General Awareness</option>
+          <option value="feature_highlight">Feature Highlight</option>
+          <option value="inventor_pitch">Inventor Pitch</option>
+          <option value="investor_pitch">Investor Pitch</option>
+          <option value="sale_announcement">Sale Announcement</option>
+          <option value="launch">Launch Post</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Additional Context (optional)</label>
+        <input type="text" class="form-input" id="socialContext" placeholder="e.g. First sale just happened, targeting tech inventors, etc.">
+      </div>
+
+      <button class="btn btn-primary" onclick="generateSocial()">Generate Content →</button>
+
+      <div class="loading" id="socialLoading">
+        <div class="spinner"></div>
+        <div class="loading-text">Generating content...</div>
+      </div>
+
+      <div class="result-box" id="socialResult">
+        <div class="result-label">Generated Post</div>
+        <div class="result-content" id="socialContent"></div>
+        <div id="socialHashtags" style="margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--cyan)"></div>
+        <div id="socialCTA" style="margin-top:8px;font-size:13px;color:var(--gold)"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="copy-btn" id="socialCopyBtn" onclick="copySocial()">COPY POST</button>
+          <button class="copy-btn" onclick="addToQueue('social')">ADD TO QUEUE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reddit Subreddits -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-title" style="margin-bottom:16px">Top Reddit Communities to Target</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/entrepreneur</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/ethereum</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/web3</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/startups</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/indiehackers</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/patents</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/invention</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/sideproject</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/cryptocurrency</span>
+        <span style="font-family:var(--mono);font-size:10px;padding:6px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)">r/defi</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE PANEL -->
+  <div id="panel-queue" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Outreach Queue</div>
+          <div class="card-sub">Content saved and ready to post manually</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="clearQueue()">Clear Queue</button>
+      </div>
+      <div id="queueList">
+        <div style="text-align:center;padding:40px;color:var(--text-muted)">
+          <div style="font-size:32px;margin-bottom:12px">📋</div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px">Queue is empty</div>
+          <div style="font-size:13px;margin-top:8px">Generate content and add it to the queue</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEED PANEL -->
+  <div id="panel-feed" class="panel">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Activity Feed</div>
+          <div class="card-sub">All outreach activity logged in real time</div>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="clearFeed()">Clear</button>
+      </div>
+      <div class="feed" id="activityFeed">
+        <div class="feed-item info">
+          <div class="feed-time" id="feedInitTime">--:--:--</div>
+          <div class="feed-body">
+            <div class="feed-title">Promotion System Initialized</div>
+            <div class="feed-msg">Autonomous outreach engine ready. Scout inventors, generate pitches, and create social content.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const BACKEND_URL = 'https://crypt-valt-backend-jkak.vercel.app';
+const WALLET      = localStorage.getItem('cv_wallet') || '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
+
+// ── State ──────────────────────────────────────────────────
+const aps = {
+  scouts:   0,
+  pitches:  0,
+  posts:    0,
+  queue:    JSON.parse(localStorage.getItem('cv_aps_queue') || '[]'),
+  log:      [],
+  lastScout:  null,
+  lastPitch:  null,
+  lastSocial: null,
+  selectedPlatform: 'reddit',
+};
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('feedInitTime').textContent = timeNow();
+  updateStats();
+  renderQueue();
+});
+
+function timeNow() {
+  return new Date().toLocaleTimeString('en-US', { hour12: false });
+}
+
+// ── Tabs ───────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Platform Toggle ────────────────────────────────────────
+function togglePlatform(el) {
+  document.querySelectorAll('.platform-badge').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  aps.selectedPlatform = el.dataset.platform;
+}
+
+// ── Scout ──────────────────────────────────────────────────
+async function runScout() {
+  const category = document.getElementById('scoutCategory').value;
+  const keywords = document.getElementById('scoutKeywords').value;
+
+  showLoading('scoutLoading');
+  hideResult('scoutResult');
+
+  try {
+    const data = await apiCall('/api/outreach/scout', { category, keywords });
+    aps.lastScout = data;
+    aps.scouts++;
+    updateStats();
+
+    const html = `
+      <div style="margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">TARGET PROFILE</div>
+        <div style="font-size:14px;color:var(--text-dim);line-height:1.6">${data.targetProfile || '—'}</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">PITCH ANGLE</div>
+        <div style="font-size:14px;color:var(--text-dim);line-height:1.6">${data.pitchAngle || '—'}</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">VALUE PROPOSITION</div>
+        <div style="font-size:14px;color:var(--cyan);line-height:1.6">${data.valueProposition || '—'}</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">SEARCH QUERIES</div>
+        ${(data.searchQueries || []).map(q => `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:6px 0;border-bottom:1px solid var(--border)">→ ${q}</div>`).join('')}
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">REDDIT COMMUNITIES</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${(data.redditSubreddits || []).map(s => `<span style="font-family:var(--mono);font-size:10px;padding:4px 10px;background:var(--surface3);border:1px solid var(--border);color:var(--cyan)">${s}</span>`).join('')}
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">READY-TO-SEND OUTREACH MESSAGE</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.7;background:var(--surface3);padding:16px;border-left:3px solid var(--cyan)">${data.outreachMessage || '—'}</div>
+      </div>
+      <button class="copy-btn" onclick="copyText(aps.lastScout.outreachMessage)">COPY MESSAGE</button>
+      <button class="copy-btn" style="margin-left:8px" onclick="addToQueueDirect('reddit', aps.lastScout.outreachMessage, aps.lastScout.emailSubject)">ADD TO QUEUE</button>
+    `;
+
+    document.getElementById('scoutResultContent').innerHTML = html;
+    showResult('scoutResult');
+    addFeedItem('success', 'Scout Complete', `Found inventor profile for ${category} category. ${(data.searchQueries||[]).length} search queries generated.`);
+    notify('success', '✓ Scout Complete', `Inventor profile generated for ${category}`);
+
+  } catch(e) {
+    notify('error', 'Scout Failed', e.message);
+    addFeedItem('warn', 'Scout Failed', e.message);
+  } finally {
+    hideLoading('scoutLoading');
+  }
+}
+
+// ── Pitch ──────────────────────────────────────────────────
+async function generatePitch() {
+  const name        = document.getElementById('pitchName').value;
+  const description = document.getElementById('pitchDescription').value.trim();
+  const platform    = document.getElementById('pitchPlatform').value;
+  const category    = document.getElementById('pitchCategory').value;
+
+  if (!description) {
+    notify('error', 'Required', 'Inventor description is required.');
+    return;
+  }
+
+  showLoading('pitchLoading');
+  hideResult('pitchResult');
+
+  try {
+    const data = await apiCall('/api/outreach/pitch', {
+      inventorName: name,
+      inventorDescription: description,
+      platform,
+      ideaCategory: category,
+    });
+
+    aps.lastPitch = data;
+    aps.pitches++;
+    updateStats();
+
+    document.getElementById('pitchSubject').textContent = '✉ ' + (data.subject || '');
+    document.getElementById('pitchContent').textContent = data.fullMessage || '';
+    document.getElementById('pitchFollowUp').textContent = data.followUpMessage || '';
+    showResult('pitchResult');
+
+    addFeedItem('success', 'Pitch Generated', `Personalized ${platform} pitch for "${name || 'inventor'}" created.`);
+    notify('success', '✓ Pitch Ready', 'Personalized pitch generated');
+
+  } catch(e) {
+    notify('error', 'Pitch Failed', e.message);
+  } finally {
+    hideLoading('pitchLoading');
+  }
+}
+
+// ── Social ─────────────────────────────────────────────────
+async function generateSocial() {
+  const contentType = document.getElementById('socialContentType').value;
+  const context     = document.getElementById('socialContext').value;
+  const platform    = aps.selectedPlatform;
+
+  showLoading('socialLoading');
+  hideResult('socialResult');
+
+  try {
+    const data = await apiCall('/api/outreach/social', {
+      platform,
+      contentType,
+      trigger: context || 'general',
+    });
+
+    aps.lastSocial = { ...data, platform };
+    aps.posts++;
+    updateStats();
+
+    document.getElementById('socialContent').textContent   = data.post || '';
+    document.getElementById('socialHashtags').textContent  = (data.hashtags || []).join(' ');
+    document.getElementById('socialCTA').textContent       = data.callToAction ? '→ ' + data.callToAction : '';
+    showResult('socialResult');
+
+    addFeedItem('success', 'Content Generated', `${platform} ${contentType} post created.`);
+    notify('success', '✓ Content Ready', `${platform} post generated`);
+
+  } catch(e) {
+    notify('error', 'Generation Failed', e.message);
+  } finally {
+    hideLoading('socialLoading');
+  }
+}
+
+// ── Queue ──────────────────────────────────────────────────
+function addToQueue(type) {
+  if (type === 'pitch' && aps.lastPitch) {
+    const platform = document.getElementById('pitchPlatform').value;
+    addToQueueDirect(platform, aps.lastPitch.fullMessage, aps.lastPitch.subject);
+  } else if (type === 'social' && aps.lastSocial) {
+    addToQueueDirect(aps.lastSocial.platform, aps.lastSocial.post, aps.lastSocial.callToAction);
+  }
+}
+
+function addToQueueDirect(platform, content, subject) {
+  if (!content) return;
+  aps.queue.unshift({
+    id:        Date.now(),
+    platform,
+    content,
+    subject:   subject || '',
+    status:    'pending',
+    createdAt: new Date().toISOString(),
+  });
+  localStorage.setItem('cv_aps_queue', JSON.stringify(aps.queue));
+  updateStats();
+  renderQueue();
+  notify('success', '✓ Added to Queue', `${platform} post queued`);
+}
+
+function renderQueue() {
+  const list = document.getElementById('queueList');
+  if (aps.queue.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:32px;margin-bottom:12px">📋</div><div style="font-family:var(--mono);font-size:11px;letter-spacing:2px">Queue is empty</div></div>`;
+    return;
+  }
+  list.innerHTML = aps.queue.map(item => `
+    <div class="queue-item">
+      <div class="queue-platform">${item.platform}</div>
+      <div class="queue-content">${item.content}</div>
+      <div class="queue-status ${item.status}">${item.status.toUpperCase()}</div>
+      <button class="copy-btn" style="margin:0;flex-shrink:0" onclick="copyText('${item.content.replace(/'/g, "\\'")}')">COPY</button>
+      <button class="copy-btn" style="margin:0;flex-shrink:0;border-color:var(--red);color:var(--red)" onclick="removeFromQueue(${item.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFromQueue(id) {
+  aps.queue = aps.queue.filter(i => i.id !== id);
+  localStorage.setItem('cv_aps_queue', JSON.stringify(aps.queue));
+  updateStats();
+  renderQueue();
+}
+
+function clearQueue() {
+  aps.queue = [];
+  localStorage.setItem('cv_aps_queue', JSON.stringify([]));
+  updateStats();
+  renderQueue();
+}
+
+// ── Feed ───────────────────────────────────────────────────
+function addFeedItem(type, title, msg) {
+  const feed = document.getElementById('activityFeed');
+  const item = document.createElement('div');
+  item.className = `feed-item ${type}`;
+  item.innerHTML = `
+    <div class="feed-time">${timeNow()}</div>
+    <div class="feed-body">
+      <div class="feed-title">${title}</div>
+      <div class="feed-msg">${msg}</div>
+    </div>`;
+  feed.insertBefore(item, feed.firstChild);
+  aps.log.unshift({ type, title, msg, time: new Date().toISOString() });
+}
+
+function clearFeed() {
+  document.getElementById('activityFeed').innerHTML = '';
+  aps.log = [];
+}
+
+// ── API ────────────────────────────────────────────────────
+async function apiCall(endpoint, body) {
+  const response = await fetch(BACKEND_URL + endpoint, {
+    method:  'POST',
+    headers: {
+      'Content-Type':     'application/json',
+      'X-Wallet-Address': WALLET,
+      'X-Timestamp':      Date.now().toString(),
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || 'Request failed: ' + response.status);
+  }
+
+  const result = await response.json();
+  if (!result.success) throw new Error(result.message || 'Request failed');
+  return result.data;
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('statScouts').textContent  = aps.scouts;
+  document.getElementById('statPitches').textContent = aps.pitches;
+  document.getElementById('statPosts').textContent   = aps.posts;
+  document.getElementById('statQueue').textContent   = aps.queue.length;
+}
+
+function showLoading(id) { document.getElementById(id).classList.add('visible'); }
+function hideLoading(id) { document.getElementById(id).classList.remove('visible'); }
+function showResult(id)  { document.getElementById(id).classList.add('visible'); }
+function hideResult(id)  { document.getElementById(id).classList.remove('visible'); }
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    notify('success', '✓ Copied', 'Text copied to clipboard');
+  }).catch(() => {
+    notify('error', 'Copy Failed', 'Copy to clipboard failed');
+  });
+}
+
+function copyPitch() {
+  const content = document.getElementById('pitchContent').textContent;
+  copyText(content);
+  const btn = document.getElementById('pitchCopyBtn');
+  btn.textContent = 'COPIED ✓';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY MESSAGE'; btn.classList.remove('copied'); }, 2000);
+}
+
+function copySocial() {
+  const content = document.getElementById('socialContent').textContent;
+  const hashtags = document.getElementById('socialHashtags').textContent;
+  copyText(content + (hashtags ? '\n\n' + hashtags : ''));
+  const btn = document.getElementById('socialCopyBtn');
+  btn.textContent = 'COPIED ✓';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'COPY POST'; btn.classList.remove('copied'); }, 2000);
+}
+
+function notify(type, title, msg) {
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `<div class="notif-title">${title}</div><div class="notif-msg">${msg}</div>`;
+  document.getElementById('notifs').prepend(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
