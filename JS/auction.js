@@ -47,7 +47,7 @@ function renderListingCard(l) {
       <div class="card-category">${l.category}</div>
       <p style="font-size:14px;color:var(--text-dim);margin-bottom:16px;line-height:1.5;font-style:italic">"${l.teaser}"</p>
 
-      <div class="card-encrypted">${fakeEncryptedString(80)}</div>
+      <div class="card-encrypted">${(state.currentEncryption && state.currentEncryption.encB64 ? state.currentEncryption.encB64.slice(0,80) : l.encData || '...encrypted...')}</div>
 
       <div class="score-bars">
         ${renderScoreBar('Marketability', score.scores.marketability)}
@@ -84,7 +84,7 @@ function renderListingCard(l) {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn btn-secondary btn-sm" onclick="viewReport('${l.id}')">View Full Report</button>
-        ${isLive ? `<button class="btn btn-gold btn-sm" onclick="openBid('${l.id}')">Place Sealed Bid</button>` : '<button class="btn btn-sm" disabled style="opacity:0.4;cursor:default;border:1px solid var(--border);background:transparent;color:var(--text-muted)">Auction Ended</button>'}
+        ${isLive ? `<button class="btn btn-gold btn-sm" onclick="checkInvestorKey('${l.id}')">Place Sealed Bid</button>` : '<button class="btn btn-sm" disabled style="opacity:0.4;cursor:default;border:1px solid var(--border);background:transparent;color:var(--text-muted)">Auction Ended</button>'}
       </div>
     </div>
   `;
@@ -277,3 +277,141 @@ function updateStats() {
 function filterListings(val) { renderListings(val); }
 
 function sortListings(val) { renderListings('all', val); }
+
+// ── Investor Key Gate ──────────────────────────────────────
+function checkInvestorKey(listingId) {
+  if (!state.wallet) {
+    notify('error', 'Wallet Required', 'Connect your wallet first.');
+    connectWallet();
+    return;
+  }
+
+  if (InvestorKeySystem.hasValidKey(state.wallet)) {
+    openBid(listingId);
+    return;
+  }
+
+  // Show investor key application modal
+  showInvestorKeyModal(listingId);
+}
+
+function showInvestorKeyModal(listingId) {
+  const existing = InvestorKeySystem.getKey(state.wallet);
+
+  let content = '';
+
+  if (existing && existing.status === 'pending') {
+    content = `
+      <div style="text-align:center;padding:32px 0">
+        <div style="font-size:48px;margin-bottom:16px">⏳</div>
+        <div style="font-family:var(--display);font-size:32px;letter-spacing:3px;margin-bottom:12px;color:var(--gold)">APPLICATION PENDING</div>
+        <p style="color:var(--text-dim);font-size:15px;line-height:1.7">Your investor access application is under review. You will be notified when approved.</p>
+        <div style="margin-top:20px;font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px">Application ID: ${existing.id || 'N/A'}</div>
+      </div>`;
+  } else if (existing && existing.status === 'rejected') {
+    content = `
+      <div style="text-align:center;padding:32px 0">
+        <div style="font-size:48px;margin-bottom:16px">❌</div>
+        <div style="font-family:var(--display);font-size:32px;letter-spacing:3px;margin-bottom:12px;color:var(--red)">APPLICATION REJECTED</div>
+        <p style="color:var(--text-dim);font-size:15px;line-height:1.7">Your previous application was not approved. You may reapply with additional information.</p>
+      </div>`;
+  } else {
+    content = `
+      <div style="margin-bottom:20px">
+        <p style="font-size:15px;color:var(--text-dim);line-height:1.7;margin-bottom:16px">CryptValt requires investor verification to maintain auction integrity. Apply for your Investor Access Key below. Claude AI screens applications — most approve in seconds.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+          <div style="background:var(--surface3);padding:14px;text-align:center">
+            <div style="font-family:var(--display);font-size:20px;color:var(--cyan)">FREE</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:4px">No cost to apply</div>
+          </div>
+          <div style="background:var(--surface3);padding:14px;text-align:center">
+            <div style="font-family:var(--display);font-size:20px;color:var(--gold)">INSTANT</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:4px">AI screening</div>
+          </div>
+          <div style="background:var(--surface3);padding:14px;text-align:center">
+            <div style="font-family:var(--display);font-size:20px;color:var(--green)">LIFETIME</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:4px">Key never expires</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Why do you want to invest in ideas?</label>
+        <textarea class="form-textarea" id="investorReason" style="min-height:80px" placeholder="e.g. I'm an entrepreneur looking to acquire innovative concepts for development..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Investment Background</label>
+        <input type="text" class="form-input" id="investorBackground" placeholder="e.g. Angel investor, VC associate, Serial entrepreneur, Tech executive...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Areas of Interest</label>
+        <input type="text" class="form-input" id="investorInterests" placeholder="e.g. Technology, Healthcare, Consumer Products...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estimated Investment Budget (optional)</label>
+        <select class="form-select" id="investorBudget">
+          <option value="">Prefer not to say</option>
+          <option value="under_10k">Under $10,000</option>
+          <option value="10k_50k">$10,000 — $50,000</option>
+          <option value="50k_250k">$50,000 — $250,000</option>
+          <option value="over_250k">Over $250,000</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+        <button class="btn btn-secondary" onclick="closeModal('investorModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="applyForInvestorKey('${listingId}')">Apply for Access Key →</button>
+      </div>`;
+  }
+
+  document.getElementById('investorModalContent').innerHTML = content;
+  document.getElementById('investorModal').classList.add('active');
+}
+
+async function applyForInvestorKey(listingId) {
+  const reason      = document.getElementById('investorReason')?.value?.trim();
+  const background  = document.getElementById('investorBackground')?.value?.trim();
+  const interests   = document.getElementById('investorInterests')?.value?.trim();
+  const budget      = document.getElementById('investorBudget')?.value;
+
+  if (!reason || !background) {
+    notify('error', 'Required Fields', 'Please fill in your reason and background.');
+    return;
+  }
+
+  const btn = document.querySelector('#investorModal .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+  try {
+    const application = await InvestorKeySystem.submitApplication(state.wallet, {
+      reason, background, interests, budget,
+      wallet: state.wallet,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (application.status === 'approved') {
+      document.getElementById('investorModalContent').innerHTML = `
+        <div style="text-align:center;padding:32px 0">
+          <div style="font-size:64px;margin-bottom:16px">🔑</div>
+          <div style="font-family:var(--display);font-size:36px;letter-spacing:3px;margin-bottom:12px;color:var(--green)">ACCESS GRANTED</div>
+          <p style="color:var(--text-dim);font-size:15px;line-height:1.7;margin-bottom:24px">Your Investor Access Key has been approved. You can now place bids on all auctions.</p>
+          <div style="background:var(--surface3);border:1px solid rgba(0,255,157,0.2);padding:16px;margin-bottom:24px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px">YOUR ACCESS KEY</div>
+            <div style="font-family:var(--mono);font-size:12px;color:var(--green);word-break:break-all">${application.key}</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:24px">Save this key. It is stored securely on your device.</div>
+          <button class="btn btn-primary" onclick="closeModal('investorModal');openBid('${listingId}')">Place Your Bid →</button>
+        </div>`;
+      notify('success', '🔑 Access Granted', 'Investor key approved — you can now bid');
+      addClaudeEntry('ok', 'Investor Approved', \`Wallet \${shortenAddr(state.wallet)} approved for investor access.\`);
+    } else {
+      document.getElementById('investorModalContent').innerHTML = `
+        <div style="text-align:center;padding:32px 0">
+          <div style="font-size:48px;margin-bottom:16px">⏳</div>
+          <div style="font-family:var(--display);font-size:32px;letter-spacing:3px;margin-bottom:12px;color:var(--gold)">UNDER REVIEW</div>
+          <p style="color:var(--text-dim);font-size:15px;line-height:1.7">Your application is being reviewed. Check back shortly.</p>
+        </div>`;
+    }
+  } catch(e) {
+    notify('error', 'Application Failed', e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Apply for Access Key →'; }
+  }
+}
