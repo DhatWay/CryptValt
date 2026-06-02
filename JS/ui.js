@@ -105,7 +105,7 @@ async function runEncryption() {
   document.getElementById('encryptResult').style.display = 'block';
   document.getElementById('ipfsCid').textContent = cid;
   document.getElementById('keyHash').textContent = keyHashStr.slice(0,32) + '...';
-  document.getElementById('encryptedPreview').textContent = fakeEncryptedString(300);
+  document.getElementById('encryptedPreview').textContent = (state.currentEncryption && state.currentEncryption.encB64 ? state.currentEncryption.encB64 : '...encrypted data...');
 }
 
 async function goToStep3() {
@@ -238,77 +238,88 @@ function setEP(n, state) {
 }
 
 function renderAIReport(score, title) {
-  const pct = (v) => `${Math.min(100, Math.max(0, v))}%`;
+  const pct = (v) => `${Math.min(100, Math.max(0, v || 0))}%`;
   const scoreColor = (v) => v >= 75 ? 'var(--green)' : v >= 50 ? 'var(--gold)' : 'var(--red)';
+  const s = score.scores || {};
+
+  const section = (label, content, color = 'var(--cyan)') => content ? `
+    <div class="report-section">
+      <div class="report-section-title" style="color:${color}">${label}</div>
+      <div class="report-text">${typeof content === 'object' ? Object.entries(content).filter(([k,v]) => k === 'analysis' || typeof v === 'string').map(([k,v]) => k === 'analysis' ? v : '').join('') || JSON.stringify(content) : content}</div>
+    </div>` : '';
+
+  const moneySection = (label, data, color = 'var(--gold)') => {
+    if (!data) return '';
+    const analysis = data.analysis || '';
+    const details  = Object.entries(data)
+      .filter(([k,v]) => k !== 'analysis' && typeof v === 'string' && v)
+      .map(([k,v]) => `<div style="display:flex;gap:8px;margin-bottom:6px"><span style="font-family:var(--mono);font-size:10px;color:var(--text-muted);width:140px;flex-shrink:0;letter-spacing:1px">${k.replace(/([A-Z])/g,' $1').toUpperCase()}</span><span style="font-size:13px;color:var(--text-dim)">${v}</span></div>`)
+      .join('');
+    return `
+    <div class="report-section">
+      <div class="report-section-title" style="color:${color}">${label}</div>
+      ${details}
+      ${analysis ? `<div class="report-text" style="margin-top:10px">${analysis}</div>` : ''}
+    </div>`;
+  };
 
   return `
     <div class="ai-report">
       <div class="ai-report-header">
         <div class="ai-icon">⬡</div>
         <div>
-          <div class="ai-report-title">INVESTOR ANALYSIS</div>
-          <div class="ai-report-sub">${title} — CryptValt AI Scoring Engine</div>
+          <div class="ai-report-title">INVESTOR ANALYSIS REPORT</div>
+          <div class="ai-report-sub">${title} — CryptValt AI Scoring Engine v4.0</div>
         </div>
         <div style="margin-left:auto;text-align:right">
-          <div style="font-family:var(--display);font-size:48px;letter-spacing:2px;color:${scoreColor(score.overallScore)};line-height:1">${score.overallScore}</div>
+          <div style="font-family:var(--display);font-size:52px;letter-spacing:2px;color:${scoreColor(score.overallScore)};line-height:1">${score.overallScore || 0}</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">/100 OVERALL</div>
+          ${score.confidenceScore ? `<div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">CONFIDENCE: ${score.confidenceScore}%</div>` : ''}
         </div>
       </div>
 
       <div class="dollar-value">
         <div class="dollar-label">AI Estimated Market Value</div>
-        <div class="dollar-amount">$${score.dollarValueMid.toLocaleString()}</div>
-        <div class="dollar-range">Range: $${score.dollarValueMin.toLocaleString()} — $${score.dollarValueMax.toLocaleString()}</div>
+        <div class="dollar-amount">$${(score.dollarValueMid || 0).toLocaleString()}</div>
+        <div class="dollar-range">Range: $${(score.dollarValueMin || 0).toLocaleString()} — $${(score.dollarValueMax || 0).toLocaleString()}</div>
+        ${score.valuationMethodology ? `<div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:8px;letter-spacing:1px">${score.valuationMethodology}</div>` : ''}
       </div>
 
       <div class="score-bars" style="margin-bottom:24px">
-        ${renderScoreBar('Marketability', score.scores.marketability)}
-        ${renderScoreBar('Scalability', score.scores.scalability)}
-        ${renderScoreBar('Consumer Potential', score.scores.consumerPotential)}
-        ${renderScoreBar('Competitive Moat', score.scores.competitiveMoat)}
-        ${renderScoreBar('Execution Feasibility', score.scores.executionFeasibility)}
-        ${renderScoreBar('Revenue Clarity', score.scores.revenueClarity)}
+        ${Object.entries(s).map(([key, val]) => renderScoreBar(key.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase()), val)).join('')}
       </div>
 
-      <div class="report-section">
-        <div class="report-section-title">Executive Summary</div>
-        <div class="report-text">${score.executiveSummary}</div>
-      </div>
+      ${score.executiveSummary ? `<div class="report-section"><div class="report-section-title">Executive Summary</div><div class="report-text" style="font-size:16px;line-height:1.8">${score.executiveSummary}</div></div>` : ''}
 
-      <div class="report-section">
-        <div class="report-section-title">Marketability</div>
-        <div class="report-text">${score.marketability}</div>
-      </div>
+      ${moneySection('Market Opportunity', score.marketOpportunity)}
+      ${moneySection('Problem Analysis', score.problemAnalysis, 'var(--red)')}
+      ${moneySection('Cost Savings & Economic Value', score.costSavingsAnalysis, 'var(--green)')}
+      ${moneySection('Revenue Projections', score.revenueProjections, 'var(--gold)')}
+      ${moneySection('Competitive Analysis', score.competitiveAnalysis)}
+      ${moneySection('IP & Patent Analysis', score.ipAnalysis, 'var(--gold)')}
+      ${moneySection('Time to Market', score.timeToMarket)}
+      ${moneySection('Regulatory Landscape', score.regulatoryLandscape)}
+      ${moneySection('Industry Disruption', score.disruptionAnalysis, 'var(--red)')}
+      ${moneySection('Social & Economic Impact', score.socialImpact, 'var(--green)')}
+      ${moneySection('Exit Scenarios', score.exitScenarios, 'var(--gold)')}
 
+      ${score.riskFactors && Array.isArray(score.riskFactors) ? `
       <div class="report-section">
-        <div class="report-section-title">Scalability</div>
-        <div class="report-text">${score.scalability}</div>
-      </div>
+        <div class="report-section-title" style="color:var(--red)">Risk Factors</div>
+        ${score.riskFactors.map((r,i) => `<div style="display:flex;gap:10px;margin-bottom:8px"><span style="font-family:var(--mono);font-size:10px;color:var(--red);flex-shrink:0">${i+1}.</span><div class="report-text" style="color:rgba(255,59,107,0.8)">${r}</div></div>`).join('')}
+      </div>` : score.riskFactors ? section('Risk Factors', score.riskFactors, 'var(--red)') : ''}
 
+      ${score.comparables && Array.isArray(score.comparables) ? `
       <div class="report-section">
-        <div class="report-section-title">Consumer Potential</div>
-        <div class="report-text">${score.consumerPotential}</div>
-      </div>
+        <div class="report-section-title">Comparable Deals</div>
+        ${score.comparables.map(c => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-dim)">→ ${c}</div>`).join('')}
+      </div>` : ''}
 
-      <div class="report-section">
-        <div class="report-section-title">Competitive Moat</div>
-        <div class="report-text">${score.competitiveMoat}</div>
-      </div>
-
-      <div class="report-section">
-        <div class="report-section-title">Revenue Model</div>
-        <div class="report-text">${score.revenueModel}</div>
-      </div>
-
-      <div class="report-section">
-        <div class="report-section-title">Risk Factors</div>
-        <div class="report-text" style="color:rgba(255,59,107,0.8)">${score.riskFactors}</div>
-      </div>
-
-      <div class="report-section">
-        <div class="report-section-title">Investor Verdict</div>
-        <div class="report-text" style="color:var(--gold)">${score.investorVerdict}</div>
-      </div>
+      ${score.investorVerdict ? `
+      <div class="report-section" style="background:rgba(240,165,0,0.05);border:1px solid rgba(240,165,0,0.15);padding:20px;margin-top:8px">
+        <div class="report-section-title" style="color:var(--gold)">Investor Verdict</div>
+        <div class="report-text" style="color:var(--gold);font-size:16px;line-height:1.8">${score.investorVerdict}</div>
+      </div>` : ''}
     </div>
   `;
 }
