@@ -84,7 +84,10 @@ function renderListingCard(l) {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn btn-secondary btn-sm" onclick="viewReport('${l.id}')">View Full Report</button>
-        ${isLive ? `<button class="btn btn-gold btn-sm" onclick="checkInvestorKey('${l.id}')">Place Sealed Bid</button>` : '<button class="btn btn-sm" disabled style="opacity:0.4;cursor:default;border:1px solid var(--border);background:transparent;color:var(--text-muted)">Auction Ended</button>'}
+        ${isLive ? `<button class="btn btn-gold btn-sm" onclick="checkInvestorKey('${l.id}')">Place Sealed Bid</button>` : 
+          (l.winner && l.winner.toLowerCase() === (state.wallet || '').toLowerCase() && l.keyDelivered && !l.fundsReleased) ?
+          `<button class="btn btn-danger btn-sm" onclick="showOptOutModal('${l.id}')">Opt-Out (48hr)</button>` :
+          '<button class="btn btn-sm" disabled style="opacity:0.4;cursor:default;border:1px solid var(--border);background:transparent;color:var(--text-muted)">Auction Ended</button>'}
       </div>
     </div>
   `;
@@ -287,7 +290,15 @@ function checkInvestorKey(listingId) {
   }
 
   if (InvestorKeySystem.hasValidKey(state.wallet)) {
-    openBid(listingId);
+    // Check if NDA already signed for this listing
+    const existingNDA = OptOutSystem.getNDA(state.wallet, listingId);
+    if (existingNDA) {
+      openBid(listingId);
+    } else {
+      const listing = state.listings.find(l => l.id === listingId);
+      const reserve = listing ? listing.reserve : 0;
+      showNDAModal(state.wallet, listingId, reserve, () => openBid(listingId));
+    }
     return;
   }
 
@@ -413,5 +424,203 @@ async function applyForInvestorKey(listingId) {
   } catch(e) {
     notify('error', 'Application Failed', e.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Apply for Access Key →'; }
+  }
+}
+
+// ── Opt-Out UI ─────────────────────────────────────────────
+function showOptOutModal(listingId) {
+  if (!state.wallet) {
+    notify('error', 'Wallet Required', 'Connect your wallet first.');
+    return;
+  }
+
+  const eligibility = OptOutSystem.canOptOut(listingId, state.wallet);
+  const listing     = state.listings.find(l => l.id === listingId);
+  if (!listing) return;
+
+  let content = '';
+
+  if (!eligibility.eligible) {
+    content = `
+      <div style="text-align:center;padding:24px 0">
+        <div style="font-size:48px;margin-bottom:12px">⏰</div>
+        <div style="font-family:var(--display);font-size:28px;letter-spacing:3px;margin-bottom:12px;color:var(--red)">NOT ELIGIBLE</div>
+        <p style="color:var(--text-dim);font-size:15px;line-height:1.7">${eligibility.reason}</p>
+      </div>`;
+  } else {
+    const penaltyETH = (eligibility.penaltyAmount / 1e18).toFixed(4);
+    const refundETH  = (eligibility.refundAmount  / 1e18).toFixed(4);
+
+    content = `
+      <div style="margin-bottom:20px">
+        <div style="background:rgba(255,59,107,0.08);border:1px solid rgba(255,59,107,0.2);padding:16px;margin-bottom:20px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:8px">⚠ OPT-OUT TERMS</div>
+          <div style="font-size:14px;color:var(--text-dim);line-height:1.7">
+            You have <strong style="color:var(--gold)">${eligibility.hoursLeft}h ${eligibility.minsLeft}m</strong> remaining in your opt-out window.
+            If you proceed, <strong style="color:var(--red)">40% penalty</strong> applies automatically.
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+          <div style="background:var(--surface3);padding:14px;text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:6px">WINNING BID</div>
+            <div style="font-family:var(--display);font-size:20px;color:var(--text)">$${(listing.winningBid||0).toLocaleString()}</div>
+          </div>
+          <div style="background:var(--surface3);padding:14px;text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:2px;margin-bottom:6px">PENALTY (40%)</div>
+            <div style="font-family:var(--display);font-size:20px;color:var(--red)">$${Math.floor((listing.winningBid||0)*0.4).toLocaleString()}</div>
+          </div>
+          <div style="background:var(--surface3);padding:14px;text-align:center">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:2px;margin-bottom:6px">YOUR REFUND</div>
+            <div style="font-family:var(--display);font-size:20px;color:var(--green)">$${Math.floor((listing.winningBid||0)*0.6).toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface3);border:1px solid rgba(240,165,0,0.2);padding:16px;margin-bottom:20px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">⚖ NDA REMAINS BINDING</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
+            Even after opting out, your Non-Disclosure and Non-Circumvention Agreement remains fully binding. 
+            You may not disclose, develop, or exploit this idea in any form.
+            Your wallet signature is permanent evidence of this agreement.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Reason for Opt-Out (optional)</label>
+          <input type="text" class="form-input" id="optOutReason" placeholder="e.g. Budget constraints, change of direction...">
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px">
+          <input type="checkbox" id="optOutNDACheck" style="width:16px;height:16px;accent-color:var(--cyan);margin-top:2px;flex-shrink:0">
+          <label for="optOutNDACheck" style="font-size:13px;color:var(--text-dim);cursor:pointer;line-height:1.6">
+            I confirm I have NOT disclosed this idea to any third party. 
+            I understand the NDA remains binding after opt-out. 
+            I accept the 40% penalty deduction.
+          </label>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <button class="btn btn-secondary" onclick="closeModal('optOutModal')">Cancel — Keep Idea</button>
+          <button class="btn btn-danger" onclick="confirmOptOut('${listingId}')">Confirm Opt-Out & Sign</button>
+        </div>
+      </div>`;
+  }
+
+  // Create modal if not exists
+  let modal = document.getElementById('optOutModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'optOutModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:580px">
+        <div class="modal-header">
+          <div class="modal-title">INVESTOR OPT-OUT</div>
+          <button class="modal-close" onclick="closeModal('optOutModal')">✕</button>
+        </div>
+        <div class="modal-body" id="optOutContent"></div>
+      </div>`;
+    modal.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('optOutContent').innerHTML = content;
+  modal.classList.add('active');
+}
+
+async function confirmOptOut(listingId) {
+  if (!document.getElementById('optOutNDACheck')?.checked) {
+    notify('error', 'Confirmation Required', 'Please check the NDA acknowledgment box.');
+    return;
+  }
+
+  const reason = document.getElementById('optOutReason')?.value || '';
+  const btn    = document.querySelector('#optOutModal .btn-danger');
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+  try {
+    const record = await OptOutSystem.executeOptOut(listingId, state.wallet, reason);
+
+    document.getElementById('optOutContent').innerHTML = `
+      <div style="text-align:center;padding:32px 0">
+        <div style="font-size:48px;margin-bottom:16px">✓</div>
+        <div style="font-family:var(--display);font-size:32px;letter-spacing:3px;margin-bottom:12px;color:var(--green)">OPT-OUT COMPLETE</div>
+        <p style="color:var(--text-dim);font-size:15px;line-height:1.7;margin-bottom:20px">
+          Your opt-out has been processed and signed on-chain.
+          Refund of <strong style="color:var(--green)">$${Math.floor((record.winningBid||0)*0.6).toLocaleString()}</strong> queued to your wallet.
+        </p>
+        <div style="background:var(--surface3);border:1px solid rgba(240,165,0,0.2);padding:16px;margin-bottom:20px;text-align:left">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">REMINDER</div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.7">Your NDA is permanently binding. Do not disclose or use this idea.</div>
+        </div>
+        <button class="btn btn-secondary" onclick="closeModal('optOutModal');renderListings()">Close</button>
+      </div>`;
+
+    renderListings();
+    updateStats();
+
+  } catch(e) {
+    notify('error', 'Opt-Out Failed', e.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm Opt-Out & Sign'; }
+  }
+}
+
+// ── NDA Modal ──────────────────────────────────────────────
+function showNDAModal(wallet, listingId, bidAmount, onAccept) {
+  const ndaText = OptOutSystem.getNDAText(wallet, listingId, bidAmount);
+
+  let modal = document.getElementById('ndaModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'ndaModal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:680px">
+        <div class="modal-header">
+          <div class="modal-title">NON-DISCLOSURE AGREEMENT</div>
+          <button class="modal-close" onclick="closeModal('ndaModal')">✕</button>
+        </div>
+        <div class="modal-body" id="ndaContent"></div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  document.getElementById('ndaContent').innerHTML = `
+    <div style="background:var(--surface3);padding:16px;max-height:300px;overflow-y:auto;margin-bottom:20px;font-family:var(--mono);font-size:11px;color:var(--text-muted);line-height:1.8;letter-spacing:0.5px;white-space:pre-wrap">${ndaText}</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:20px">
+      <input type="checkbox" id="ndaAgreeCheck" style="width:16px;height:16px;accent-color:var(--cyan);margin-top:2px;flex-shrink:0">
+      <label for="ndaAgreeCheck" style="font-size:14px;color:var(--text-dim);cursor:pointer;line-height:1.6">
+        I have read and agree to the full Non-Disclosure and Non-Circumvention Agreement. 
+        I understand this is a legally binding agreement enforced by my wallet signature.
+      </label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button class="btn btn-secondary" onclick="closeModal('ndaModal')">Decline</button>
+      <button class="btn btn-primary" onclick="acceptNDA('${listingId}', ${bidAmount}, window._ndaCallback)">Sign & Continue →</button>
+    </div>`;
+
+  window._ndaCallback = onAccept;
+  modal.classList.add('active');
+}
+
+async function acceptNDA(listingId, bidAmount, callback) {
+  if (!document.getElementById('ndaAgreeCheck')?.checked) {
+    notify('error', 'Agreement Required', 'Please read and check the NDA agreement.');
+    return;
+  }
+
+  try {
+    const btn = document.querySelector('#ndaModal .btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing...'; }
+
+    await OptOutSystem.signNDA(state.wallet, listingId, bidAmount);
+    closeModal('ndaModal');
+    notify('success', '✓ NDA Signed', 'Agreement signed. Proceeding to bid.');
+
+    if (callback) callback();
+  } catch(e) {
+    notify('error', 'Signature Required', e.message);
+    const btn = document.querySelector('#ndaModal .btn-primary');
+    if (btn) { btn.disabled = false; btn.textContent = 'Sign & Continue →'; }
   }
 }
