@@ -1,9 +1,9 @@
 /**
- * CryptValt Service Worker v5.0
+ * CryptValt Service Worker v6.0
  * Complete cache list — all pages, JS modules, and assets
  */
 
-const CACHE_NAME  = 'cryptvalt-v5';
+const CACHE_NAME  = 'cryptvalt-v6';
 const OFFLINE_URL = '/CryptValt/offline.html';
 
 const PRECACHE_ASSETS = [
@@ -40,6 +40,7 @@ const PRECACHE_ASSETS = [
   '/CryptValt/founder/index.html',
   '/CryptValt/analytics/index.html',
   '/CryptValt/token/index.html',
+  '/CryptValt/investor/index.html',
   '/CryptValt/promo/index.html',
   '/CryptValt/promo/outreach.html',
 ];
