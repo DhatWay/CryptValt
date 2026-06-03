@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Membership</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --cyan-dim:rgba(0,200,255,0.1);
+  --gold:#f0a500; --gold-dim:rgba(240,165,0,0.12);
+  --green:#00ff9d; --green-dim:rgba(0,255,157,0.1);
+  --red:#ff3b6b; --text:#e8f4ff;
+  --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
+  --bronze:#cd7f32; --silver:#c0c0c0; --platinum:#e5e4e2;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);
+  background-size:50px 50px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(240,165,0,0.2)}50%{box-shadow:0 0 40px rgba(240,165,0,0.5)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:22px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);text-decoration:none;
+  padding:6px 14px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-back:hover{color:var(--cyan);border-color:var(--cyan);}
+
+main{position:relative;z-index:1;padding:80px 24px 60px;max-width:1100px;margin:0 auto;}
+
+.hero{text-align:center;padding:60px 0 80px;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:5px;color:var(--cyan);margin-bottom:16px;text-transform:uppercase;}
+.hero-title{font-family:var(--display);font-size:clamp(56px,10vw,100px);letter-spacing:4px;line-height:0.9;margin-bottom:20px;}
+.hero-title .gold{color:var(--gold);}
+.hero-sub{font-size:17px;color:var(--text-dim);line-height:1.7;max-width:560px;margin:0 auto 40px;}
+
+.wallet-status{display:inline-flex;align-items:center;gap:10px;padding:10px 20px;
+  background:var(--surface2);border:1px solid var(--border-bright);font-family:var(--mono);font-size:11px;
+  letter-spacing:2px;margin-bottom:40px;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:60px;}
+
+.tier-card{background:var(--surface);border:1px solid var(--border);padding:32px;position:relative;
+  overflow:hidden;transition:all 0.3s;animation:fadeIn 0.5s ease;}
+.tier-card:hover{transform:translateY(-4px);}
+.tier-card.bronze{border-color:rgba(205,127,50,0.3);}
+.tier-card.bronze:hover{border-color:var(--bronze);}
+.tier-card.gold{border-color:rgba(240,165,0,0.3);animation:glow 3s infinite;}
+.tier-card.gold:hover{border-color:var(--gold);}
+.tier-card.platinum{border-color:rgba(229,228,226,0.3);}
+.tier-card.platinum:hover{border-color:var(--platinum);}
+
+.tier-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.tier-card.bronze::before{background:linear-gradient(90deg,transparent,var(--bronze),transparent);}
+.tier-card.gold::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.tier-card.platinum::before{background:linear-gradient(90deg,transparent,var(--platinum),transparent);}
+
+.tier-badge{font-family:var(--mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  padding:4px 12px;border:1px solid;margin-bottom:16px;display:inline-block;}
+.tier-badge.bronze{color:var(--bronze);border-color:rgba(205,127,50,0.4);}
+.tier-badge.gold{color:var(--gold);border-color:rgba(240,165,0,0.4);}
+.tier-badge.platinum{color:var(--platinum);border-color:rgba(229,228,226,0.4);}
+
+.tier-price{font-family:var(--display);font-size:52px;letter-spacing:2px;line-height:1;margin-bottom:4px;}
+.tier-price.bronze{color:var(--bronze);}
+.tier-price.gold{color:var(--gold);}
+.tier-price.platinum{color:var(--platinum);}
+.tier-currency{font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:20px;}
+
+.tier-supply{font-family:var(--mono);font-size:10px;letter-spacing:2px;margin-bottom:20px;}
+.supply-bar{height:4px;background:var(--surface3);margin-top:6px;overflow:hidden;}
+.supply-fill{height:100%;transition:width 1s ease;}
+.supply-fill.bronze{background:var(--bronze);}
+.supply-fill.gold{background:var(--gold);}
+.supply-fill.platinum{background:var(--platinum);}
+
+.tier-benefits{list-style:none;margin-bottom:28px;}
+.tier-benefits li{font-size:14px;color:var(--text-dim);padding:7px 0;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;line-height:1.4;}
+.tier-benefits li:last-child{border-bottom:none;}
+.benefit-icon{font-size:14px;flex-shrink:0;}
+
+.btn{font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:14px 28px;border:none;cursor:pointer;transition:all 0.2s;width:100%;}
+.btn-bronze{background:var(--bronze);color:#fff;}
+.btn-bronze:hover{background:#e8913a;box-shadow:0 0 20px rgba(205,127,50,0.4);}
+.btn-gold{background:var(--gold);color:var(--bg);}
+.btn-gold:hover{background:#ffb820;box-shadow:0 0 20px rgba(240,165,0,0.4);}
+.btn-platinum{background:var(--platinum);color:var(--bg);}
+.btn-platinum:hover{background:#fff;box-shadow:0 0 20px rgba(229,228,226,0.5);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.section-title{font-family:var(--display);font-size:40px;letter-spacing:4px;margin-bottom:32px;}
+
+.benefits-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:60px;}
+.benefit-card{background:var(--surface);border:1px solid var(--border);padding:24px;}
+.benefit-icon-lg{font-size:32px;margin-bottom:12px;}
+.benefit-title{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:8px;color:var(--gold);}
+.benefit-text{font-size:14px;color:var(--text-dim);line-height:1.7;}
+
+.my-membership{background:var(--surface);border:1px solid var(--border-bright);padding:32px;margin-bottom:40px;display:none;}
+.my-membership.visible{display:block;}
+.membership-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.membership-title{font-family:var(--display);font-size:32px;letter-spacing:3px;}
+.revenue-box{background:var(--surface3);border:1px solid rgba(0,255,157,0.2);padding:20px;text-align:center;}
+.revenue-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;}
+.revenue-amount{font-family:var(--display);font-size:36px;color:var(--green);letter-spacing:2px;}
+
+.notif-container{position:fixed;top:70px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:320px;}
+.notif{background:var(--surface2);border:1px solid var(--border-bright);padding:12px 16px;}
+.notif.success{border-color:rgba(0,255,157,0.3);}
+.notif.error{border-color:rgba(255,59,107,0.3);}
+.notif-title{font-weight:700;font-size:13px;margin-bottom:3px;}
+.notif-msg{font-size:12px;color:var(--text-dim);}
+
+@media(max-width:768px){
+  .tiers{grid-template-columns:1fr;}
+  .benefits-grid{grid-template-columns:1fr;}
+  nav{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
+</nav>
+
+<div class="notif-container" id="notifs"></div>
+
+<main>
+
+  <div class="hero">
+    <div class="hero-eyebrow">⬡ Exclusive Access · Revenue Share · Platform Ownership</div>
+    <h1 class="hero-title">CRYPTVALT<br><span class="gold">MEMBERSHIP</span></h1>
+    <p class="hero-sub">Own a piece of the future of intellectual property. Members get fee discounts, priority access, and Platinum holders earn a share of all platform revenue — forever.</p>
+    <div class="wallet-status" id="walletStatus">
+      <div class="status-dot"></div>
+      <span id="walletLabel">Connect wallet to mint</span>
+    </div>
+  </div>
+
+  <!-- MY MEMBERSHIP -->
+  <div class="my-membership" id="myMembership">
+    <div class="membership-header">
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:4px">YOUR MEMBERSHIP</div>
+        <div class="membership-title" id="myTierName" style="color:var(--gold)">—</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="revenue-box" id="revenueBox" style="display:none">
+          <div class="revenue-label">Pending Revenue</div>
+          <div class="revenue-amount" id="pendingRevenue">0 ETH</div>
+          <button class="btn btn-gold" style="margin-top:12px;padding:8px 20px;font-size:11px" onclick="claimRevenue()">Claim</button>
+        </div>
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:1px" id="myTokens"></div>
+  </div>
+
+  <!-- TIERS -->
+  <div class="tiers">
+
+    <!-- BRONZE -->
+    <div class="tier-card bronze">
+      <div class="tier-badge bronze">Bronze</div>
+      <div class="tier-price bronze" id="priceBronze">0.05</div>
+      <div class="tier-currency">ETH · One Time</div>
+      <div class="tier-supply">
+        <span style="color:var(--bronze)" id="mintedBronze">0</span>
+        <span style="color:var(--text-muted)"> / 1,000 minted</span>
+        <div class="supply-bar"><div class="supply-fill bronze" id="supplyBronze" style="width:0%"></div></div>
+      </div>
+      <ul class="tier-benefits">
+        <li><span class="benefit-icon">✓</span> Access to all public auctions</li>
+        <li><span class="benefit-icon">✓</span> 5% fee discount on all sales</li>
+        <li><span class="benefit-icon">✓</span> CryptValt member badge</li>
+        <li><span class="benefit-icon">✓</span> Early listing notifications</li>
+        <li><span class="benefit-icon">✓</span> Transferable NFT</li>
+      </ul>
+      <button class="btn btn-bronze" id="btnBronze" onclick="mint('bronze')">Mint Bronze — 0.05 ETH</button>
+    </div>
+
+    <!-- GOLD -->
+    <div class="tier-card gold">
+      <div class="tier-badge gold">Gold</div>
+      <div class="tier-price gold" id="priceGold">0.15</div>
+      <div class="tier-currency">ETH · One Time</div>
+      <div class="tier-supply">
+        <span style="color:var(--gold)" id="mintedGold">0</span>
+        <span style="color:var(--text-muted)"> / 500 minted</span>
+        <div class="supply-bar"><div class="supply-fill gold" id="supplyGold" style="width:0%"></div></div>
+      </div>
+      <ul class="tier-benefits">
+        <li><span class="benefit-icon">✓</span> Everything in Bronze</li>
+        <li><span class="benefit-icon">✓</span> 10% fee discount on all sales</li>
+        <li><span class="benefit-icon">✓</span> Priority bid queue position</li>
+        <li><span class="benefit-icon">✓</span> Gold member Discord role</li>
+        <li><span class="benefit-icon">✓</span> Exclusive Gold auctions access</li>
+        <li><span class="benefit-icon">✓</span> Monthly market report</li>
+      </ul>
+      <button class="btn btn-gold" id="btnGold" onclick="mint('gold')">Mint Gold — 0.15 ETH</button>
+    </div>
+
+    <!-- PLATINUM -->
+    <div class="tier-card platinum">
+      <div class="tier-badge platinum">Platinum</div>
+      <div class="tier-price platinum" id="pricePlatinum">0.50</div>
+      <div class="tier-currency">ETH · One Time</div>
+      <div class="tier-supply">
+        <span style="color:var(--platinum)" id="mintedPlatinum">0</span>
+        <span style="color:var(--text-muted)"> / 100 minted</span>
+        <div class="supply-bar"><div class="supply-fill platinum" id="supplyPlatinum" style="width:0%"></div></div>
+      </div>
+      <ul class="tier-benefits">
+        <li><span class="benefit-icon">✓</span> Everything in Gold</li>
+        <li><span class="benefit-icon">✓</span> 15% fee discount on all sales</li>
+        <li><span class="benefit-icon" style="color:var(--green)">★</span> <strong style="color:var(--green)">Revenue share — earn from ALL platform fees</strong></li>
+        <li><span class="benefit-icon">✓</span> Private Platinum-only auctions</li>
+        <li><span class="benefit-icon">✓</span> Direct inventor introductions</li>
+        <li><span class="benefit-icon">✓</span> Governance voting rights</li>
+        <li><span class="benefit-icon">✓</span> Lifetime access — no expiry</li>
+      </ul>
+      <button class="btn btn-platinum" id="btnPlatinum" onclick="mint('platinum')">Mint Platinum — 0.50 ETH</button>
+    </div>
+
+  </div>
+
+  <!-- BENEFITS -->
+  <h2 class="section-title">WHY BECOME A MEMBER</h2>
+  <div class="benefits-grid">
+    <div class="benefit-card">
+      <div class="benefit-icon-lg">💰</div>
+      <div class="benefit-title">Revenue Share</div>
+      <div class="benefit-text">Platinum members earn 10% of all platform fees automatically. Every idea sold on CryptValt generates revenue that flows to Platinum holders on-chain. No claiming delays. Fully autonomous.</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-lg">🔐</div>
+      <div class="benefit-title">Fee Discounts</div>
+      <div class="benefit-text">Members pay less. Bronze saves 5%, Gold saves 10%, Platinum saves 15% on every transaction. For active investors buying multiple ideas, this compounds significantly over time.</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-lg">⬡</div>
+      <div class="benefit-title">Platform Ownership</div>
+      <div class="benefit-text">Your NFT is permanent proof of membership. Transferable. Sellable. As CryptValt grows and transaction volume increases, the revenue share and demand for Platinum NFTs grows with it.</div>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon-lg">🚀</div>
+      <div class="benefit-title">First Mover Advantage</div>
+      <div class="benefit-text">Only 100 Platinum memberships will ever exist. Only 500 Gold. Only 1,000 Bronze. These numbers never change. Early members lock in the best terms before the platform reaches scale.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const BACKEND_URL = 'https://crypt-valt-backend-jkak.vercel.app';
+const MEMBERSHIP_CONTRACT = null; // Set after deployment
+
+let wallet = localStorage.getItem('cv_wallet') || null;
+let membershipData = {
+  bronze:   { minted: 0, max: 1000, price: '0.05' },
+  gold:     { minted: 0, max: 500,  price: '0.15' },
+  platinum: { minted: 0, max: 100,  price: '0.50' },
+};
+
+window.addEventListener('load', () => {
+  if (wallet) {
+    document.getElementById('walletLabel').textContent = shortenAddr(wallet);
+    checkMyMembership();
+  }
+  updateSupplyBars();
+});
+
+function shortenAddr(addr) {
+  return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '';
+}
+
+async function mint(tier) {
+  if (!wallet) {
+    if (window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      wallet = accounts[0];
+      localStorage.setItem('cv_wallet', wallet);
+      document.getElementById('walletLabel').textContent = shortenAddr(wallet);
+    } else {
+      notify('error', 'MetaMask Required', 'Install MetaMask to mint a membership.');
+      return;
+    }
+  }
+
+  if (!MEMBERSHIP_CONTRACT) {
+    notify('info', 'Coming Soon', 'Membership contract deploying soon. Check back after mainnet launch.');
+    return;
+  }
+
+  notify('info', '⬡ Minting', `Processing your ${tier.toUpperCase()} membership...`);
+}
+
+function checkMyMembership() {
+  // Will be populated from contract after deployment
+  const stored = localStorage.getItem('cv_membership_' + wallet);
+  if (stored) {
+    const data = JSON.parse(stored);
+    showMyMembership(data);
+  }
+}
+
+function showMyMembership(data) {
+  const el = document.getElementById('myMembership');
+  el.classList.add('visible');
+  document.getElementById('myTierName').textContent = data.tier + ' MEMBER';
+  document.getElementById('myTokens').textContent = 'Token IDs: ' + (data.tokens || []).join(', ');
+  if (data.tier === 'PLATINUM') {
+    document.getElementById('revenueBox').style.display = 'block';
+    document.getElementById('pendingRevenue').textContent = (data.pendingRevenue || 0) + ' ETH';
+  }
+}
+
+function claimRevenue() {
+  if (!MEMBERSHIP_CONTRACT) {
+    notify('info', 'Contract Not Deployed', 'Revenue claiming available after mainnet launch.');
+    return;
+  }
+  notify('info', '⬡ Claiming', 'Confirm transaction in MetaMask...');
+}
+
+function updateSupplyBars() {
+  const tiers = ['bronze', 'gold', 'platinum'];
+  const maxes = { bronze: 1000, gold: 500, platinum: 100 };
+  tiers.forEach(t => {
+    const minted = membershipData[t].minted;
+    const pct    = (minted / maxes[t]) * 100;
+    const el     = document.getElementById('supply' + t.charAt(0).toUpperCase() + t.slice(1));
+    const num    = document.getElementById('minted' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el)  el.style.width  = pct + '%';
+    if (num) num.textContent = minted;
+  });
+}
+
+function notify(type, title, msg) {
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `<div class="notif-title">${title}</div><div class="notif-msg">${msg}</div>`;
+  document.getElementById('notifs').prepend(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
