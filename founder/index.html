@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Founder Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --gold:#f0a500; --green:#00ff9d; --red:#ff3b6b;
+  --text:#e8f4ff; --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
+  --genesis:#ff6fff; --architect:#00c8ff; --pioneer:#f0a500; --visionary:#00ff9d;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);
+  background-size:50px 50px;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 30px rgba(255,111,255,0.2)}50%{box-shadow:0 0 60px rgba(255,111,255,0.5)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:22px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);text-decoration:none;
+  padding:6px 14px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-back:hover{color:var(--cyan);border-color:var(--cyan);}
+
+main{position:relative;z-index:1;padding:80px 24px 60px;max-width:1100px;margin:0 auto;}
+
+.hero{text-align:center;padding:60px 0;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:5px;color:var(--genesis);margin-bottom:16px;}
+.hero-title{font-family:var(--display);font-size:clamp(60px,12vw,110px);letter-spacing:4px;line-height:0.9;margin-bottom:20px;}
+.hero-title .gold{color:var(--gold);}
+.hero-sub{font-size:17px;color:var(--text-dim);line-height:1.7;max-width:580px;margin:0 auto 40px;}
+
+.mint-card{background:var(--surface);border:2px solid var(--genesis);padding:40px;text-align:center;
+  margin-bottom:60px;position:relative;overflow:hidden;animation:glow 4s infinite;}
+.mint-card::before{content:'FOUNDER';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  font-family:var(--display);font-size:120px;letter-spacing:10px;color:rgba(255,111,255,0.03);white-space:nowrap;}
+.mint-price{font-family:var(--display);font-size:72px;letter-spacing:4px;color:var(--genesis);line-height:1;margin-bottom:8px;}
+.mint-currency{font-family:var(--mono);font-size:12px;color:var(--text-muted);letter-spacing:3px;margin-bottom:24px;}
+.supply-info{font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:24px;}
+.supply-bar{height:6px;background:var(--surface3);margin:12px auto;max-width:400px;overflow:hidden;}
+.supply-fill{height:100%;background:linear-gradient(90deg,var(--genesis),var(--gold));transition:width 1s ease;}
+.btn{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:16px 40px;border:none;cursor:pointer;transition:all 0.2s;}
+.btn-genesis{background:var(--genesis);color:var(--bg);}
+.btn-genesis:hover{background:#ff99ff;box-shadow:0 0 40px rgba(255,111,255,0.5);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+.rarity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:60px;}
+.rarity-card{background:var(--surface);border:1px solid;padding:24px;text-align:center;position:relative;overflow:hidden;}
+.rarity-card.genesis{border-color:rgba(255,111,255,0.4);}
+.rarity-card.architect{border-color:rgba(0,200,255,0.4);}
+.rarity-card.pioneer{border-color:rgba(240,165,0,0.4);}
+.rarity-card.visionary{border-color:rgba(0,255,157,0.4);}
+.rarity-badge{font-family:var(--display);font-size:28px;letter-spacing:3px;margin-bottom:8px;}
+.rarity-badge.genesis{color:var(--genesis);}
+.rarity-badge.architect{color:var(--architect);}
+.rarity-badge.pioneer{color:var(--pioneer);}
+.rarity-badge.visionary{color:var(--visionary);}
+.rarity-ids{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:12px;}
+.rarity-count{font-family:var(--display);font-size:48px;line-height:1;margin-bottom:4px;}
+.rarity-count.genesis{color:var(--genesis);}
+.rarity-count.architect{color:var(--architect);}
+.rarity-count.pioneer{color:var(--pioneer);}
+.rarity-count.visionary{color:var(--visionary);}
+.rarity-label{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;}
+
+.perks{margin-bottom:60px;}
+.perks-title{font-family:var(--display);font-size:40px;letter-spacing:4px;margin-bottom:32px;}
+.perks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.perk-card{background:var(--surface);border:1px solid var(--border);padding:24px;
+  border-left:3px solid var(--genesis);}
+.perk-icon{font-size:28px;margin-bottom:12px;}
+.perk-title{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:8px;color:var(--genesis);}
+.perk-text{font-size:14px;color:var(--text-dim);line-height:1.7;}
+
+.nft-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:60px;}
+.nft-cell{aspect-ratio:1;background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;position:relative;transition:all 0.2s;}
+.nft-cell:hover{border-color:var(--border-bright);transform:scale(1.05);}
+.nft-cell.minted{border-color:rgba(255,111,255,0.3);background:rgba(255,111,255,0.05);}
+.nft-cell.genesis{border-color:rgba(255,111,255,0.5);}
+.nft-cell.architect{border-color:rgba(0,200,255,0.5);}
+.nft-cell.pioneer{border-color:rgba(240,165,0,0.5);}
+.nft-cell.visionary{border-color:rgba(0,255,157,0.3);}
+.nft-num{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;}
+
+.notifs{position:fixed;top:70px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:320px;}
+.notif{background:var(--surface2);border:1px solid var(--border-bright);padding:12px 16px;}
+.notif.success{border-color:rgba(0,255,157,0.3);}
+.notif.error{border-color:rgba(255,59,107,0.3);}
+.notif-title{font-weight:700;font-size:13px;margin-bottom:3px;}
+.notif-msg{font-size:12px;color:var(--text-dim);}
+
+@media(max-width:768px){
+  .rarity-grid{grid-template-columns:1fr 1fr;}
+  .perks-grid{grid-template-columns:1fr;}
+  .nft-grid{grid-template-columns:repeat(4,1fr);}
+  nav{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
+</nav>
+
+<div class="notifs" id="notifs"></div>
+
+<main>
+
+  <div class="hero">
+    <div class="hero-eyebrow">⬡ Genesis Collection · 100 Total · Never Minted Again</div>
+    <h1 class="hero-title">CRYPT<span class="gold">VALT</span><br>FOUNDERS</h1>
+    <p class="hero-sub">Own a piece of history. 100 Founder NFTs — the rarest assets in the CryptValt ecosystem. Founders shaped this platform. They own it forever.</p>
+  </div>
+
+  <!-- MINT CARD -->
+  <div class="mint-card">
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--genesis);margin-bottom:16px">FOUNDER MINT</div>
+    <div class="mint-price" id="mintPrice">1.00</div>
+    <div class="mint-currency">ETH · ONE TIME · FOREVER</div>
+    <div class="supply-info">
+      <span id="mintedCount">0</span> / 100 MINTED
+    </div>
+    <div class="supply-bar">
+      <div class="supply-fill" id="supplyFill" style="width:0%"></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-bottom:28px" id="mintStatus">
+      MINT OPENS AFTER MAINNET LAUNCH
+    </div>
+    <button class="btn btn-genesis" id="mintBtn" onclick="mint()" disabled>
+      Mint Founder NFT — 1 ETH
+    </button>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-top:16px">
+      10% Royalty on Secondary Sales · ERC-721 · Transferable
+    </div>
+  </div>
+
+  <!-- RARITY TIERS -->
+  <div class="rarity-grid">
+    <div class="rarity-card genesis">
+      <div class="rarity-badge genesis">GENESIS</div>
+      <div class="rarity-ids">#1 — #10</div>
+      <div class="rarity-count genesis">10</div>
+      <div class="rarity-label">TOKENS · RAREST</div>
+    </div>
+    <div class="rarity-card architect">
+      <div class="rarity-badge architect">ARCHITECT</div>
+      <div class="rarity-ids">#11 — #25</div>
+      <div class="rarity-count architect">15</div>
+      <div class="rarity-label">TOKENS</div>
+    </div>
+    <div class="rarity-card pioneer">
+      <div class="rarity-badge pioneer">PIONEER</div>
+      <div class="rarity-ids">#26 — #50</div>
+      <div class="rarity-count pioneer">25</div>
+      <div class="rarity-label">TOKENS</div>
+    </div>
+    <div class="rarity-card visionary">
+      <div class="rarity-badge visionary">VISIONARY</div>
+      <div class="rarity-ids">#51 — #100</div>
+      <div class="rarity-count visionary">50</div>
+      <div class="rarity-label">TOKENS</div>
+    </div>
+  </div>
+
+  <!-- PERKS -->
+  <div class="perks">
+    <div class="perks-title">FOUNDER PERKS</div>
+    <div class="perks-grid">
+      <div class="perk-card">
+        <div class="perk-icon">💎</div>
+        <div class="perk-title">Lifetime Platinum Benefits</div>
+        <div class="perk-text">Every Founder NFT includes all Platinum membership benefits permanently. 15% fee discount, private auctions, and priority access — forever, with no additional cost.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon">💰</div>
+        <div class="perk-title">2x Revenue Share Multiplier</div>
+        <div class="perk-text">Founders earn double the revenue share of standard Platinum members. Every idea sold on CryptValt generates revenue that flows to Founder wallets at 2x rate — automatically on-chain.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon">🏛</div>
+        <div class="perk-title">Governance Veto Power</div>
+        <div class="perk-text">Founders hold veto rights on protocol changes. If a majority of Founders reject a proposed change to fee structures, smart contract upgrades, or platform direction — it doesn't happen.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon">🚀</div>
+        <div class="perk-title">First Access Forever</div>
+        <div class="perk-text">Every new feature, every new product, every partnership — Founders get access first. Always. This is written into the protocol and cannot be changed without Founder approval.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon">⬡</div>
+        <div class="perk-title">Founder Badge</div>
+        <div class="perk-text">A permanent Founder badge appears on every listing, bid, and profile associated with your wallet. In a marketplace built on trust, being a verified Founder is a signal that carries real weight.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon">📡</div>
+        <div class="perk-title">Direct Roadmap Access</div>
+        <div class="perk-text">Founders have a direct communication channel with the CryptValt development team. Your feedback shapes what gets built next. You're not a user — you're a co-creator of the platform.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NFT GRID -->
+  <div style="font-family:var(--display);font-size:40px;letter-spacing:4px;margin-bottom:24px">ALL 100 TOKENS</div>
+  <div class="nft-grid" id="nftGrid"></div>
+
+</main>
+
+<script>
+const FOUNDER_CONTRACT = null; // Set after deployment
+let wallet = localStorage.getItem('cv_wallet') || null;
+let minted = 0;
+
+window.addEventListener('load', () => {
+  renderNFTGrid();
+  updateSupply();
+});
+
+function getRarityClass(id) {
+  if (id <= 10)  return 'genesis';
+  if (id <= 25)  return 'architect';
+  if (id <= 50)  return 'pioneer';
+  return 'visionary';
+}
+
+function renderNFTGrid() {
+  const grid = document.getElementById('nftGrid');
+  let html = '';
+  for (let i = 1; i <= 100; i++) {
+    const rarity  = getRarityClass(i);
+    const isMinted = i <= minted;
+    const colors   = { genesis:'#ff6fff', architect:'#00c8ff', pioneer:'#f0a500', visionary:'#00ff9d' };
+    html += `
+      <div class="nft-cell ${rarity} ${isMinted ? 'minted' : ''}" title="#${i} — ${rarity.charAt(0).toUpperCase()+rarity.slice(1)}">
+        <div style="text-align:center">
+          <div style="font-family:var(--display);font-size:18px;color:${colors[rarity]};letter-spacing:1px">#${String(i).padStart(3,'0')}</div>
+          <div class="nft-num">${rarity.toUpperCase()}</div>
+        </div>
+      </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function updateSupply() {
+  document.getElementById('mintedCount').textContent = minted;
+  document.getElementById('supplyFill').style.width = (minted / 100 * 100) + '%';
+}
+
+async function mint() {
+  if (!wallet) {
+    if (window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      wallet = accounts[0];
+      localStorage.setItem('cv_wallet', wallet);
+    } else {
+      notify('error', 'MetaMask Required', 'Install MetaMask to mint.');
+      return;
+    }
+  }
+  if (!FOUNDER_CONTRACT) {
+    notify('info', 'Coming Soon', 'Founder mint opens after mainnet launch.');
+    return;
+  }
+  notify('info', '⬡ Minting', 'Processing your Founder NFT...');
+}
+
+function notify(type, title, msg) {
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `<div class="notif-title">${title}</div><div class="notif-msg">${msg}</div>`;
+  document.getElementById('notifs').prepend(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
