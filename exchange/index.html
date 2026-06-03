@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — CVT Exchange Listing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --gold:#f0a500; --green:#00ff9d; --red:#ff3b6b;
+  --text:#e8f4ff; --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);background-size:50px 50px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:22px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);text-decoration:none;
+  padding:6px 14px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-back:hover{color:var(--cyan);border-color:var(--cyan);}
+
+main{position:relative;z-index:1;padding:80px 24px 60px;max-width:1000px;margin:0 auto;}
+
+.hero{text-align:center;padding:48px 0 40px;}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:5px;color:var(--cyan);margin-bottom:16px;}
+.title{font-family:var(--display);font-size:clamp(48px,10vw,88px);letter-spacing:4px;line-height:0.95;margin-bottom:16px;}
+.title span{color:var(--gold);}
+.sub{font-size:15px;color:var(--text-dim);line-height:1.7;max-width:540px;margin:0 auto;}
+
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--text-muted);
+  text-transform:uppercase;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+.card{background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:16px;}
+.card-title{font-size:17px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+.card-sub{font-size:13px;color:var(--text-dim);line-height:1.6;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
+
+.stat{background:var(--surface);border:1px solid var(--border);padding:20px;text-align:center;}
+.stat-val{font-family:var(--display);font-size:36px;letter-spacing:2px;line-height:1;margin-bottom:6px;}
+.stat-label{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;}
+
+.checklist{margin-bottom:32px;}
+.check-item{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+.check-item:last-child{border-bottom:none;}
+.check-icon{font-size:16px;flex-shrink:0;margin-top:2px;}
+.check-title{font-size:15px;font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.check-desc{font-size:13px;color:var(--text-dim);line-height:1.5;}
+.check-status{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:3px 8px;border:1px solid;margin-top:6px;display:inline-block;}
+.status-done{color:var(--green);border-color:rgba(0,255,157,0.3);}
+.status-ready{color:var(--cyan);border-color:rgba(0,200,255,0.3);}
+.status-pending{color:var(--gold);border-color:rgba(240,165,0,0.3);}
+.status-post{color:var(--text-muted);border-color:var(--border);}
+
+.exchange-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:32px;}
+.exchange-card{background:var(--surface);border:1px solid var(--border);padding:20px;text-align:center;transition:all 0.2s;}
+.exchange-card:hover{border-color:var(--border-bright);}
+.exchange-name{font-family:var(--display);font-size:24px;letter-spacing:2px;margin-bottom:6px;}
+.exchange-type{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:10px;}
+.exchange-reqs{font-size:12px;color:var(--text-dim);line-height:1.6;text-align:left;}
+.exchange-tier{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:3px 10px;border:1px solid;margin-bottom:12px;display:inline-block;}
+.tier-1{color:var(--gold);border-color:rgba(240,165,0,0.4);}
+.tier-2{color:var(--cyan);border-color:rgba(0,200,255,0.4);}
+.tier-3{color:var(--green);border-color:rgba(0,255,157,0.4);}
+
+.timeline{position:relative;padding-left:20px;margin-bottom:32px;}
+.timeline::before{content:'';position:absolute;left:4px;top:8px;bottom:8px;width:2px;background:var(--border);}
+.tl-item{position:relative;margin-bottom:24px;padding-left:20px;}
+.tl-item::before{content:'';position:absolute;left:-16px;top:6px;width:10px;height:10px;
+  border-radius:50%;border:2px solid var(--border-bright);background:var(--bg);}
+.tl-item.done::before{background:var(--green);border-color:var(--green);}
+.tl-item.active::before{background:var(--cyan);border-color:var(--cyan);}
+.tl-phase{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:4px;}
+.tl-title{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.tl-desc{font-size:13px;color:var(--text-dim);line-height:1.5;}
+
+.token-info{background:var(--surface);border:1px solid var(--border-bright);padding:28px;margin-bottom:32px;}
+.token-row{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.token-row:last-child{border-bottom:none;}
+.token-key{color:var(--text-dim);}
+.token-val{font-family:var(--mono);font-size:12px;color:var(--cyan);}
+
+@media(max-width:768px){
+  .grid2,.grid3,.exchange-grid{grid-template-columns:1fr;}
+  nav{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
+</nav>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">⬡ CVT Token · Exchange Listing Strategy</div>
+    <h1 class="title">EXCHANGE<br><span>LISTING</span></h1>
+    <p class="sub">The roadmap to getting CVT listed on major exchanges — from DEX launch to Tier 1 CEX. Every requirement, every step, every milestone.</p>
+  </div>
+
+  <!-- TOKEN SPECS -->
+  <div class="section-label" style="margin-bottom:20px">Token Specifications</div>
+  <div class="token-info">
+    <div class="token-row"><span class="token-key">Token Name</span><span class="token-val">CryptValt Token</span></div>
+    <div class="token-row"><span class="token-key">Ticker</span><span class="token-val">CVT</span></div>
+    <div class="token-row"><span class="token-key">Standard</span><span class="token-val">ERC-20 (Ethereum)</span></div>
+    <div class="token-row"><span class="token-key">Total Supply</span><span class="token-val">100,000,000 CVT</span></div>
+    <div class="token-row"><span class="token-key">Decimals</span><span class="token-val">18</span></div>
+    <div class="token-row"><span class="token-key">Contract</span><span class="token-val" id="contractAddr">Pending Deployment</span></div>
+    <div class="token-row"><span class="token-key">Audit Status</span><span class="token-val">Pending</span></div>
+    <div class="token-row"><span class="token-key">Initial Liquidity</span><span class="token-val">10,000,000 CVT (10%)</span></div>
+    <div class="token-row"><span class="token-key">Initial Price Target</span><span class="token-val">$0.05 USD</span></div>
+    <div class="token-row"><span class="token-key">Initial Market Cap</span><span class="token-val">$5,000,000 USD</span></div>
+  </div>
+
+  <!-- LISTING CHECKLIST -->
+  <div class="section-label">Pre-Listing Checklist</div>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-icon">✅</div>
+      <div>
+        <div class="check-title">Smart Contract Written</div>
+        <div class="check-desc">ERC-20 contract with staking, vesting, burn mechanism, and fee discount tiers. Fully written and compiling.</div>
+        <div class="check-status status-done">COMPLETE</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">🔵</div>
+      <div>
+        <div class="check-title">Mainnet Deployment</div>
+        <div class="check-desc">Deploy CryptValtToken.sol to Ethereum mainnet. Record contract address. Verify on Etherscan.</div>
+        <div class="check-status status-ready">READY — NEEDS GAS</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">Etherscan Verification</div>
+        <div class="check-desc">Verify contract source code on Etherscan so investors can read the contract. Required by all exchanges.</div>
+        <div class="check-status status-ready">AFTER DEPLOYMENT</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">Smart Contract Audit</div>
+        <div class="check-desc">Third-party security audit from firms like CertiK, Hacken, or OpenZeppelin. Required for Tier 1 CEX. Cost: $5k-$50k depending on firm.</div>
+        <div class="check-status status-pending">POST-FUNDING</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">Uniswap V3 DEX Launch</div>
+        <div class="check-desc">Create CVT/ETH and CVT/USDC liquidity pools on Uniswap V3. Add initial 10M CVT liquidity. This is Day 1 of trading.</div>
+        <div class="check-status status-ready">AFTER DEPLOYMENT</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">CoinGecko & CoinMarketCap Listing</div>
+        <div class="check-desc">Submit token info to CoinGecko and CoinMarketCap for tracking. Free listing. Required before CEX applications. Takes 1-4 weeks.</div>
+        <div class="check-status status-pending">AFTER DEX LAUNCH</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">Tier 3 CEX Applications</div>
+        <div class="check-desc">Apply to MEXC, Gate.io, BitMart. Lower requirements, faster listing. Good for initial volume and visibility. Listing fees: $10k-$50k.</div>
+        <div class="check-status status-pending">30-60 DAYS POST-DEX</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">Tier 2 CEX Applications</div>
+        <div class="check-desc">Apply to KuCoin, Bybit, OKX. Requires proven trading volume, audit, and community size. Listing fees: $50k-$200k.</div>
+        <div class="check-status status-post">3-6 MONTHS POST-LAUNCH</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-icon">⬡</div>
+      <div>
+        <div class="check-title">Tier 1 CEX Applications</div>
+        <div class="check-desc">Apply to Binance, Coinbase, Kraken. Requires significant volume, full audit, legal compliance, and strong community. Listing fees: $500k+.</div>
+        <div class="check-status status-post">12+ MONTHS POST-LAUNCH</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXCHANGES -->
+  <div class="section-label">Target Exchanges</div>
+  <div class="exchange-grid">
+    <div class="exchange-card">
+      <div class="exchange-tier tier-3">TIER 3 — First Target</div>
+      <div class="exchange-name">MEXC</div>
+      <div class="exchange-type">Centralized Exchange</div>
+      <div class="exchange-reqs">
+        ✓ No minimum volume<br>
+        ✓ Self-listing available<br>
+        ✓ Fast approval (1-2 weeks)<br>
+        ✓ Low listing fee<br>
+        ✓ Global reach — 10M+ users
+      </div>
+    </div>
+    <div class="exchange-card">
+      <div class="exchange-tier tier-3">TIER 3 — First Target</div>
+      <div class="exchange-name">Gate.io</div>
+      <div class="exchange-type">Centralized Exchange</div>
+      <div class="exchange-reqs">
+        ✓ Startup-friendly<br>
+        ✓ IEO launchpad available<br>
+        ✓ 14M+ users<br>
+        ✓ Strong Asian market<br>
+        ✓ Reasonable listing fees
+      </div>
+    </div>
+    <div class="exchange-card">
+      <div class="exchange-tier tier-2">TIER 2 — Growth Phase</div>
+      <div class="exchange-name">KuCoin</div>
+      <div class="exchange-type">Centralized Exchange</div>
+      <div class="exchange-reqs">
+        ✓ 27M+ users<br>
+        ✓ "People's Exchange"<br>
+        ✓ Strong community focus<br>
+        ⚡ Requires proven volume<br>
+        ⚡ KCS ecosystem synergy
+      </div>
+    </div>
+    <div class="exchange-card">
+      <div class="exchange-tier tier-2">TIER 2 — Growth Phase</div>
+      <div class="exchange-name">Bybit</div>
+      <div class="exchange-type">Centralized Exchange</div>
+      <div class="exchange-reqs">
+        ✓ 20M+ users<br>
+        ✓ Launchpad program<br>
+        ✓ Strong derivatives market<br>
+        ⚡ Requires audit<br>
+        ⚡ Active community needed
+      </div>
+    </div>
+    <div class="exchange-card" style="border-color:rgba(0,200,255,0.2)">
+      <div class="exchange-tier tier-3">DEX — Day 1</div>
+      <div class="exchange-name">Uniswap</div>
+      <div class="exchange-type">Decentralized Exchange</div>
+      <div class="exchange-reqs">
+        ✓ No permission needed<br>
+        ✓ Launch same day as token<br>
+        ✓ CVT/ETH + CVT/USDC pools<br>
+        ✓ Permissionless trading<br>
+        ✓ On-chain liquidity
+      </div>
+    </div>
+    <div class="exchange-card" style="border-color:rgba(240,165,0,0.2)">
+      <div class="exchange-tier tier-1" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">TIER 1 — Long Term</div>
+      <div class="exchange-name">Binance</div>
+      <div class="exchange-type">Largest CEX Globally</div>
+      <div class="exchange-reqs">
+        ✓ 185M+ users<br>
+        ⚡ Full audit required<br>
+        ⚡ Proven $1M+ daily volume<br>
+        ⚡ Legal compliance<br>
+        ⚡ Listing fee $500k+
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section-label">Listing Timeline</div>
+  <div class="timeline">
+    <div class="tl-item done">
+      <div class="tl-phase">Phase 1 — Complete</div>
+      <div class="tl-title">Token Built</div>
+      <div class="tl-desc">ERC-20 contract written with full tokenomics, staking, vesting, and governance integration.</div>
+    </div>
+    <div class="tl-item active">
+      <div class="tl-phase">Phase 2 — Now</div>
+      <div class="tl-title">Mainnet Deployment</div>
+      <div class="tl-desc">Deploy token contract. Verify on Etherscan. Set up Uniswap liquidity pools. Day 1 of live trading begins.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-phase">Phase 3 — Week 2-4</div>
+      <div class="tl-title">CoinGecko & CMC</div>
+      <div class="tl-desc">Submit to CoinGecko and CoinMarketCap. Build trading history. Start community growth on Twitter and Discord.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-phase">Phase 4 — Month 1-2</div>
+      <div class="tl-title">Tier 3 CEX</div>
+      <div class="tl-desc">Apply to MEXC and Gate.io with trading volume history. Target $100k+ daily volume on DEX before applying.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-phase">Phase 5 — Month 3-6</div>
+      <div class="tl-title">Audit + Tier 2 CEX</div>
+      <div class="tl-desc">Complete security audit. Apply to KuCoin and Bybit. Build toward $1M+ daily volume. Series A fundraise.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-phase">Phase 6 — Year 1+</div>
+      <div class="tl-title">Tier 1 CEX</div>
+      <div class="tl-desc">Binance, Coinbase, Kraken applications. Requires strong fundamentals, volume, community, and full legal compliance.</div>
+    </div>
+  </div>
+
+  <!-- WHAT WE NEED -->
+  <div class="section-label">What We Need Right Now</div>
+  <div class="grid3">
+    <div class="stat">
+      <div class="stat-val" style="color:var(--cyan)">$50</div>
+      <div class="stat-label">Gas to Deploy Token</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:var(--gold)">10M CVT</div>
+      <div class="stat-label">Initial DEX Liquidity</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:var(--green)">Day 1</div>
+      <div class="stat-label">Uniswap Live After Deploy</div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>
