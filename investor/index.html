@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Investor Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --gold:#f0a500; --green:#00ff9d; --red:#ff3b6b;
+  --text:#e8f4ff; --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);background-size:50px 50px;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:22px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);text-decoration:none;
+  padding:6px 14px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-back:hover{color:var(--cyan);border-color:var(--cyan);}
+
+main{position:relative;z-index:1;padding:80px 24px 60px;max-width:900px;margin:0 auto;}
+
+/* SLIDES */
+.slide{background:var(--surface);border:1px solid var(--border);padding:48px;margin-bottom:32px;
+  animation:fadeIn 0.4s ease;position:relative;overflow:hidden;}
+.slide::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.slide-num{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:16px;}
+.slide-title{font-family:var(--display);font-size:clamp(36px,6vw,60px);letter-spacing:4px;
+  line-height:0.95;margin-bottom:20px;}
+.slide-sub{font-size:16px;color:var(--text-dim);line-height:1.7;margin-bottom:24px;}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0;}
+.metric{background:var(--surface2);border:1px solid var(--border-bright);padding:20px;text-align:center;}
+.metric-value{font-family:var(--display);font-size:40px;letter-spacing:2px;line-height:1;}
+.metric-label{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;
+  text-transform:uppercase;margin-top:6px;}
+
+/* TABLE */
+.table{width:100%;border-collapse:collapse;margin:20px 0;}
+.table th{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;
+  text-transform:uppercase;padding:10px 0;border-bottom:1px solid var(--border);text-align:left;}
+.table td{padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-dim);}
+.table td:last-child{text-align:right;font-family:var(--mono);font-size:12px;}
+.table tr:last-child td{border-bottom:none;}
+
+/* COMPARISON */
+.comparison{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:20px 0;}
+.comp-col{background:var(--surface2);border:1px solid var(--border);padding:20px;}
+.comp-col.highlight{border-color:rgba(0,200,255,0.4);background:rgba(0,200,255,0.04);}
+.comp-header{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.comp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-dim);}
+.check{color:var(--green);}
+.cross{color:var(--red);}
+
+/* ROADMAP */
+.roadmap{position:relative;padding-left:24px;margin:20px 0;}
+.roadmap::before{content:'';position:absolute;left:4px;top:8px;bottom:8px;width:2px;background:var(--border);}
+.roadmap-item{position:relative;margin-bottom:24px;}
+.roadmap-item::before{content:'';position:absolute;left:-20px;top:6px;width:10px;height:10px;
+  border-radius:50%;border:2px solid var(--border-bright);}
+.roadmap-item.done::before{background:var(--green);border-color:var(--green);}
+.roadmap-item.active::before{background:var(--cyan);border-color:var(--cyan);}
+.roadmap-item.upcoming::before{background:transparent;}
+.roadmap-phase{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px;}
+.roadmap-title{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.roadmap-desc{font-size:13px;color:var(--text-dim);line-height:1.5;}
+
+/* USE OF FUNDS */
+.funds-bar{margin:8px 0;}
+.funds-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.funds-label{font-size:14px;width:160px;flex-shrink:0;}
+.funds-track{flex:1;height:8px;background:var(--surface3);overflow:hidden;}
+.funds-fill{height:100%;transition:width 1s ease;}
+.funds-pct{font-family:var(--mono);font-size:11px;width:36px;text-align:right;}
+
+/* CTA */
+.cta-box{background:linear-gradient(135deg,rgba(0,200,255,0.05),rgba(240,165,0,0.05));
+  border:1px solid var(--border-bright);padding:40px;text-align:center;margin-top:32px;}
+.cta-title{font-family:var(--display);font-size:48px;letter-spacing:4px;margin-bottom:12px;}
+.btn{font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:14px 36px;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;}
+.btn-primary{background:var(--cyan);color:var(--bg);}
+.btn-primary:hover{background:#33d4ff;box-shadow:0 0 24px rgba(0,200,255,0.4);}
+.btn-gold{background:var(--gold);color:var(--bg);}
+.btn-gold:hover{background:#ffb820;}
+
+.highlight-text{color:var(--cyan);}
+.gold-text{color:var(--gold);}
+.green-text{color:var(--green);}
+
+@media(max-width:768px){
+  .metrics{grid-template-columns:1fr 1fr;}
+  .comparison{grid-template-columns:1fr;}
+  .slide{padding:28px 20px;}
+  nav{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
+</nav>
+
+<main>
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide">
+    <div class="slide-num">01 — Cover</div>
+    <h1 class="slide-title">THE WORLD'S FIRST<br><span class="highlight-text">ENCRYPTED</span><br>IDEA MARKETPLACE</h1>
+    <p class="slide-sub">CryptValt enables inventors to monetize their ideas with complete privacy, military-grade encryption, and autonomous AI valuation — without ever revealing the idea until the sale is complete.</p>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-top:24px">
+      SEED ROUND · $500,000 · 2024
+    </div>
+  </div>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide">
+    <div class="slide-num">02 — The Problem</div>
+    <h2 class="slide-title">IDEAS ARE<br><span style="color:var(--red)">STOLEN</span><br>EVERY DAY</h2>
+    <p class="slide-sub">Inventors have no safe way to monetize ideas. Every existing marketplace requires full disclosure before sale — exposing ideas to theft, copying, and exploitation with zero recourse.</p>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" style="color:var(--red)">$500B</div>
+        <div class="metric-label">IP Theft Annually (US)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--red)">87%</div>
+        <div class="metric-label">Inventors Fear Disclosure</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--red)">0</div>
+        <div class="metric-label">Encrypted Marketplaces Exist</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: SOLUTION -->
+  <div class="slide">
+    <div class="slide-num">03 — The Solution</div>
+    <h2 class="slide-title">SUBMIT IN<br><span class="highlight-text">TOTAL</span><br>PRIVACY</h2>
+    <p class="slide-sub">CryptValt encrypts ideas with AES-256-GCM directly in the inventor's browser. The idea never leaves their device in plaintext — not to the platform, not to the AI, not to anyone — until the buyer purchases the decryption key.</p>
+    <div class="comparison">
+      <div class="comp-col">
+        <div class="comp-header" style="color:var(--text-muted)">Traditional Platforms</div>
+        <div class="comp-row"><span class="cross">✕</span> Ideas exposed to platform</div>
+        <div class="comp-row"><span class="cross">✕</span> No encryption</div>
+        <div class="comp-row"><span class="cross">✕</span> Manual valuation</div>
+        <div class="comp-row"><span class="cross">✕</span> Centralized escrow</div>
+        <div class="comp-row"><span class="cross">✕</span> No royalties</div>
+        <div class="comp-row"><span class="cross">✕</span> High platform fees</div>
+      </div>
+      <div class="comp-col highlight">
+        <div class="comp-header" style="color:var(--cyan)">CryptValt</div>
+        <div class="comp-row"><span class="check">✓</span> End-to-end encrypted</div>
+        <div class="comp-row"><span class="check">✓</span> AES-256-GCM</div>
+        <div class="comp-row"><span class="check">✓</span> AI-powered valuation</div>
+        <div class="comp-row"><span class="check">✓</span> Ethereum smart contract</div>
+        <div class="comp-row"><span class="check">✓</span> Perpetual royalties</div>
+        <div class="comp-row"><span class="check">✓</span> 80% to inventor</div>
+      </div>
+      <div class="comp-col">
+        <div class="comp-header" style="color:var(--text-muted)">Patent System</div>
+        <div class="comp-row"><span class="cross">✕</span> $10k-$50k cost</div>
+        <div class="comp-row"><span class="cross">✕</span> 2-5 year process</div>
+        <div class="comp-row"><span class="cross">✕</span> Public disclosure</div>
+        <div class="comp-row"><span class="cross">✕</span> No marketplace</div>
+        <div class="comp-row"><span class="cross">✕</span> Legal complexity</div>
+        <div class="comp-row"><span class="check">✓</span> Legal protection</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: HOW IT WORKS -->
+  <div class="slide">
+    <div class="slide-num">04 — How It Works</div>
+    <h2 class="slide-title">FOUR<br><span class="highlight-text">STEPS</span></h2>
+    <div style="margin:24px 0">
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--display);font-size:48px;color:var(--cyan);line-height:1;flex-shrink:0">01</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Inventor Submits</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Idea encrypts in browser with AES-256-GCM. Encrypted blob uploads to IPFS. Only the inventor holds the key.</div></div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--display);font-size:48px;color:var(--gold);line-height:1;flex-shrink:0">02</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">AI Scores Without Seeing</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Claude AI analyzes the public teaser and metadata across 14 dimensions to generate a dollar valuation. The encrypted idea is never decrypted.</div></div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--display);font-size:48px;color:var(--green);line-height:1;flex-shrink:0">03</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Investors Bid Blind</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Sealed blind auction on Ethereum. Investors commit bids without seeing others. Winning bid held in smart contract escrow.</div></div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="font-family:var(--display);font-size:48px;color:#ff6fff;line-height:1;flex-shrink:0">04</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Key Delivered, Funds Released</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Inventor delivers decryption key. Smart contract releases 80% to inventor automatically. 20% to platform. Royalties on every future resale.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: MARKET -->
+  <div class="slide">
+    <div class="slide-num">05 — Market Opportunity</div>
+    <h2 class="slide-title">$2.9T<br><span class="highlight-text">ADDRESSABLE</span><br>MARKET</h2>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" style="color:var(--cyan)">$2.9T</div>
+        <div class="metric-label">Global IP Market (TAM)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--gold)">$340B</div>
+        <div class="metric-label">IP Licensing Market (SAM)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">$4.2B</div>
+        <div class="metric-label">Year 5 Target (SOM)</div>
+      </div>
+    </div>
+    <p class="slide-sub">The global IP market grows at 8.3% annually. Web3 IP marketplaces are an entirely new category with zero dominant players. CryptValt is positioned to define this market.</p>
+  </div>
+
+  <!-- SLIDE 6: BUSINESS MODEL -->
+  <div class="slide">
+    <div class="slide-num">06 — Business Model</div>
+    <h2 class="slide-title">MULTIPLE<br><span class="gold-text">REVENUE</span><br>STREAMS</h2>
+    <table class="table">
+      <tr><th>Revenue Stream</th><th>Details</th><th>Rate</th></tr>
+      <tr><td>Primary Auction Fee</td><td>Fee on every idea sale</td><td style="color:var(--gold)">20% of sale</td></tr>
+      <tr><td>Secondary Market Fee</td><td>Fee on resales</td><td style="color:var(--gold)">5% of sale</td></tr>
+      <tr><td>NFT Membership Mint</td><td>Bronze/Gold/Platinum</td><td style="color:var(--gold)">0.05–0.50 ETH</td></tr>
+      <tr><td>Founder NFT Mint</td><td>100 genesis tokens</td><td style="color:var(--gold)">1 ETH each</td></tr>
+      <tr><td>CVT Token</td><td>Platform token utility</td><td style="color:var(--gold)">Ecosystem value</td></tr>
+      <tr><td>Enterprise Licensing</td><td>White-label solution</td><td style="color:var(--gold)">$50k-$500k/yr</td></tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 7: TRACTION -->
+  <div class="slide">
+    <div class="slide-num">07 — Traction</div>
+    <h2 class="slide-title">BUILT &<br><span class="green-text">READY</span><br>TO LAUNCH</h2>
+    <div class="metrics" style="grid-template-columns:repeat(2,1fr)">
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">8</div>
+        <div class="metric-label">Smart Contracts Written</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">14</div>
+        <div class="metric-label">AI Scoring Dimensions</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">100%</div>
+        <div class="metric-label">Platform Built</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">$50</div>
+        <div class="metric-label">To Go Live (Gas Cost)</div>
+      </div>
+    </div>
+    <p class="slide-sub">CryptValt is fully built. Smart contracts compile and are ready for deployment. The frontend PWA is live at dhatway.github.io/CryptValt. Backend API is deployed on Vercel. The only barrier to launch is gas fees for contract deployment.</p>
+  </div>
+
+  <!-- SLIDE 8: ROADMAP -->
+  <div class="slide">
+    <div class="slide-num">08 — Roadmap</div>
+    <h2 class="slide-title">PATH TO<br><span class="highlight-text">SCALE</span></h2>
+    <div class="roadmap">
+      <div class="roadmap-item done">
+        <div class="roadmap-phase">Phase 1 — Complete</div>
+        <div class="roadmap-title">Foundation</div>
+        <div class="roadmap-desc">Full platform built. Smart contracts written. AI scoring. Backend API. Security monitor. Promotional system.</div>
+      </div>
+      <div class="roadmap-item active">
+        <div class="roadmap-phase">Phase 2 — In Progress</div>
+        <div class="roadmap-title">Launch</div>
+        <div class="roadmap-desc">Contract deployment. NFT Membership. Founder collection. Revenue sharing. DAO governance. CVT token.</div>
+      </div>
+      <div class="roadmap-item upcoming">
+        <div class="roadmap-phase">Phase 3 — Q2 2025</div>
+        <div class="roadmap-title">Growth</div>
+        <div class="roadmap-desc">First 100 idea listings. $1M platform volume. Twitter API integration. Scout referral program. Exchange listing for CVT.</div>
+      </div>
+      <div class="roadmap-item upcoming">
+        <div class="roadmap-phase">Phase 4 — Q4 2025</div>
+        <div class="roadmap-title">Scale</div>
+        <div class="roadmap-desc">Mobile app. Patent database integration. Enterprise licensing. $10M platform volume. Series A fundraise.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: USE OF FUNDS -->
+  <div class="slide">
+    <div class="slide-num">09 — Use of Funds</div>
+    <h2 class="slide-title">$500K<br><span class="gold-text">SEED</span><br>ROUND</h2>
+    <div class="funds-bar">
+      <div class="funds-row">
+        <div class="funds-label">Engineering</div>
+        <div class="funds-track"><div class="funds-fill" style="width:35%;background:var(--cyan)"></div></div>
+        <div class="funds-pct" style="color:var(--cyan)">35%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Marketing & Growth</div>
+        <div class="funds-track"><div class="funds-fill" style="width:25%;background:var(--gold)"></div></div>
+        <div class="funds-pct" style="color:var(--gold)">25%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Legal & Compliance</div>
+        <div class="funds-track"><div class="funds-fill" style="width:15%;background:var(--green)"></div></div>
+        <div class="funds-pct" style="color:var(--green)">15%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Operations</div>
+        <div class="funds-track"><div class="funds-fill" style="width:15%;background:#ff6fff"></div></div>
+        <div class="funds-pct" style="color:#ff6fff">15%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Reserve</div>
+        <div class="funds-track"><div class="funds-fill" style="width:10%;background:var(--text-muted)"></div></div>
+        <div class="funds-pct" style="color:var(--text-muted)">10%</div>
+      </div>
+    </div>
+    <p class="slide-sub" style="margin-top:20px">$175k engineering accelerates mobile app and enterprise features. $125k marketing drives inventor and investor acquisition. $75k legal ensures IP protection and regulatory compliance.</p>
+  </div>
+
+  <!-- SLIDE 10: TEAM -->
+  <div class="slide">
+    <div class="slide-num">10 — Team</div>
+    <h2 class="slide-title">BUILT BY<br><span class="highlight-text">ONE</span></h2>
+    <p class="slide-sub">CryptValt was conceived, designed, and built entirely by a solo independent creator — from an Android phone. No VC backing. No team. No office. Just vision, execution, and 6 months of building.</p>
+    <div style="background:var(--surface2);border:1px solid var(--border-bright);padding:24px;margin:20px 0">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:12px">FOUNDER</div>
+      <div style="font-size:20px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Michael Venable</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:12px">@iamthevgod · DhatWay</div>
+      <div style="font-size:14px;color:var(--text-dim);line-height:1.7">Independent music artist, developer, and entrepreneur. Built CryptValt as part of the DhatWay creative and technology umbrella. Proof that one person with a vision and the right tools can build something that changes an industry.</div>
+    </div>
+    <p class="slide-sub">Seed funding will be used to expand the team with 2 engineers and 1 marketing lead to accelerate growth.</p>
+  </div>
+
+  <!-- SLIDE 11: THE ASK -->
+  <div class="cta-box">
+    <div class="cta-title">JOIN THE<br><span style="color:var(--gold)">REVOLUTION</span></div>
+    <p style="font-size:16px;color:var(--text-dim);line-height:1.7;max-width:500px;margin:0 auto 32px">CryptValt is the first encrypted idea marketplace. We are raising $500,000 in seed funding to deploy, grow, and dominate a market that has never existed before.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px">
+      <div style="text-align:center">
+        <div style="font-family:var(--display);font-size:40px;color:var(--cyan)">$500K</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">RAISING</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--display);font-size:40px;color:var(--gold)">10%</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">EQUITY OFFERED</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--display);font-size:40px;color:var(--green)">$5M</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">PRE-MONEY VALUATION</div>
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:20px">
+      CONTACT · dhatway2024@gmail.com · dhatway.github.io/CryptValt
+    </div>
+    <a href="../index.html" class="btn btn-primary">View Live Platform →</a>
+  </div>
+
+</main>
+
+</body>
+</html>
