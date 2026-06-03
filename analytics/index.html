@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Analytics & Revenue</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --gold:#f0a500; --green:#00ff9d; --red:#ff3b6b;
+  --text:#e8f4ff; --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);
+  background-size:50px 50px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:22px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);text-decoration:none;
+  padding:6px 14px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-back:hover{color:var(--cyan);border-color:var(--cyan);}
+
+main{position:relative;z-index:1;padding:80px 24px 60px;max-width:1200px;margin:0 auto;}
+
+.page-header{margin-bottom:40px;}
+.page-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--cyan);margin-bottom:8px;}
+.page-title{font-family:var(--display);font-size:56px;letter-spacing:4px;line-height:1;}
+
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:32px;overflow-x:auto;}
+.tab{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:12px 20px;
+  color:var(--text-muted);cursor:pointer;border:none;background:transparent;
+  border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.tab:hover{color:var(--text-dim);}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+
+.panel{display:none;animation:fadeIn 0.3s ease;}
+.panel.active{display:block;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);padding:20px;}
+.stat-label{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.stat-value{font-family:var(--display);font-size:36px;letter-spacing:2px;}
+.stat-sub{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:4px;}
+
+/* CHART */
+.chart-card{background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:20px;}
+.chart-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:20px;}
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:160px;}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.chart-bar{width:100%;background:linear-gradient(180deg,var(--cyan),rgba(0,200,255,0.3));
+  border-radius:2px 2px 0 0;transition:height 0.8s ease;min-height:4px;}
+.chart-bar-label{font-family:var(--mono);font-size:8px;color:var(--text-muted);letter-spacing:1px;}
+.chart-bar-val{font-family:var(--mono);font-size:9px;color:var(--cyan);}
+
+/* REVENUE BREAKDOWN */
+.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+.breakdown-card{background:var(--surface);border:1px solid var(--border);padding:24px;}
+.breakdown-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--text-muted);margin-bottom:16px;text-transform:uppercase;}
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+.breakdown-row:last-child{border-bottom:none;}
+.breakdown-key{color:var(--text-dim);}
+.breakdown-val{font-family:var(--mono);font-size:12px;}
+
+/* MY EARNINGS */
+.earnings-card{background:var(--surface);border:1px solid var(--border-bright);padding:32px;margin-bottom:24px;text-align:center;}
+.earnings-amount{font-family:var(--display);font-size:64px;letter-spacing:4px;color:var(--green);line-height:1;}
+.earnings-label{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-top:8px;}
+.btn{font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:12px 32px;border:none;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:var(--cyan);color:var(--bg);}
+.btn-primary:hover{background:#33d4ff;box-shadow:0 0 24px rgba(0,200,255,0.3);}
+.btn-gold{background:var(--gold);color:var(--bg);}
+.btn-gold:hover{background:#ffb820;}
+.btn-secondary{background:transparent;color:var(--cyan);border:1px solid var(--cyan);}
+.btn-sm{padding:8px 16px;font-size:11px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* REFERRAL */
+.referral-card{background:var(--surface);border:1px solid var(--border-bright);padding:28px;margin-bottom:20px;}
+.referral-title{font-family:var(--display);font-size:28px;letter-spacing:3px;margin-bottom:8px;}
+.referral-sub{font-size:14px;color:var(--text-dim);line-height:1.6;margin-bottom:20px;}
+.referral-code-box{background:var(--surface3);border:1px solid var(--border-bright);padding:16px;
+  display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.referral-code{font-family:var(--mono);font-size:20px;letter-spacing:4px;color:var(--cyan);flex:1;}
+.copy-btn{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:8px 14px;
+  background:var(--surface);border:1px solid var(--border-bright);color:var(--cyan);cursor:pointer;transition:all 0.2s;}
+.copy-btn:hover{background:rgba(0,200,255,0.1);}
+.copy-btn.copied{border-color:var(--green);color:var(--green);}
+.referral-link-box{background:var(--surface3);border:1px solid var(--border);padding:12px 16px;
+  font-family:var(--mono);font-size:10px;color:var(--text-muted);word-break:break-all;margin-bottom:16px;}
+
+/* LEADERBOARD */
+.leaderboard{background:var(--surface);border:1px solid var(--border);overflow:hidden;}
+.leaderboard-header{display:grid;grid-template-columns:40px 1fr 100px 80px 80px;gap:16px;
+  padding:12px 20px;background:var(--surface2);
+  font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;}
+.leaderboard-row{display:grid;grid-template-columns:40px 1fr 100px 80px 80px;gap:16px;
+  padding:14px 20px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.2s;}
+.leaderboard-row:hover{background:var(--surface2);}
+.leaderboard-row:last-child{border-bottom:none;}
+.rank{font-family:var(--display);font-size:24px;color:var(--text-muted);}
+.rank.gold{color:var(--gold);}
+.rank.silver{color:#c0c0c0;}
+.rank.bronze{color:#cd7f32;}
+.scout-addr{font-family:var(--mono);font-size:11px;color:var(--cyan);}
+.scout-tier{font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border:1px solid;}
+.tier-standard{color:var(--text-muted);border-color:var(--border);}
+.tier-platinum{color:#e5e4e2;border-color:rgba(229,228,226,0.4);}
+.tier-founder{color:#ff6fff;border-color:rgba(255,111,255,0.4);}
+
+/* MULTIPLIER CARDS */
+.multiplier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
+.multiplier-card{background:var(--surface);border:1px solid var(--border);padding:24px;text-align:center;}
+.multiplier-badge{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  padding:4px 10px;border:1px solid;margin-bottom:12px;display:inline-block;}
+.multiplier-pct{font-family:var(--display);font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:6px;}
+.multiplier-label{font-size:13px;color:var(--text-dim);}
+
+.notifs{position:fixed;top:70px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:320px;}
+.notif{background:var(--surface2);border:1px solid var(--border-bright);padding:12px 16px;}
+.notif.success{border-color:rgba(0,255,157,0.3);}
+.notif.error{border-color:rgba(255,59,107,0.3);}
+.notif-title{font-weight:700;font-size:13px;margin-bottom:3px;}
+.notif-msg{font-size:12px;color:var(--text-dim);}
+
+@media(max-width:768px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .breakdown{grid-template-columns:1fr;}
+  .multiplier-grid{grid-template-columns:1fr;}
+  .leaderboard-header,.leaderboard-row{grid-template-columns:30px 1fr 80px;}
+  nav{padding:0 16px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
+</nav>
+
+<div class="notifs" id="notifs"></div>
+
+<main>
+  <div class="page-header">
+    <div class="page-eyebrow">⬡ Real-Time Platform Intelligence</div>
+    <h1 class="page-title">ANALYTICS &<br>REVENUE</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview', this)">Overview</button>
+    <button class="tab" onclick="switchTab('revenue', this)">Revenue Share</button>
+    <button class="tab" onclick="switchTab('scout', this)">Scout Program</button>
+    <button class="tab" onclick="switchTab('leaderboard', this)">Leaderboard</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="panel-overview" class="panel active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Volume</div>
+        <div class="stat-value" id="totalVolume" style="color:var(--gold)">$0</div>
+        <div class="stat-sub">All-time platform volume</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Platform Revenue</div>
+        <div class="stat-value" id="platformRevenue" style="color:var(--cyan)">$0</div>
+        <div class="stat-sub">20% of total volume</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ideas Sold</div>
+        <div class="stat-value" id="ideasSold" style="color:var(--green)">0</div>
+        <div class="stat-sub">Completed auctions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Scouts</div>
+        <div class="stat-value" id="activeScouts" style="color:var(--text)">0</div>
+        <div class="stat-sub">Referral partners</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Volume by Category</div>
+      <div class="chart-bars" id="categoryChart">
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-val">$0</div>
+          <div class="chart-bar" style="height:20px;background:linear-gradient(180deg,#00c8ff,rgba(0,200,255,0.3))"></div>
+          <div class="chart-bar-label">TECH</div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-val">$0</div>
+          <div class="chart-bar" style="height:20px;background:linear-gradient(180deg,#00ff9d,rgba(0,255,157,0.3))"></div>
+          <div class="chart-bar-label">HEALTH</div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-val">$0</div>
+          <div class="chart-bar" style="height:20px;background:linear-gradient(180deg,#f0a500,rgba(240,165,0,0.3))"></div>
+          <div class="chart-bar-label">FINANCE</div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-val">$0</div>
+          <div class="chart-bar" style="height:20px;background:linear-gradient(180deg,#ff6fff,rgba(255,111,255,0.3))"></div>
+          <div class="chart-bar-label">CONSUMER</div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-val">$0</div>
+          <div class="chart-bar" style="height:20px;background:linear-gradient(180deg,#ff3b6b,rgba(255,59,107,0.3))"></div>
+          <div class="chart-bar-label">ENERGY</div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-val">$0</div>
+          <div class="chart-bar" style="height:20px;background:linear-gradient(180deg,#888,rgba(136,136,136,0.3))"></div>
+          <div class="chart-bar-label">OTHER</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-card">
+        <div class="breakdown-title">Revenue Distribution</div>
+        <div class="breakdown-row"><span class="breakdown-key">Inventor Share (80%)</span><span class="breakdown-val" id="inventorTotal" style="color:var(--green)">$0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Platform Fee (20%)</span><span class="breakdown-val" id="platformTotal" style="color:var(--cyan)">$0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">→ Platinum Pool (10%)</span><span class="breakdown-val" style="color:#e5e4e2">$0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">→ Founder Pool (15%)</span><span class="breakdown-val" style="color:#ff6fff">$0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">→ Scout Referrals</span><span class="breakdown-val" id="scoutTotal" style="color:var(--gold)">$0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">→ Treasury</span><span class="breakdown-val" style="color:var(--text-muted)">$0</span></div>
+      </div>
+      <div class="breakdown-card">
+        <div class="breakdown-title">Platform Stats</div>
+        <div class="breakdown-row"><span class="breakdown-key">Total Listings</span><span class="breakdown-val" id="totalListings">0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Total Bids</span><span class="breakdown-val" id="totalBids">0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Avg Sale Price</span><span class="breakdown-val" id="avgSale">$0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Platinum Members</span><span class="breakdown-val" id="platCount">0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Founder NFTs Minted</span><span class="breakdown-val" id="founderMinted">0</span></div>
+        <div class="breakdown-row"><span class="breakdown-key">Active Scouts</span><span class="breakdown-val" id="scoutCount">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVENUE SHARE -->
+  <div id="panel-revenue" class="panel">
+    <div id="revenueConnectGate" style="text-align:center;padding:60px 0;display:none">
+      <div style="font-size:48px;margin-bottom:16px">🔑</div>
+      <div style="font-family:var(--display);font-size:36px;letter-spacing:3px;margin-bottom:12px">CONNECT WALLET</div>
+      <p style="color:var(--text-dim);margin-bottom:24px">Connect your wallet to view and claim your revenue share</p>
+      <button class="btn btn-primary" onclick="connectForRevenue()">Connect Wallet</button>
+    </div>
+
+    <div id="revenueContent">
+      <div class="earnings-card">
+        <div class="earnings-label">YOUR PENDING REVENUE</div>
+        <div class="earnings-amount" id="myPendingRevenue">$0.00</div>
+        <div class="earnings-label" style="margin-top:4px">ETH</div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
+          <button class="btn btn-gold" onclick="claimAll()" id="claimAllBtn" disabled>Claim All Revenue</button>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <div class="breakdown-card">
+          <div class="breakdown-title">My Revenue Breakdown</div>
+          <div class="breakdown-row"><span class="breakdown-key">Platinum Share</span><span class="breakdown-val" id="myPlatinumPending" style="color:#e5e4e2">0 ETH</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Founder Share</span><span class="breakdown-val" id="myFounderPending" style="color:#ff6fff">0 ETH</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Scout Earnings</span><span class="breakdown-val" id="myScoutPending" style="color:var(--gold)">0 ETH</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Total Claimed</span><span class="breakdown-val" id="myTotalClaimed" style="color:var(--green)">0 ETH</span></div>
+        </div>
+        <div class="breakdown-card">
+          <div class="breakdown-title">My Membership Status</div>
+          <div class="breakdown-row"><span class="breakdown-key">Tier</span><span class="breakdown-val" id="myTier" style="color:var(--cyan)">—</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Platinum Tokens</span><span class="breakdown-val" id="myPlatTokens">0</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Founder Tokens</span><span class="breakdown-val" id="myFoundTokens">0</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Scout Multiplier</span><span class="breakdown-val" id="myScoutMult">1x</span></div>
+          <div class="breakdown-row"><span class="breakdown-key">Successful Scouts</span><span class="breakdown-val" id="myScoutSuccesses">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCOUT PROGRAM -->
+  <div id="panel-scout" class="panel">
+
+    <div class="multiplier-grid">
+      <div class="multiplier-card">
+        <div class="multiplier-badge" style="color:var(--text-muted);border-color:var(--border)">Standard</div>
+        <div class="multiplier-pct" style="color:var(--cyan)">15%</div>
+        <div class="multiplier-label">of platform fee per successful sale</div>
+      </div>
+      <div class="multiplier-card" style="border-color:rgba(229,228,226,0.3)">
+        <div class="multiplier-badge" style="color:#e5e4e2;border-color:rgba(229,228,226,0.4)">Platinum</div>
+        <div class="multiplier-pct" style="color:#e5e4e2">20%</div>
+        <div class="multiplier-label">of platform fee per successful sale</div>
+      </div>
+      <div class="multiplier-card" style="border-color:rgba(255,111,255,0.3)">
+        <div class="multiplier-badge" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">Founder</div>
+        <div class="multiplier-pct" style="color:#ff6fff">25%</div>
+        <div class="multiplier-label">of platform fee per successful sale</div>
+      </div>
+    </div>
+
+    <div class="referral-card">
+      <div class="referral-title">YOUR REFERRAL CODE</div>
+      <div class="referral-sub">Share your unique referral link with inventors. When they submit an idea using your link and it sells — you automatically earn a percentage of the platform fee.</div>
+
+      <div id="referralGate" style="text-align:center;padding:20px 0">
+        <button class="btn btn-primary" onclick="generateMyCode()">Generate My Referral Code</button>
+      </div>
+
+      <div id="referralDisplay" style="display:none">
+        <div class="referral-code-box">
+          <div class="referral-code" id="myReferralCode">CV0000XXXX</div>
+          <button class="copy-btn" id="copyCodeBtn" onclick="copyCode()">COPY CODE</button>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px">REFERRAL LINK</div>
+        <div class="referral-link-box" id="myReferralLink"></div>
+        <button class="copy-btn" id="copyLinkBtn" onclick="copyLink()">COPY LINK</button>
+      </div>
+    </div>
+
+    <div class="breakdown-card" style="margin-bottom:20px">
+      <div class="breakdown-title">How It Works</div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">1. Generate your referral link</span>
+        <span class="breakdown-val" style="color:var(--cyan)">Above ↑</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">2. Share with inventors</span>
+        <span class="breakdown-val" style="color:var(--text-muted)">Reddit, Discord, Email</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">3. Inventor submits via your link</span>
+        <span class="breakdown-val" style="color:var(--text-muted)">Auto-tracked</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">4. Idea sells on CryptValt</span>
+        <span class="breakdown-val" style="color:var(--green)">Sale confirmed</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">5. You earn % of platform fee</span>
+        <span class="breakdown-val" style="color:var(--gold)">Auto-credited</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">6. Claim anytime</span>
+        <span class="breakdown-val" style="color:var(--green)">Revenue Share tab</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="panel-leaderboard" class="panel">
+    <div class="leaderboard">
+      <div class="leaderboard-header">
+        <div>#</div>
+        <div>Scout</div>
+        <div>Earned</div>
+        <div style="display:none" class="hide-mobile">Sales</div>
+        <div style="display:none" class="hide-mobile">Tier</div>
+      </div>
+      <div id="leaderboardList">
+        <div style="text-align:center;padding:48px;color:var(--text-muted)">
+          <div style="font-size:32px;margin-bottom:12px">🏆</div>
+          <div style="font-family:var(--mono);font-size:11px;letter-spacing:2px">No scouts yet</div>
+          <div style="font-size:13px;margin-top:8px">Be the first to refer an inventor</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const BACKEND_URL = 'https://crypt-valt-backend-jkak.vercel.app';
+let wallet = localStorage.getItem('cv_wallet') || null;
+
+// ── Scout System (inline) ──────────────────────────────────
+function getScoutData() {
+  try { return JSON.parse(localStorage.getItem('cv_scout_data') || '{}'); } catch { return {}; }
+}
+
+function saveScoutData(d) { localStorage.setItem('cv_scout_data', JSON.stringify(d)); }
+
+function getOrCreateCode(addr) {
+  if (!addr) return null;
+  const data = getScoutData();
+  const key  = addr.toLowerCase();
+  if (!data[key]) {
+    const rand = Math.random().toString(36).substring(2,6).toUpperCase();
+    data[key]  = {
+      code:          'CV' + addr.slice(2,6).toUpperCase() + rand,
+      wallet:        key,
+      createdAt:     new Date().toISOString(),
+      listings:      [],
+      successCount:  0,
+      totalEarnings: 0,
+      claimedAmount: 0,
+      tier:          'standard',
+    };
+    saveScoutData(data);
+  }
+  return data[key].code;
+}
+
+// ── Init ───────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  loadStats();
+  loadLeaderboard();
+  if (wallet) loadMyRevenue();
+  else {
+    document.getElementById('revenueConnectGate').style.display = 'block';
+    document.getElementById('revenueContent').style.display     = 'none';
+  }
+});
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Load Stats from localStorage ──────────────────────────
+function loadStats() {
+  const listings = JSON.parse(localStorage.getItem('cv_listings') || '[]');
+  const bids     = JSON.parse(localStorage.getItem('cv_bids')     || '[]');
+  const sold     = listings.filter(l => l.status !== 'live');
+  const volume   = listings.reduce((s, l) => s + (l.bids?.length > 0 ? Math.max(...l.bids.map(b => b.amount)) : 0), 0);
+  const revenue  = Math.floor(volume * 0.20);
+  const scoutData = getScoutData();
+  const scouts   = Object.values(scoutData).filter(s => s.successCount > 0).length;
+
+  document.getElementById('totalVolume').textContent    = '$' + volume.toLocaleString();
+  document.getElementById('platformRevenue').textContent = '$' + revenue.toLocaleString();
+  document.getElementById('ideasSold').textContent       = sold.length;
+  document.getElementById('activeScouts').textContent    = scouts;
+  document.getElementById('totalListings').textContent   = listings.length;
+  document.getElementById('totalBids').textContent       = bids.length;
+  document.getElementById('avgSale').textContent         = sold.length > 0 ? '$' + Math.floor(volume / sold.length).toLocaleString() : '$0';
+  document.getElementById('inventorTotal').textContent   = '$' + Math.floor(volume * 0.80).toLocaleString();
+  document.getElementById('platformTotal').textContent   = '$' + revenue.toLocaleString();
+  document.getElementById('scoutCount').textContent      = Object.keys(scoutData).length;
+}
+
+// ── Load My Revenue ────────────────────────────────────────
+function loadMyRevenue() {
+  if (!wallet) return;
+  document.getElementById('revenueConnectGate').style.display = 'none';
+  document.getElementById('revenueContent').style.display     = 'block';
+
+  const scoutData = getScoutData();
+  const myScout   = scoutData[wallet.toLowerCase()];
+  const pending   = myScout ? myScout.totalEarnings - myScout.claimedAmount : 0;
+
+  document.getElementById('myPendingRevenue').textContent = pending > 0 ? '$' + pending.toLocaleString() : '0.00';
+  document.getElementById('myScoutPending').textContent   = myScout ? myScout.totalEarnings - myScout.claimedAmount + ' USD' : '0 USD';
+  document.getElementById('myScoutSuccesses').textContent = myScout ? myScout.successCount : 0;
+  document.getElementById('myTier').textContent           = myScout ? myScout.tier.toUpperCase() : 'STANDARD';
+  document.getElementById('myScoutMult').textContent      = myScout?.tier === 'founder' ? '1.67x' : myScout?.tier === 'platinum' ? '1.33x' : '1x';
+
+  if (pending > 0) document.getElementById('claimAllBtn').disabled = false;
+}
+
+// ── Scout Code ─────────────────────────────────────────────
+async function generateMyCode() {
+  if (!wallet) {
+    if (window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      wallet = accounts[0];
+      localStorage.setItem('cv_wallet', wallet);
+    } else {
+      wallet = '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
+      localStorage.setItem('cv_wallet', wallet);
+    }
+  }
+
+  const code = getOrCreateCode(wallet);
+  const link = window.location.origin + '/CryptValt/index.html?ref=' + code;
+
+  document.getElementById('referralGate').style.display   = 'none';
+  document.getElementById('referralDisplay').style.display = 'block';
+  document.getElementById('myReferralCode').textContent   = code;
+  document.getElementById('myReferralLink').textContent   = link;
+}
+
+function copyCode() {
+  const code = document.getElementById('myReferralCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyCodeBtn');
+    btn.textContent = 'COPIED ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY CODE'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyLink() {
+  const link = document.getElementById('myReferralLink').textContent;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copyLinkBtn');
+    btn.textContent = 'COPIED ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY LINK'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── Claim Revenue ──────────────────────────────────────────
+function claimAll() {
+  notify('info', '⬡ Claiming', 'Revenue claiming available after contract deployment.');
+}
+
+function connectForRevenue() {
+  if (window.ethereum) {
+    window.ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
+      wallet = accounts[0];
+      localStorage.setItem('cv_wallet', wallet);
+      loadMyRevenue();
+    });
+  } else {
+    wallet = '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
+    localStorage.setItem('cv_wallet', wallet);
+    loadMyRevenue();
+  }
+}
+
+// ── Leaderboard ────────────────────────────────────────────
+function loadLeaderboard() {
+  const data    = getScoutData();
+  const scouts  = Object.values(data)
+    .filter(s => s.successCount > 0)
+    .sort((a, b) => b.totalEarnings - a.totalEarnings)
+    .slice(0, 20);
+
+  const list = document.getElementById('leaderboardList');
+  if (scouts.length === 0) return;
+
+  list.innerHTML = scouts.map((s, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const tierClass = s.tier === 'founder' ? 'tier-founder' : s.tier === 'platinum' ? 'tier-platinum' : 'tier-standard';
+    return `
+      <div class="leaderboard-row">
+        <div class="rank ${rankClass}">${i + 1}</div>
+        <div class="scout-addr">${s.wallet.slice(0,6)}...${s.wallet.slice(-4)}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--gold)">$${s.totalEarnings.toLocaleString()}</div>
+      </div>`;
+  }).join('');
+}
+
+function notify(type, title, msg) {
+  const el = document.createElement('div');
+  el.className = `notif ${type}`;
+  el.innerHTML = `<div class="notif-title">${title}</div><div class="notif-msg">${msg}</div>`;
+  document.getElementById('notifs').prepend(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
