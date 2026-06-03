@@ -1,75 +1,91 @@
 /**
- * CryptValt Service Worker v1.0
- * Handles offline support, caching, and PWA install
+ * CryptValt Service Worker v5.0
+ * Complete cache list — all pages, JS modules, and assets
  */
 
-const CACHE_NAME = 'cryptvalt-v1';
+const CACHE_NAME  = 'cryptvalt-v5';
 const OFFLINE_URL = '/CryptValt/offline.html';
 
-// Assets to cache immediately on install
 const PRECACHE_ASSETS = [
+  // ── Root ──────────────────────────────────────────────
   '/CryptValt/',
   '/CryptValt/index.html',
   '/CryptValt/manifest.json',
-  '/CryptValt/icon-192.png',
-  '/CryptValt/icon-512.png',
   '/CryptValt/offline.html',
+  '/CryptValt/sw.js',
+
+  // ── JS Modules ────────────────────────────────────────
+  '/CryptValt/js/state.js',
+  '/CryptValt/js/wallet.js',
+  '/CryptValt/js/config.js',
+  '/CryptValt/js/chain.js',
+  '/CryptValt/js/crypto.js',
+  '/CryptValt/js/ipfs.js',
+  '/CryptValt/js/scoring.js',
+  '/CryptValt/js/fileupload.js',
+  '/CryptValt/js/auction.js',
+  '/CryptValt/js/submit.js',
+  '/CryptValt/js/ui.js',
+  '/CryptValt/js/claude.js',
+  '/CryptValt/js/investor.js',
+  '/CryptValt/js/optout.js',
+  '/CryptValt/js/security.js',
+  '/CryptValt/js/ams.js',
+  '/CryptValt/js/scout.js',
+  '/CryptValt/js/app.js',
+  '/CryptValt/js/pwa.js',
+
+  // ── Sub Pages ─────────────────────────────────────────
+  '/CryptValt/membership/index.html',
+  '/CryptValt/founder/index.html',
+  '/CryptValt/analytics/index.html',
+  '/CryptValt/token/index.html',
+  '/CryptValt/promo/index.html',
+  '/CryptValt/promo/outreach.html',
 ];
 
-// External assets to cache on first fetch
-const CACHE_EXTERNAL = [
-  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js',
+// Always fetch live — never cache
+const ALWAYS_LIVE = [
+  'api.anthropic.com',
+  'api.pinata.cloud',
+  'rpc.sepolia.org',
+  'crypt-valt-backend-jkak.vercel.app',
+  'ethereum-sepolia.publicnode.com',
+  'gateway.pinata.cloud',
 ];
 
-// ============================================================
-// INSTALL — Cache all critical assets
-// ============================================================
+// ── Install ────────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(PRECACHE_ASSETS).catch(err => {
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_ASSETS).catch(err => {
         console.warn('[SW] Pre-cache partial failure:', err);
-      });
-    }).then(() => self.skipWaiting())
+      }))
+      .then(() => self.skipWaiting())
   );
 });
 
-// ============================================================
-// ACTIVATE — Clean old caches
-// ============================================================
+// ── Activate ───────────────────────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// ============================================================
-// FETCH — Smart caching strategy per request type
-// ============================================================
+// ── Fetch ──────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Never intercept these — always need live data
-  const alwaysOnline = [
-    'api.anthropic.com',
-    'api.pinata.cloud',
-    'rpc.sepolia.org',
-    'ethereum-sepolia.publicnode.com',
-  ];
-
-  if (alwaysOnline.some(domain => url.hostname.includes(domain))) {
-    // Online only — if offline return a JSON error
+  // Always live for API calls
+  if (ALWAYS_LIVE.some(domain => url.hostname.includes(domain))) {
     event.respondWith(
       fetch(event.request).catch(() =>
         new Response(
-          JSON.stringify({ error: 'offline', message: 'This feature requires an internet connection.' }),
+          JSON.stringify({ error: 'offline', message: 'Internet connection required.' }),
           { headers: { 'Content-Type': 'application/json' } }
         )
       )
@@ -77,7 +93,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App shell — Cache First, fall back to network
+  // App shell — Cache First
   if (
     event.request.mode === 'navigate' ||
     url.pathname.startsWith('/CryptValt/')
@@ -91,13 +107,13 @@ self.addEventListener('fetch', event => {
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
           return response;
-        }).catch(() => caches.match('/CryptValt/offline.html'));
+        }).catch(() => caches.match(OFFLINE_URL));
       })
     );
     return;
   }
 
-  // Google Fonts & CDN — Cache First
+  // Fonts + CDN — Cache First
   if (
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com') ||
@@ -118,7 +134,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Everything else — Network First, fall back to cache
+  // Everything else — Network First
   event.respondWith(
     fetch(event.request).then(response => {
       if (response && response.status === 200 && event.request.method === 'GET') {
@@ -128,42 +144,24 @@ self.addEventListener('fetch', event => {
       return response;
     }).catch(() =>
       caches.match(event.request).then(cached =>
-        cached || caches.match('/CryptValt/offline.html')
+        cached || caches.match(OFFLINE_URL)
       )
     )
   );
 });
 
-// ============================================================
-// BACKGROUND SYNC — Queue actions when offline
-// ============================================================
+// ── Background Sync ────────────────────────────────────────
 self.addEventListener('sync', event => {
   if (event.tag === 'sync-listings') {
-    event.waitUntil(syncPendingListings());
-  }
-  if (event.tag === 'sync-bids') {
-    event.waitUntil(syncPendingBids());
+    event.waitUntil(
+      self.clients.matchAll().then(clients =>
+        clients.forEach(c => c.postMessage({ type: 'SYNC_LISTINGS' }))
+      )
+    );
   }
 });
 
-async function syncPendingListings() {
-  // When back online, sync any locally saved listings to chain
-  const clients = await self.clients.matchAll();
-  clients.forEach(client => {
-    client.postMessage({ type: 'SYNC_LISTINGS' });
-  });
-}
-
-async function syncPendingBids() {
-  const clients = await self.clients.matchAll();
-  clients.forEach(client => {
-    client.postMessage({ type: 'SYNC_BIDS' });
-  });
-}
-
-// ============================================================
-// PUSH NOTIFICATIONS — Auction alerts
-// ============================================================
+// ── Push Notifications ─────────────────────────────────────
 self.addEventListener('push', event => {
   if (!event.data) return;
   const data = event.data.json();
@@ -173,28 +171,21 @@ self.addEventListener('push', event => {
       icon:  '/CryptValt/icon-192.png',
       badge: '/CryptValt/icon-192.png',
       data:  data.url ? { url: data.url } : {},
-      actions: data.actions || [],
     })
   );
 });
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  if (event.notification.data && event.notification.data.url) {
+  if (event.notification.data?.url) {
     event.waitUntil(clients.openWindow(event.notification.data.url));
   }
 });
 
-// ============================================================
-// MESSAGE HANDLER — From main app
-// ============================================================
+// ── Message Handler ────────────────────────────────────────
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    caches.open(CACHE_NAME).then(cache => {
-      cache.addAll(event.data.urls);
-    });
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data?.type === 'CACHE_URLS') {
+    caches.open(CACHE_NAME).then(cache => cache.addAll(event.data.urls));
   }
 });
