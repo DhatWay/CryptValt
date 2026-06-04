@@ -1853,6 +1853,9 @@ window.addEventListener('load', () => {
   document.getElementById('initTime').textContent = timeNow();
   startClaudeMonitor();
   checkSavedWallet();
+  checkReferralCode();
+  setTimeout(() => runRemediationScan(), 3000);
+  setInterval(() => runRemediationScan(), 300000);
 });
 
 function checkSavedWallet() {
@@ -2461,6 +2464,7 @@ function renderListingCard(l) {
         </div>
       </div>
 
+      ${isListingFlagged(l.id) ? '<div style="font-family:var(--mono);font-size:9px;color:var(--red);letter-spacing:2px;margin-bottom:6px">⚠ FLAGGED — UNDER REVIEW</div>' : ''}
       <div class="card-title">${l.title}</div>
       <div class="card-category">${l.category}</div>
       <p style="font-size:14px;color:var(--text-dim);margin-bottom:16px;line-height:1.5;font-style:italic">"${l.teaser}"</p>
@@ -2540,6 +2544,10 @@ setInterval(() => {
 // BID SYSTEM
 // ============================================================
 function openBid(listingId) {
+  if (isWalletBlocked(state.wallet || '')) {
+    notify('error', 'Access Restricted', 'Your wallet has been flagged by the security monitor.');
+    return;
+  }
   if (!state.wallet) {
     notify('error', 'Wallet Required', 'Connect your wallet to place a bid.');
     connectWallet();
@@ -2624,6 +2632,10 @@ async function submitBid(listingId) {
     timestamp: Date.now()
   };
 
+  if (isBidFrozen(bid.id)) {
+    notify('error', 'Bid Frozen', 'This bid has been flagged by the security monitor.');
+    return;
+  }
   listing.bids.push(bid);
   state.bids.push(bid);
   localStorage.setItem('cv_listings', JSON.stringify(state.listings));
@@ -3067,6 +3079,191 @@ Give a brief patent analysis verdict in JSON only:
   } catch(e) {
     console.warn('Patent search error:', e);
   }
+}
+
+
+// ============================================================
+// REFERRAL DETECTION
+// ============================================================
+function checkReferralCode() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  if (ref) {
+    localStorage.setItem('cv_active_referral', ref);
+    window.history.replaceState({}, '', window.location.pathname);
+    notify('info', '⬡ Referral Detected', 'Submit your idea to credit your scout.');
+  }
+}
+
+// ============================================================
+// FILE UPLOAD
+// ============================================================
+let uploadedFiles = [];
+
+function handleFileSelect(e) { Array.from(e.target.files).forEach(addFile); }
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  const dz = document.getElementById('fileDropZone');
+  if (dz) dz.style.borderColor = 'rgba(0,200,255,0.2)';
+  Array.from(e.dataTransfer.files).forEach(addFile);
+}
+
+function addFile(file) {
+  if (file.size > 50*1024*1024) { notify('error','Too Large', file.name+' exceeds 50MB'); return; }
+  if (uploadedFiles.length >= 5) { notify('error','Max Files','Maximum 5 files per listing'); return; }
+  const icons = {'application/pdf':'📄','image':'🖼️','video':'🎥','audio':'🎵'};
+  const icon = Object.keys(icons).find(k => file.type.includes(k)) ? icons[Object.keys(icons).find(k => file.type.includes(k))] : '📎';
+  uploadedFiles.push({ id: Date.now().toString(36), file, name: file.name, size: file.size, icon });
+  renderFileList();
+  notify('success','📎 Added', file.name);
+}
+
+function removeFile(id) {
+  uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (!list) return;
+  if (!uploadedFiles.length) { list.innerHTML = ''; return; }
+  list.innerHTML = uploadedFiles.map(f => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);margin-bottom:6px">
+      <span style="font-size:20px">${f.icon}</span>
+      <div style="flex:1;overflow:hidden">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">${(f.size/1024/1024).toFixed(1)} MB</div>
+      </div>
+      <button onclick="removeFile('${f.id}')" style="background:transparent;border:1px solid var(--red);color:var(--red);padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
+    </div>`).join('');
+}
+
+// ============================================================
+// AUTO-REMEDIATION ENGINE
+// ============================================================
+const BLOCKED_KEY     = 'cv_blocked_wallets';
+const FLAGGED_KEY     = 'cv_flagged_listings';
+const FROZEN_BIDS_KEY = 'cv_frozen_bids';
+const REMEDIATION_LOG = 'cv_remediation_log';
+
+function getBlocked()    { try { return JSON.parse(localStorage.getItem(BLOCKED_KEY)     || '[]'); } catch { return []; } }
+function getFlagged()    { try { return JSON.parse(localStorage.getItem(FLAGGED_KEY)     || '[]'); } catch { return []; } }
+function getFrozenBids() { try { return JSON.parse(localStorage.getItem(FROZEN_BIDS_KEY) || '[]'); } catch { return []; } }
+function getRemLog()     { try { return JSON.parse(localStorage.getItem(REMEDIATION_LOG) || '[]'); } catch { return []; } }
+
+function isWalletBlocked(wallet) { return getBlocked().some(b => b.wallet.toLowerCase() === wallet.toLowerCase() && b.blocked); }
+function isListingFlagged(id)    { return getFlagged().some(f => f.listingId === id); }
+function isBidFrozen(bidId)      { return getFrozenBids().some(f => f.bidId === bidId); }
+
+function logRemediation(level, threat, action, detail, wallet) {
+  const log = getRemLog();
+  log.unshift({ id: Date.now().toString(36), timestamp: new Date().toISOString(), level, threat, action, detail, wallet: wallet || null });
+  localStorage.setItem(REMEDIATION_LOG, JSON.stringify(log.slice(0, 200)));
+  addClaudeEntry(
+    level === 'CRITICAL' || level === 'HIGH' ? 'alert' : level === 'WARN' ? 'warn' : 'info',
+    '[AUTO-REMEDIATION] ' + threat,
+    'Action: ' + action + ' — ' + detail
+  );
+  if (level === 'HIGH' || level === 'CRITICAL') notify('error', '⚠ ' + threat, action);
+  updateRemediationStats();
+}
+
+function freezeBid(bidId, listingId) {
+  const frozen = getFrozenBids();
+  if (!frozen.find(f => f.bidId === bidId)) {
+    frozen.push({ bidId, listingId, frozenAt: new Date().toISOString() });
+    localStorage.setItem(FROZEN_BIDS_KEY, JSON.stringify(frozen));
+  }
+}
+
+function flagWallet(wallet, reason) {
+  const blocked = getBlocked();
+  if (!blocked.find(b => b.wallet.toLowerCase() === wallet.toLowerCase())) {
+    blocked.push({ wallet: wallet.toLowerCase(), reason, flaggedAt: new Date().toISOString(), blocked: false });
+    localStorage.setItem(BLOCKED_KEY, JSON.stringify(blocked));
+  }
+}
+
+function flagListing(listingId, reason) {
+  const flagged = getFlagged();
+  if (!flagged.find(f => f.listingId === listingId)) {
+    flagged.push({ listingId, reason, flaggedAt: new Date().toISOString() });
+    localStorage.setItem(FLAGGED_KEY, JSON.stringify(flagged));
+  }
+}
+
+function updateRemediationStats() {
+  const frozenEl  = document.getElementById('frozenBidsCount');
+  const blockedEl = document.getElementById('blockedWalletsCount');
+  const flagEl    = document.getElementById('flagCount');
+  const anomalyEl = document.getElementById('anomalyCount');
+  const log       = getRemLog();
+  if (frozenEl)  frozenEl.textContent  = getFrozenBids().length;
+  if (blockedEl) blockedEl.textContent = getBlocked().filter(b => b.blocked).length;
+  if (flagEl)    flagEl.textContent    = log.filter(e => e.level === 'HIGH' || e.level === 'CRITICAL').length;
+  if (anomalyEl) anomalyEl.textContent = log.length;
+}
+
+function runRemediationScan() {
+  const listings = state.listings;
+  if (!listings || !listings.length) return;
+
+  // Shill bidding
+  listings.forEach(listing => {
+    listing.bids.forEach(bid => {
+      if (bid.wallet && listing.wallet && bid.wallet.toLowerCase() === listing.wallet.toLowerCase()) {
+        freezeBid(bid.id, listing.id);
+        logRemediation('CRITICAL','Shill Bidding Detected','Bid frozen — wallet matches listing owner','Listing '+listing.id+' · Bid '+bid.id, bid.wallet);
+      }
+    });
+  });
+
+  // Wash trading
+  listings.forEach(listing => {
+    const wbt = {};
+    listing.bids.forEach(bid => { if (!wbt[bid.wallet]) wbt[bid.wallet]=[]; wbt[bid.wallet].push(bid.timestamp); });
+    Object.entries(wbt).forEach(([wallet, times]) => {
+      if (times.length >= 3 && (Math.max(...times) - Math.min(...times)) < 60000) {
+        flagWallet(wallet, 'Rapid successive bidding');
+        logRemediation('HIGH','Wash Trading Pattern','Wallet flagged','Listing '+listing.id, wallet);
+      }
+    });
+  });
+
+  // Blocked wallet bids
+  listings.forEach(listing => {
+    listing.bids.forEach(bid => {
+      if (isWalletBlocked(bid.wallet || '')) {
+        freezeBid(bid.id, listing.id);
+        logRemediation('CRITICAL','Blocked Wallet Bid','Bid frozen','Listing '+listing.id, bid.wallet);
+      }
+    });
+  });
+
+  // Expired auctions
+  const now = Date.now();
+  listings.forEach(listing => {
+    if (listing.status === 'live' && listing.endsAt < now)
+      logRemediation('INFO','Auction Expired','Awaiting resolution','Listing '+listing.id+' expired '+ Math.round((now-listing.endsAt)/60000)+'m ago', listing.wallet);
+  });
+
+  // Anomalous scores
+  const catScores = {};
+  listings.forEach(l => { if (l.score) { if (!catScores[l.category]) catScores[l.category]=[]; catScores[l.category].push(l.score.overallScore); } });
+  listings.forEach(listing => {
+    if (!listing.score) return;
+    const scores = catScores[listing.category] || [];
+    if (scores.length < 3) return;
+    const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+    if (Math.abs(listing.score.overallScore - avg) > 35) {
+      flagListing(listing.id, 'Anomalous AI score');
+      logRemediation('WARN','Anomalous AI Score','Listing flagged for review','Listing '+listing.id+' scored '+listing.score.overallScore+' vs avg '+Math.round(avg), listing.wallet);
+    }
+  });
+
+  updateRemediationStats();
+  renderListings();
 }
 
 </script>
