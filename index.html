@@ -1297,6 +1297,7 @@ main {
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
     <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
     <button class="nav-btn" onclick="showPage('crm')" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">CRM</button>
+    <button class="nav-btn" onclick="openAdmin()" style="color:var(--red);border-color:rgba(255,59,107,0.4)">Admin</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
       <div class="wallet-dot"></div>
@@ -1889,6 +1890,91 @@ main {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <button class="btn btn-secondary" onclick="closeModal('investorModal')">Cancel</button>
           <button class="btn btn-primary" onclick="saveInvestor()">Save Investor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div class="modal-overlay" id="adminLoginModal">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <div class="modal-title">⬡ ADMIN ACCESS</div>
+        <button class="modal-close" onclick="closeModal('adminLoginModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:48px;margin-bottom:12px">🔐</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px">RESTRICTED ACCESS</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Admin Password</label>
+          <input type="password" class="form-input" id="adminPasswordInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')submitAdminLogin()">
+        </div>
+        <div id="adminLoginError" style="display:none;font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:1px;margin-bottom:16px">✕ Incorrect password</div>
+        <button class="btn btn-primary btn-full" onclick="submitAdminLogin()">Enter Admin Panel</button>
+      </div>
+    </div>
+  </div>
+  <!-- ADMIN PAGE -->
+  <div id="page-admin" class="page">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">ADMIN</div>
+        <div class="section-count">PLATFORM CONTROL</div>
+        <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="adminLogout()">Lock Admin</button>
+      </div>
+      <div class="tabs" style="margin-bottom:32px">
+        <button class="tab active" onclick="switchAdminTab('tabAdminPlatform',this)">Platform</button>
+        <button class="tab" onclick="switchAdminTab('tabAdminSecurity',this)">Security</button>
+        <button class="tab" onclick="switchAdminTab('tabAdminConfig',this)">Config</button>
+        <button class="tab" onclick="switchAdminTab('tabAdminPassword',this)">Password</button>
+      </div>
+      <div id="tabAdminPlatform">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px">
+          <div class="card" style="padding:20px"><div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:12px">PLATFORM STATUS</div><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div class="wallet-dot"></div><span id="adminStatusLabel" style="font-size:14px;font-weight:600">Online</span></div><button class="btn btn-danger btn-sm" onclick="togglePlatformStatus()">Toggle Maintenance Mode</button></div>
+          <div class="card" style="padding:20px"><div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:12px">PLATFORM FEE</div><div style="display:flex;gap:0;margin-bottom:10px"><input type="number" class="form-input" id="adminFeeInput" style="border-right:none" placeholder="20" min="0" max="50"><div style="background:var(--surface2);border:1px solid var(--border);padding:0 14px;display:flex;align-items:center;font-family:var(--mono);font-size:12px;color:var(--text-muted)">%</div></div><button class="btn btn-primary btn-sm" onclick="savePlatformFee()">Update Fee</button></div>
+          <div class="card" style="padding:20px"><div style="font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:12px">ALERT EMAIL</div><input type="email" class="form-input" id="adminAlertEmail" placeholder="your@email.com" style="margin-bottom:10px"><button class="btn btn-primary btn-sm" onclick="saveAdminAlertEmail()">Update Alert Email</button></div>
+          <div class="card" style="padding:20px"><div style="font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:12px">DANGER ZONE</div><button class="btn btn-danger btn-sm btn-full" onclick="clearAllListings()">Clear All Listings</button></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">FEATURE TOGGLES</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px" id="featureToggles"></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">LIVE STATS</div>
+        <div class="dashboard-grid">
+          <div class="dash-stat"><div class="dash-stat-label">Total Listings</div><div class="dash-stat-value" id="adminStatListings" style="color:var(--cyan)">0</div></div>
+          <div class="dash-stat"><div class="dash-stat-label">Total Bids</div><div class="dash-stat-value" id="adminStatBids" style="color:var(--gold)">0</div></div>
+          <div class="dash-stat"><div class="dash-stat-label">Frozen Bids</div><div class="dash-stat-value" id="adminStatFrozen" style="color:var(--red)">0</div></div>
+          <div class="dash-stat"><div class="dash-stat-label">Blocked Wallets</div><div class="dash-stat-value" id="adminStatBlocked" style="color:var(--gold)">0</div></div>
+        </div>
+      </div>
+      <div id="tabAdminSecurity" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px">
+          <div class="card" style="padding:20px"><div style="font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:12px">BLOCK WALLET</div><input type="text" class="form-input" id="adminBlockWallet" placeholder="0x..." style="margin-bottom:8px"><input type="text" class="form-input" id="adminBlockReason" placeholder="Reason..." style="margin-bottom:10px"><button class="btn btn-danger btn-sm btn-full" onclick="adminBlockWalletFn()">Block Wallet</button></div>
+          <div class="card" style="padding:20px"><div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:12px">UNBLOCK WALLET</div><input type="text" class="form-input" id="adminUnblockWallet" placeholder="0x..." style="margin-bottom:10px"><button class="btn btn-secondary btn-sm btn-full" onclick="adminUnblockWalletFn()">Unblock Wallet</button></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">BLOCKED WALLETS</div>
+        <div id="adminBlockedList" style="margin-bottom:32px"></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">REMEDIATION LOG</div>
+        <div id="adminRemLog" style="max-height:300px;overflow-y:auto"></div>
+        <button class="btn btn-danger btn-sm" style="margin-top:16px" onclick="clearRemLog()">Clear Log</button>
+      </div>
+      <div id="tabAdminConfig" style="display:none">
+        <div style="max-width:500px">
+          <div class="form-group"><label class="form-label">Pinata API Key</label><input type="text" class="form-input" id="cfgPinataKey" placeholder="Pinata API Key"></div>
+          <div class="form-group"><label class="form-label">Pinata Secret</label><input type="password" class="form-input" id="cfgPinataSecret" placeholder="Pinata Secret"></div>
+          <div class="form-group"><label class="form-label">Anthropic API Key</label><input type="password" class="form-input" id="cfgAnthropicKey" placeholder="Anthropic API Key"></div>
+          <div class="form-group"><label class="form-label">Owner Wallet</label><input type="text" class="form-input" id="cfgOwnerWallet" placeholder="0x..."></div>
+          <button class="btn btn-primary btn-full" onclick="saveApiConfig()">Save Config</button>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-top:10px">// Saved to localStorage. No need to push keys to GitHub.</div>
+        </div>
+      </div>
+      <div id="tabAdminPassword" style="display:none">
+        <div style="max-width:400px">
+          <div class="form-group"><label class="form-label">Current Password</label><input type="password" class="form-input" id="pwCurrent" placeholder="Current password"></div>
+          <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-input" id="pwNew" placeholder="New password (min 8 chars)"></div>
+          <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" class="form-input" id="pwConfirm" placeholder="Confirm new password"></div>
+          <button class="btn btn-primary btn-full" onclick="changeAdminPassword()">Update Password</button>
         </div>
       </div>
     </div>
@@ -3587,6 +3673,34 @@ function copyTemplate(type) {
 }
 
 window.addEventListener('load', () => { setTimeout(renderCRM, 100); });
+
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+const ADMIN_PASS_KEY='cv_admin_password';const ADMIN_SESSION_KEY='cv_admin_session';
+let adminFeatures=JSON.parse(localStorage.getItem('cv_admin_features')||JSON.stringify({submissions:true,bidding:true,aiScoring:true,patentSearch:true,referrals:true,membership:true}));
+function getAdminPassword(){return localStorage.getItem(ADMIN_PASS_KEY)||'CryptValt2024!';}
+function isAdminLoggedIn(){return sessionStorage.getItem(ADMIN_SESSION_KEY)==='true';}
+function openAdmin(){if(isAdminLoggedIn()){showPage('admin');refreshAdminData();}else{document.getElementById('adminPasswordInput').value='';document.getElementById('adminLoginError').style.display='none';document.getElementById('adminLoginModal').classList.add('active');}}
+function submitAdminLogin(){const input=document.getElementById('adminPasswordInput').value;if(input===getAdminPassword()){sessionStorage.setItem(ADMIN_SESSION_KEY,'true');closeModal('adminLoginModal');showPage('admin');refreshAdminData();notify('success','⬡ Admin Access Granted','Welcome to the admin panel.');}else{document.getElementById('adminLoginError').style.display='block';document.getElementById('adminPasswordInput').value='';}}
+function adminLogout(){sessionStorage.removeItem(ADMIN_SESSION_KEY);showPage('home');notify('info','🔐 Admin Locked','Admin session ended.');}
+function switchAdminTab(tabId,btn){['tabAdminPlatform','tabAdminSecurity','tabAdminConfig','tabAdminPassword'].forEach(t=>{document.getElementById(t).style.display='none';});document.getElementById(tabId).style.display='block';document.querySelectorAll('#page-admin .tab').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');}
+function refreshAdminData(){document.getElementById('adminStatListings').textContent=state.listings.length;document.getElementById('adminStatBids').textContent=state.bids.length;document.getElementById('adminStatFrozen').textContent=getFrozenBids().length;document.getElementById('adminStatBlocked').textContent=getBlocked().filter(b=>b.blocked).length;document.getElementById('adminFeeInput').value=Math.round(CONFIG.PLATFORM_FEE*100);document.getElementById('adminAlertEmail').value=localStorage.getItem('cv_alert_email')||'';document.getElementById('cfgOwnerWallet').value=CONFIG.OWNER_WALLET;renderFeatureToggles();renderAdminBlockedList();renderAdminRemLog();}
+function renderFeatureToggles(){const c=document.getElementById('featureToggles');if(!c)return;const features=[{key:'submissions',label:'Idea Submissions',color:'var(--cyan)'},{key:'bidding',label:'Bidding System',color:'var(--gold)'},{key:'aiScoring',label:'AI Scoring',color:'var(--green)'},{key:'patentSearch',label:'Patent Search',color:'var(--cyan)'},{key:'referrals',label:'Scout Referrals',color:'#ff6fff'},{key:'membership',label:'Membership Minting',color:'var(--gold)'}];c.innerHTML=features.map(f=>`<div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between"><div style="font-family:var(--mono);font-size:10px;color:${f.color};letter-spacing:1px">${f.label}</div><div onclick="toggleFeature('${f.key}')" style="cursor:pointer;padding:4px 12px;border:1px solid;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:${adminFeatures[f.key]?'var(--green)':'var(--red)'};border-color:${adminFeatures[f.key]?'rgba(0,255,157,0.4)':'rgba(255,59,107,0.4)'};background:${adminFeatures[f.key]?'var(--green-dim)':'var(--red-dim)'}">${adminFeatures[f.key]?'ON':'OFF'}</div></div>`).join('');}
+function toggleFeature(key){adminFeatures[key]=!adminFeatures[key];localStorage.setItem('cv_admin_features',JSON.stringify(adminFeatures));renderFeatureToggles();notify('info','Feature Updated',key+' is now '+(adminFeatures[key]?'ON':'OFF'));}
+function togglePlatformStatus(){const m=localStorage.getItem('cv_maintenance')==='true';localStorage.setItem('cv_maintenance',String(!m));document.getElementById('adminStatusLabel').textContent=!m?'Maintenance Mode':'Online';notify(!m?'error':'success','Platform Status',!m?'Maintenance mode enabled':'Platform back online');}
+function clearAllListings(){if(!confirm('Clear ALL listings? This cannot be undone.'))return;state.listings=[];state.bids=[];localStorage.setItem('cv_listings','[]');localStorage.setItem('cv_bids','[]');updateStats();renderListings();refreshAdminData();notify('info','Cleared','All listings removed.');}
+function savePlatformFee(){const fee=parseInt(document.getElementById('adminFeeInput').value);if(isNaN(fee)||fee<0||fee>50){notify('error','Invalid Fee','Enter 0-50%.');return;}CONFIG.PLATFORM_FEE=fee/100;CONFIG.INVENTOR_SHARE=1-CONFIG.PLATFORM_FEE;localStorage.setItem('cv_platform_fee',fee);notify('success','✓ Fee Updated','Platform fee set to '+fee+'%');}
+function saveAdminAlertEmail(){const email=document.getElementById('adminAlertEmail').value.trim();if(!email||!email.includes('@')){notify('error','Invalid Email','Enter a valid email.');return;}CONFIG.ALERT_EMAIL=email;localStorage.setItem('cv_alert_email',email);const input=document.getElementById('alertEmailInput');if(input)input.value=email;notify('success','✓ Alert Email Saved',email);}
+function adminBlockWalletFn(){const wallet=document.getElementById('adminBlockWallet').value.trim();const reason=document.getElementById('adminBlockReason').value.trim()||'Manually blocked by admin';if(!wallet){notify('error','Required','Enter a wallet address.');return;}const blocked=getBlocked();const existing=blocked.find(b=>b.wallet.toLowerCase()===wallet.toLowerCase());if(existing){existing.blocked=true;existing.reason=reason;}else blocked.push({wallet:wallet.toLowerCase(),reason,flaggedAt:new Date().toISOString(),blocked:true});localStorage.setItem(BLOCKED_KEY,JSON.stringify(blocked));document.getElementById('adminBlockWallet').value='';document.getElementById('adminBlockReason').value='';renderAdminBlockedList();refreshAdminData();notify('success','✓ Blocked',wallet.slice(0,10)+'...');}
+function adminUnblockWalletFn(){const wallet=document.getElementById('adminUnblockWallet').value.trim();if(!wallet){notify('error','Required','Enter a wallet address.');return;}localStorage.setItem(BLOCKED_KEY,JSON.stringify(getBlocked().filter(b=>b.wallet.toLowerCase()!==wallet.toLowerCase())));document.getElementById('adminUnblockWallet').value='';renderAdminBlockedList();refreshAdminData();notify('success','✓ Unblocked',wallet.slice(0,10)+'...');}
+function renderAdminBlockedList(){const el=document.getElementById('adminBlockedList');if(!el)return;const blocked=getBlocked();if(!blocked.length){el.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding:12px">No blocked wallets</div>';return;}el.innerHTML=blocked.map(b=>`<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:6px"><div style="flex:1"><div style="font-family:var(--mono);font-size:11px;color:${b.blocked?'var(--red)':'var(--gold)'}">${b.wallet}</div><div style="font-size:12px;color:var(--text-muted)">${b.reason}</div></div><div style="font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid;color:${b.blocked?'var(--red)':'var(--gold)'};border-color:${b.blocked?'rgba(255,59,107,0.4)':'rgba(240,165,0,0.4)'}">${b.blocked?'BLOCKED':'FLAGGED'}</div></div>`).join('');}
+function renderAdminRemLog(){const el=document.getElementById('adminRemLog');if(!el)return;const log=getRemLog();if(!log.length){el.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);padding:12px">No events logged</div>';return;}const lc={CRITICAL:'var(--red)',HIGH:'var(--red)',WARN:'var(--gold)',INFO:'var(--cyan)'};el.innerHTML=log.slice(0,50).map(e=>`<div style="display:flex;gap:12px;padding:10px;background:var(--surface2);border:1px solid var(--border);margin-bottom:4px"><div style="font-family:var(--mono);font-size:9px;color:${lc[e.level]||'var(--cyan)'};width:60px;flex-shrink:0">${e.level}</div><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">${e.threat}</div><div style="font-size:11px;color:var(--text-muted)">${e.detail}</div></div><div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);flex-shrink:0">${new Date(e.timestamp).toLocaleTimeString()}</div></div>`).join('');}
+function clearRemLog(){localStorage.removeItem(REMEDIATION_LOG);renderAdminRemLog();notify('info','Log Cleared','Remediation log cleared.');}
+function saveApiConfig(){const pk=document.getElementById('cfgPinataKey').value.trim();const ps=document.getElementById('cfgPinataSecret').value.trim();const ak=document.getElementById('cfgAnthropicKey').value.trim();const ow=document.getElementById('cfgOwnerWallet').value.trim();if(pk){CONFIG.PINATA_API_KEY=pk;localStorage.setItem('cv_pinata_key',pk);}if(ps){CONFIG.PINATA_API_SECRET=ps;localStorage.setItem('cv_pinata_secret',ps);}if(ak){CONFIG.ANTHROPIC_API_KEY=ak;localStorage.setItem('cv_anthropic_key',ak);}if(ow){CONFIG.OWNER_WALLET=ow;localStorage.setItem('cv_owner_wallet',ow);}notify('success','✓ Config Saved','API configuration updated.');}
+function changeAdminPassword(){const current=document.getElementById('pwCurrent').value;const newPw=document.getElementById('pwNew').value;const confirm=document.getElementById('pwConfirm').value;if(current!==getAdminPassword()){notify('error','Wrong Password','Current password is incorrect.');return;}if(newPw.length<8){notify('error','Too Short','Password must be at least 8 characters.');return;}if(newPw!==confirm){notify('error','Mismatch','New passwords do not match.');return;}localStorage.setItem(ADMIN_PASS_KEY,newPw);['pwCurrent','pwNew','pwConfirm'].forEach(id=>document.getElementById(id).value='');notify('success','✓ Password Updated','Admin password changed successfully.');}
+window.addEventListener('load',()=>{const fee=localStorage.getItem('cv_platform_fee');const pk=localStorage.getItem('cv_pinata_key');const ps=localStorage.getItem('cv_pinata_secret');const ak=localStorage.getItem('cv_anthropic_key');const ow=localStorage.getItem('cv_owner_wallet');if(fee){CONFIG.PLATFORM_FEE=parseInt(fee)/100;CONFIG.INVENTOR_SHARE=1-CONFIG.PLATFORM_FEE;}if(pk)CONFIG.PINATA_API_KEY=pk;if(ps)CONFIG.PINATA_API_SECRET=ps;if(ak)CONFIG.ANTHROPIC_API_KEY=ak;if(ow)CONFIG.OWNER_WALLET=ow;});
 
 </script>
 </body>
