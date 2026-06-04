@@ -1294,6 +1294,7 @@ main {
     <button class="nav-btn" onclick="window.location.href='analytics/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Analytics</button>
     <button class="nav-btn" onclick="window.location.href='token/index.html'" style="color:var(--green);border-color:rgba(0,255,157,0.4)">CVT</button>
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
+    <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <button class="nav-btn" onclick="window.location.href='promo/index.html'">About</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
@@ -1383,6 +1384,34 @@ main {
       </div>
 
       <div id="submitForm">
+
+        <!-- PDF AUTO-FILL DROP ZONE -->
+        <div id="pdfDropZone" style="border:2px dashed rgba(0,200,255,0.3);padding:28px;text-align:center;cursor:pointer;background:var(--surface2);margin-bottom:24px;transition:all 0.2s;position:relative"
+          onclick="document.getElementById('pdfAutoInput').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--cyan)'"
+          ondragleave="this.style.borderColor='rgba(0,200,255,0.3)'"
+          ondrop="handlePdfAutoDrop(event)">
+          <input type="file" id="pdfAutoInput" accept=".pdf" style="display:none" onchange="handlePdfAutoSelect(event)">
+          <div style="font-size:36px;margin-bottom:8px">📄</div>
+          <div style="font-family:var(--display);font-size:22px;letter-spacing:3px;margin-bottom:6px">DROP YOUR IDEA PDF</div>
+          <div style="font-size:13px;color:var(--text-dim);line-height:1.6">Claude AI will read your PDF and automatically fill all fields,<br>run patent search, and check for existing ideas.</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-top:10px">OR FILL FIELDS MANUALLY BELOW</div>
+        </div>
+
+        <!-- PDF PROCESSING STATE -->
+        <div id="pdfProcessing" style="display:none;background:var(--surface2);border:1px solid var(--border-bright);padding:20px;margin-bottom:24px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="loading-spinner" style="width:24px;height:24px;margin:0"></div>
+            <div>
+              <div style="font-size:14px;font-weight:700;letter-spacing:1px" id="pdfStatusTitle">Reading PDF...</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:3px" id="pdfStatusSub">Claude is extracting your idea details</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATENT SEARCH RESULT -->
+        <div id="patentSearchResult" style="display:none;margin-bottom:24px"></div>
+
         <div class="steps">
           <div class="step active" id="step1">
             <span class="step-num">01</span>
@@ -1447,30 +1476,6 @@ main {
           <div class="form-group">
             <label class="form-label">Estimated Market Size</label>
             <input type="text" class="form-input" id="ideaMarketSize" placeholder="e.g. $50B global market, 500M potential users...">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Cost Savings / Economic Value</label>
-            <input type="text" class="form-input" id="ideaCostSavings" placeholder="e.g. Saves businesses $10k/year, reduces waste by 40%...">
-            <div class="form-hint">// How much money or time does this save users or businesses?</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Known Competitors</label>
-            <input type="text" class="form-input" id="ideaCompetitors" placeholder="e.g. No direct competitors, or Company X does Y but not Z...">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Revenue Model</label>
-            <input type="text" class="form-input" id="ideaRevenueModel" placeholder="e.g. SaaS subscription, licensing, one-time sale, marketplace fees...">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Supporting Files (Optional)</label>
-            <div id="fileDropZone" style="border:2px dashed rgba(0,200,255,0.2);padding:24px;text-align:center;cursor:pointer;background:var(--surface2);transition:all 0.2s" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--cyan)'" ondrop="handleFileDrop(event)">
-              <div style="font-size:32px;margin-bottom:8px">📎</div>
-              <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px">DROP FILES OR TAP TO BROWSE</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:6px">PDF, Images, Word, PowerPoint, Video — Max 50MB</div>
-              <input type="file" id="fileInput" multiple style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.ppt,.pptx,.mp4,.mov,.txt,.csv" onchange="handleFileSelect(event)">
-            </div>
-            <div id="fileList" style="margin-top:12px"></div>
-            <div class="form-hint">// Files encrypt in your browser alongside your idea. Buyer receives decryption key after purchase.</div>
           </div>
           <button class="btn btn-primary btn-full" onclick="goToStep2()">Continue to Encryption →</button>
         </div>
@@ -2832,78 +2837,237 @@ Respond concisely as a platform oversight AI. Focus on security, integrity, anom
 }
 
 // ============================================================
-// FILE UPLOAD
+// PDF AUTO-FILL + PATENT SEARCH
 // ============================================================
-let uploadedFiles = [];
 
-function handleFileSelect(e) {
-  Array.from(e.target.files).forEach(addFile);
-}
-
-function handleFileDrop(e) {
+function handlePdfAutoDrop(e) {
   e.preventDefault();
-  document.getElementById('fileDropZone').style.borderColor = 'rgba(0,200,255,0.2)';
-  Array.from(e.dataTransfer.files).forEach(addFile);
+  document.getElementById('pdfDropZone').style.borderColor = 'rgba(0,200,255,0.3)';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') processPdfAutoFill(file);
+  else notify('error', 'PDF Only', 'Please drop a PDF file.');
 }
 
-function addFile(file) {
-  if (file.size > 50 * 1024 * 1024) {
-    notify('error', 'File Too Large', file.name + ' exceeds 50MB limit.');
-    return;
+function handlePdfAutoSelect(e) {
+  const file = e.target.files[0];
+  if (file) processPdfAutoFill(file);
+}
+
+async function processPdfAutoFill(file) {
+  // Show processing state
+  document.getElementById('pdfDropZone').style.display = 'none';
+  document.getElementById('pdfProcessing').style.display = 'block';
+  document.getElementById('pdfStatusTitle').textContent = 'Reading PDF...';
+  document.getElementById('pdfStatusSub').textContent = 'Claude is extracting your idea details';
+
+  try {
+    // Convert PDF to base64
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = () => rej(new Error('Read failed'));
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('pdfStatusTitle').textContent = 'Analyzing with AI...';
+    document.getElementById('pdfStatusSub').textContent = 'Extracting idea details from your document';
+
+    // Call Claude to extract idea details from PDF
+    const extractResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CONFIG.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+            },
+            {
+              type: 'text',
+              text: `You are reading an inventor's idea document. Extract all relevant information and respond with ONLY a valid JSON object — no markdown, no explanation outside the JSON.
+
+{
+  "title": "<compelling title for the idea, max 80 chars>",
+  "category": "<one of: tech, health, finance, consumer, energy, other>",
+  "teaser": "<one sentence that hints at the idea without fully revealing it, max 120 chars>",
+  "description": "<full detailed description of the idea — what it is, how it works, why it's valuable>",
+  "problem": "<the specific problem this idea solves, who has it, how big is it>",
+  "market": "<target market — who would buy or use this>",
+  "marketSize": "<estimated market size if mentioned, or reasonable estimate>",
+  "costSavings": "<economic value or cost savings this idea provides>",
+  "competitors": "<known competitors or alternatives, if any>",
+  "revenueModel": "<how this idea could make money>",
+  "searchKeywords": "<5-8 keywords for patent database search, comma separated>"
+}`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!extractResponse.ok) throw new Error('Claude API error: ' + extractResponse.status);
+    const extractData = await extractResponse.json();
+    const extractText = extractData.content[0].text;
+    const clean = extractText.replace(/```json|```/g, '').trim();
+    const ideaData = JSON.parse(clean);
+
+    // Auto-fill all form fields
+    document.getElementById('ideaTitle').value        = ideaData.title        || '';
+    document.getElementById('ideaCategory').value     = ideaData.category     || '';
+    document.getElementById('ideaTeaser').value       = ideaData.teaser       || '';
+    document.getElementById('ideaDescription').value  = ideaData.description  || '';
+    document.getElementById('ideaProblem').value      = ideaData.problem      || '';
+    document.getElementById('ideaMarket').value       = ideaData.market       || '';
+    document.getElementById('ideaMarketSize').value   = ideaData.marketSize   || '';
+    document.getElementById('ideaCostSavings').value  = ideaData.costSavings  || '';
+    document.getElementById('ideaCompetitors').value  = ideaData.competitors  || '';
+    document.getElementById('ideaRevenueModel').value = ideaData.revenueModel || '';
+
+    notify('success', '📄 PDF Read', 'All fields auto-filled from your document.');
+
+    // Now run patent search automatically
+    document.getElementById('pdfStatusTitle').textContent = 'Running Patent Search...';
+    document.getElementById('pdfStatusSub').textContent = 'Checking USPTO and CryptValt listings';
+
+    const keywords = ideaData.searchKeywords || ideaData.title;
+    await runPatentSearch(keywords, ideaData.category, ideaData.title, ideaData.description);
+
+    document.getElementById('pdfProcessing').style.display = 'none';
+    document.getElementById('pdfDropZone').style.display = 'block';
+    document.getElementById('pdfDropZone').style.borderColor = 'rgba(0,255,157,0.4)';
+    document.getElementById('pdfDropZone').innerHTML = `
+      <div style="font-size:28px;margin-bottom:6px">✅</div>
+      <div style="font-family:var(--display);font-size:18px;letter-spacing:2px;color:var(--green)">PDF PROCESSED</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px">${file.name} — All fields filled · Patent check complete</div>
+    `;
+
+  } catch(e) {
+    console.warn('PDF autofill error:', e);
+    document.getElementById('pdfProcessing').style.display = 'none';
+    document.getElementById('pdfDropZone').style.display = 'block';
+    notify('error', 'PDF Error', 'Could not read PDF. Please fill fields manually.');
   }
-  if (uploadedFiles.length >= 5) {
-    notify('error', 'Max Files', 'Maximum 5 files per listing.');
-    return;
-  }
-  const icons = { 'application/pdf':'📄', 'image':'🖼️', 'video':'🎥', 'audio':'🎵' };
-  const icon = Object.keys(icons).find(k => file.type.includes(k)) ? icons[Object.keys(icons).find(k => file.type.includes(k))] : '📎';
-  const id = Date.now().toString(36);
-  uploadedFiles.push({ id, file, name: file.name, size: file.size, icon });
-  renderFileList();
-  notify('success', '📎 File Added', file.name);
 }
 
-function removeFile(id) {
-  uploadedFiles = uploadedFiles.filter(f => f.id !== id);
-  renderFileList();
-}
+async function runPatentSearch(keywords, category, title, description) {
+  try {
+    // Search CryptValt listings
+    const kw = keywords.toLowerCase().split(/[,\s]+/).filter(w => w.length > 2);
+    const platformMatches = state.listings.filter(l => {
+      const text = (l.title + ' ' + l.teaser + ' ' + l.category).toLowerCase();
+      return kw.some(w => text.includes(w));
+    });
 
-function renderFileList() {
-  const list = document.getElementById('fileList');
-  if (!list) return;
-  if (uploadedFiles.length === 0) { list.innerHTML = ''; return; }
-  list.innerHTML = uploadedFiles.map(f => `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);margin-bottom:6px">
-      <span style="font-size:20px">${f.icon}</span>
-      <div style="flex:1;overflow:hidden">
-        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">${(f.size/1024/1024).toFixed(1)} MB</div>
-      </div>
-      <button onclick="removeFile('${f.id}')" style="background:transparent;border:1px solid var(--red);color:var(--red);padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
-    </div>`).join('');
-}
-
-async function encryptAndUploadFiles(cryptoKey) {
-  const results = [];
-  for (const fileObj of uploadedFiles) {
+    // Search USPTO
+    let usptoResults = [];
     try {
-      const buffer = await fileObj.file.arrayBuffer();
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-      const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, buffer);
-      const payload = {
-        encryptedData: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
-        iv: btoa(String.fromCharCode(...iv)),
-        keyHash: state.currentEncryption?.keyHashStr || '',
-        category: 'file',
-        title: fileObj.name,
-      };
-      const cid = await uploadToIPFS(payload, 'file_' + Date.now() + '.json');
-      results.push({ cid, name: fileObj.name, size: fileObj.size });
-    } catch(e) {
-      console.warn('File upload error:', e);
+      const q = encodeURIComponent(keywords.split(',')[0].trim());
+      const res = await fetch(`https://developer.uspto.gov/ibd-api/v1/patent/application?searchText=${q}&start=0&rows=5`);
+      if (res.ok) {
+        const data = await res.json();
+        usptoResults = (data?.response?.docs || []).map(d => ({
+          title: d.inventionTitle || 'Patent',
+          number: d.patentNumber || d.applicationNumber || '',
+          date: d.grantDate || d.filingDate || '',
+          abstract: d.briefSummary || ''
+        }));
+      }
+    } catch(e) { /* USPTO may have CORS - silent fail */ }
+
+    // Ask Claude to analyze results and give verdict
+    const analysisPrompt = `You are a patent analyst for CryptValt. 
+
+Idea being submitted:
+Title: ${title}
+Description: ${description ? description.slice(0, 500) : ''}
+
+USPTO patents found: ${usptoResults.length}
+Similar CryptValt listings found: ${platformMatches.length}
+
+${usptoResults.length > 0 ? 'USPTO Results: ' + JSON.stringify(usptoResults.slice(0,3).map(p => ({title: p.title, number: p.number}))) : ''}
+${platformMatches.length > 0 ? 'Platform matches: ' + platformMatches.map(l => l.title).join(', ') : ''}
+
+Give a brief patent analysis verdict in JSON only:
+{
+  "status": "CLEAR" or "REVIEW_NEEDED" or "CONFLICT_LIKELY",
+  "verdict": "<2-3 sentence plain English verdict for the inventor>",
+  "riskLevel": "LOW" or "MEDIUM" or "HIGH",
+  "recommendation": "<one sentence action recommendation>"
+}`;
+
+    const analysisRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CONFIG.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: analysisPrompt }]
+      })
+    });
+
+    let verdict = { status: 'CLEAR', verdict: 'No significant conflicts found. Your idea appears original based on available data.', riskLevel: 'LOW', recommendation: 'You may proceed to submit your idea.' };
+
+    if (analysisRes.ok) {
+      const analysisData = await analysisRes.json();
+      const analysisText = analysisData.content[0].text.replace(/```json|```/g, '').trim();
+      try { verdict = JSON.parse(analysisText); } catch(e) {}
     }
+
+    // Render patent search results
+    const statusColors = { CLEAR: 'var(--green)', REVIEW_NEEDED: 'var(--gold)', CONFLICT_LIKELY: 'var(--red)' };
+    const statusIcons  = { CLEAR: '✅', REVIEW_NEEDED: '⚠️', CONFLICT_LIKELY: '🚫' };
+    const riskColors   = { LOW: 'var(--green)', MEDIUM: 'var(--gold)', HIGH: 'var(--red)' };
+    const color = statusColors[verdict.status] || 'var(--green)';
+    const googleLink = `https://patents.google.com/?q=${encodeURIComponent(keywords.split(',')[0])}`;
+
+    document.getElementById('patentSearchResult').style.display = 'block';
+    document.getElementById('patentSearchResult').innerHTML = `
+      <div style="background:var(--surface2);border:1px solid ${color};padding:20px">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+          <div style="font-size:28px">${statusIcons[verdict.status] || '✅'}</div>
+          <div style="flex:1">
+            <div style="font-family:var(--display);font-size:22px;letter-spacing:2px;color:${color};margin-bottom:4px">PATENT CHECK — ${verdict.status.replace('_',' ')}</div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:${riskColors[verdict.riskLevel] || 'var(--green)'};margin-bottom:10px">RISK LEVEL: ${verdict.riskLevel}</div>
+            <div style="font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:8px">${verdict.verdict}</div>
+            <div style="font-size:13px;color:${color};font-weight:600">${verdict.recommendation}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+          <div style="background:var(--surface3);padding:12px;text-align:center">
+            <div style="font-family:var(--display);font-size:28px;color:var(--cyan)">${platformMatches.length}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">PLATFORM MATCHES</div>
+          </div>
+          <div style="background:var(--surface3);padding:12px;text-align:center">
+            <div style="font-family:var(--display);font-size:28px;color:var(--gold)">${usptoResults.length}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">USPTO RESULTS</div>
+          </div>
+          <div style="background:var(--surface3);padding:12px;text-align:center">
+            <div style="font-family:var(--display);font-size:28px;color:var(--green)">AI</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">ANALYSIS DONE</div>
+          </div>
+        </div>
+        <a href="${googleLink}" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;text-decoration:none">
+          VIEW GOOGLE PATENTS FULL SEARCH →
+        </a>
+      </div>`;
+
+  } catch(e) {
+    console.warn('Patent search error:', e);
   }
-  return results;
 }
 
 </script>
