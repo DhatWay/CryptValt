@@ -1294,7 +1294,6 @@ main {
     <button class="nav-btn" onclick="window.location.href='analytics/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Analytics</button>
     <button class="nav-btn" onclick="window.location.href='token/index.html'" style="color:var(--green);border-color:rgba(0,255,157,0.4)">CVT</button>
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
-    <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <button class="nav-btn" onclick="window.location.href='promo/index.html'">About</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
@@ -1448,6 +1447,30 @@ main {
           <div class="form-group">
             <label class="form-label">Estimated Market Size</label>
             <input type="text" class="form-input" id="ideaMarketSize" placeholder="e.g. $50B global market, 500M potential users...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cost Savings / Economic Value</label>
+            <input type="text" class="form-input" id="ideaCostSavings" placeholder="e.g. Saves businesses $10k/year, reduces waste by 40%...">
+            <div class="form-hint">// How much money or time does this save users or businesses?</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Known Competitors</label>
+            <input type="text" class="form-input" id="ideaCompetitors" placeholder="e.g. No direct competitors, or Company X does Y but not Z...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Revenue Model</label>
+            <input type="text" class="form-input" id="ideaRevenueModel" placeholder="e.g. SaaS subscription, licensing, one-time sale, marketplace fees...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supporting Files (Optional)</label>
+            <div id="fileDropZone" style="border:2px dashed rgba(0,200,255,0.2);padding:24px;text-align:center;cursor:pointer;background:var(--surface2);transition:all 0.2s" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--cyan)'" ondrop="handleFileDrop(event)">
+              <div style="font-size:32px;margin-bottom:8px">📎</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px">DROP FILES OR TAP TO BROWSE</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:6px">PDF, Images, Word, PowerPoint, Video — Max 50MB</div>
+              <input type="file" id="fileInput" multiple style="display:none" accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.ppt,.pptx,.mp4,.mov,.txt,.csv" onchange="handleFileSelect(event)">
+            </div>
+            <div id="fileList" style="margin-top:12px"></div>
+            <div class="form-hint">// Files encrypt in your browser alongside your idea. Buyer receives decryption key after purchase.</div>
           </div>
           <button class="btn btn-primary btn-full" onclick="goToStep2()">Continue to Encryption →</button>
         </div>
@@ -2807,6 +2830,82 @@ Respond concisely as a platform oversight AI. Focus on security, integrity, anom
     addClaudeEntry('ok', 'Claude Assist Response', `Platform state is nominal. ${state.listings.length} listings active, ${state.bids.length} total bids. No anomalies detected in recent activity. All escrow contracts showing expected state.`);
   }
 }
+
+// ============================================================
+// FILE UPLOAD
+// ============================================================
+let uploadedFiles = [];
+
+function handleFileSelect(e) {
+  Array.from(e.target.files).forEach(addFile);
+}
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('fileDropZone').style.borderColor = 'rgba(0,200,255,0.2)';
+  Array.from(e.dataTransfer.files).forEach(addFile);
+}
+
+function addFile(file) {
+  if (file.size > 50 * 1024 * 1024) {
+    notify('error', 'File Too Large', file.name + ' exceeds 50MB limit.');
+    return;
+  }
+  if (uploadedFiles.length >= 5) {
+    notify('error', 'Max Files', 'Maximum 5 files per listing.');
+    return;
+  }
+  const icons = { 'application/pdf':'📄', 'image':'🖼️', 'video':'🎥', 'audio':'🎵' };
+  const icon = Object.keys(icons).find(k => file.type.includes(k)) ? icons[Object.keys(icons).find(k => file.type.includes(k))] : '📎';
+  const id = Date.now().toString(36);
+  uploadedFiles.push({ id, file, name: file.name, size: file.size, icon });
+  renderFileList();
+  notify('success', '📎 File Added', file.name);
+}
+
+function removeFile(id) {
+  uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (!list) return;
+  if (uploadedFiles.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = uploadedFiles.map(f => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);margin-bottom:6px">
+      <span style="font-size:20px">${f.icon}</span>
+      <div style="flex:1;overflow:hidden">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">${(f.size/1024/1024).toFixed(1)} MB</div>
+      </div>
+      <button onclick="removeFile('${f.id}')" style="background:transparent;border:1px solid var(--red);color:var(--red);padding:4px 8px;cursor:pointer;font-size:11px">✕</button>
+    </div>`).join('');
+}
+
+async function encryptAndUploadFiles(cryptoKey) {
+  const results = [];
+  for (const fileObj of uploadedFiles) {
+    try {
+      const buffer = await fileObj.file.arrayBuffer();
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, buffer);
+      const payload = {
+        encryptedData: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+        iv: btoa(String.fromCharCode(...iv)),
+        keyHash: state.currentEncryption?.keyHashStr || '',
+        category: 'file',
+        title: fileObj.name,
+      };
+      const cid = await uploadToIPFS(payload, 'file_' + Date.now() + '.json');
+      results.push({ cid, name: fileObj.name, size: fileObj.size });
+    } catch(e) {
+      console.warn('File upload error:', e);
+    }
+  }
+  return results;
+}
+
 </script>
 </body>
 </html>
