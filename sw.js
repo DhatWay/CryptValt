@@ -3,7 +3,7 @@
  * Complete cache list — all pages, JS modules, and assets
  */
 
-const CACHE_NAME  = 'cryptvalt-v7';
+const CACHE_NAME  = 'cryptvalt-v8';
 const OFFLINE_URL = '/CryptValt/offline.html';
 
 const PRECACHE_ASSETS = [
@@ -13,27 +13,6 @@ const PRECACHE_ASSETS = [
   '/CryptValt/manifest.json',
   '/CryptValt/offline.html',
   '/CryptValt/sw.js',
-
-  // ── JS Modules ────────────────────────────────────────
-  '/CryptValt/js/state.js',
-  '/CryptValt/js/wallet.js',
-  '/CryptValt/js/config.js',
-  '/CryptValt/js/chain.js',
-  '/CryptValt/js/crypto.js',
-  '/CryptValt/js/ipfs.js',
-  '/CryptValt/js/scoring.js',
-  '/CryptValt/js/fileupload.js',
-  '/CryptValt/js/auction.js',
-  '/CryptValt/js/submit.js',
-  '/CryptValt/js/ui.js',
-  '/CryptValt/js/claude.js',
-  '/CryptValt/js/investor.js',
-  '/CryptValt/js/optout.js',
-  '/CryptValt/js/security.js',
-  '/CryptValt/js/ams.js',
-  '/CryptValt/js/scout.js',
-  '/CryptValt/js/app.js',
-  '/CryptValt/js/pwa.js',
 
   // ── Sub Pages ─────────────────────────────────────────
   '/CryptValt/membership/index.html',
@@ -54,6 +33,7 @@ const ALWAYS_LIVE = [
   'crypt-valt-backend-jkak.vercel.app',
   'ethereum-sepolia.publicnode.com',
   'gateway.pinata.cloud',
+  'cdn.jsdelivr.net',
 ];
 
 // ── Install ────────────────────────────────────────────────
