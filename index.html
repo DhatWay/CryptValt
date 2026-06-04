@@ -1274,6 +1274,7 @@ main {
   .hero-title { font-size: 60px; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -1739,6 +1740,17 @@ main {
         </div>
       </div>
 
+      <div style="margin-top:32px;background:var(--surface);border:1px solid var(--border-bright);padding:20px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:3px;margin-bottom:14px">⚡ ALERT NOTIFICATIONS</div>
+        <div style="display:flex;gap:0;margin-bottom:8px">
+          <input type="email" id="alertEmailInput" class="form-input" style="border-right:none;flex:1"
+            placeholder="Enter your email for security alerts..."
+            value="">
+          <button onclick="saveAlertEmail()" style="background:var(--cyan);color:var(--bg);border:none;padding:0 20px;font-family:var(--mono);font-size:11px;letter-spacing:2px;cursor:pointer">SAVE</button>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px">// You will receive an email when Claude auto-remediates or needs manual intervention</div>
+      </div>
+
       <div style="margin-top:40px">
         <div class="section-header" style="margin-bottom:24px">
           <div class="section-title" style="font-size:28px">PLATFORM HEALTH</div>
@@ -1830,6 +1842,10 @@ const CONFIG = {
   OWNER_WALLET: '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504',
   PLATFORM_FEE: 0.20,
   INVENTOR_SHARE: 0.80,
+  EMAILJS_SERVICE_ID: 'service_o97hwhw',
+  EMAILJS_TEMPLATE_ID: 'gspwuu9',
+  EMAILJS_PUBLIC_KEY: 'WO0hdu3FI-lyi-Ici',
+  ALERT_EMAIL: '',  // Set your email address here
 };
 
 // ============================================================
@@ -3265,6 +3281,75 @@ function runRemediationScan() {
   updateRemediationStats();
   renderListings();
 }
+
+
+// ============================================================
+// ALERT SYSTEM — EmailJS
+// ============================================================
+(function() {
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+  }
+})();
+
+async function sendAlertEmail(alertType, severity, message, action) {
+  if (!CONFIG.ALERT_EMAIL) return; // Skip if no email set
+  if (typeof emailjs === 'undefined') return;
+  try {
+    await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_ID, {
+      alert_type: alertType,
+      severity:   severity,
+      message:    message,
+      action:     action || 'Auto-remediated',
+      time:       new Date().toLocaleString(),
+    });
+    console.log('[Alert] Email sent:', alertType);
+  } catch(e) {
+    console.warn('[Alert] Email failed:', e);
+  }
+}
+
+// Patch logRemediation to trigger email on HIGH/CRITICAL
+const _origLogRemediation = typeof logRemediation !== 'undefined' ? logRemediation : null;
+function logRemediationWithAlert(level, threat, action, detail, wallet) {
+  if (_origLogRemediation) _origLogRemediation(level, threat, action, detail, wallet);
+  if (level === 'HIGH' || level === 'CRITICAL') {
+    sendAlertEmail(threat, level, detail, action);
+  }
+}
+
+// Override addClaudeEntry to watch for manual intervention needed
+const _origAddClaudeEntry = addClaudeEntry;
+function addClaudeEntry(type, title, msg) {
+  _origAddClaudeEntry(type, title, msg);
+  // Send alert if Claude flags something that needs manual review
+  if (type === 'alert' && CONFIG.ALERT_EMAIL) {
+    sendAlertEmail(title, 'HIGH', msg, 'Manual review required');
+  }
+}
+
+
+function saveAlertEmail() {
+  const email = document.getElementById('alertEmailInput').value.trim();
+  if (!email || !email.includes('@')) {
+    notify('error', 'Invalid Email', 'Enter a valid email address.');
+    return;
+  }
+  CONFIG.ALERT_EMAIL = email;
+  localStorage.setItem('cv_alert_email', email);
+  if (typeof emailjs !== 'undefined') emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY);
+  notify('success', '✓ Alerts Enabled', 'You will receive emails when Claude detects threats.');
+}
+
+// Load saved alert email on startup
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('cv_alert_email');
+  if (saved) {
+    CONFIG.ALERT_EMAIL = saved;
+    const input = document.getElementById('alertEmailInput');
+    if (input) input.value = saved;
+  }
+});
 
 </script>
 </body>
