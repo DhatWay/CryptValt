@@ -1297,7 +1297,6 @@ main {
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
     <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
     <button class="nav-btn" onclick="showPage('crm')" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">CRM</button>
-    <button class="nav-btn" onclick="openAdmin()" style="color:var(--red);border-color:rgba(255,59,107,0.4)">Admin</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
       <div class="wallet-dot"></div>
@@ -3285,6 +3284,11 @@ function checkReferralCode() {
     localStorage.setItem('cv_active_referral', ref);
     window.history.replaceState({}, '', window.location.pathname);
     notify('info', '⬡ Referral Detected', 'Submit your idea to credit your scout.');
+  }
+  // Secret admin access via URL parameter
+  if (params.get('admin') === 'true') {
+    window.history.replaceState({}, '', window.location.pathname);
+    openAdmin();
   }
 }
 
