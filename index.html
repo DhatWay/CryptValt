@@ -1296,6 +1296,7 @@ main {
     <button class="nav-btn" onclick="window.location.href='token/index.html'" style="color:var(--green);border-color:rgba(0,255,157,0.4)">CVT</button>
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
     <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
+    <button class="nav-btn" onclick="showPage('crm')" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">CRM</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
       <div class="wallet-dot"></div>
@@ -1798,6 +1799,96 @@ main {
               <span style="color:var(--green);font-weight:600">Running</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CRM PAGE -->
+  <div id="page-crm" class="page">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">INVESTOR CRM</div>
+        <div class="section-count" id="crmCount">0 CONTACTS</div>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openAddInvestor()">+ Add Investor</button>
+      </div>
+
+      <div class="dashboard-grid" style="margin-bottom:32px">
+        <div class="dash-stat"><div class="dash-stat-label">Total Contacts</div><div class="dash-stat-value" id="crmTotal" style="color:var(--cyan)">0</div></div>
+        <div class="dash-stat"><div class="dash-stat-label">Contacted</div><div class="dash-stat-value" id="crmContacted" style="color:var(--gold)">0</div></div>
+        <div class="dash-stat"><div class="dash-stat-label">Interested</div><div class="dash-stat-value" id="crmInterested" style="color:var(--green)">0</div></div>
+        <div class="dash-stat"><div class="dash-stat-label">Committed</div><div class="dash-stat-value" id="crmCommitted" style="color:#ff6fff">0</div></div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+        <button class="tab active" onclick="filterCRM('all',this)" style="padding:8px 16px">All</button>
+        <button class="tab" onclick="filterCRM('new',this)" style="padding:8px 16px">New</button>
+        <button class="tab" onclick="filterCRM('contacted',this)" style="padding:8px 16px">Contacted</button>
+        <button class="tab" onclick="filterCRM('interested',this)" style="padding:8px 16px">Interested</button>
+        <button class="tab" onclick="filterCRM('committed',this)" style="padding:8px 16px">Committed</button>
+        <button class="tab" onclick="filterCRM('passed',this)" style="padding:8px 16px">Passed</button>
+      </div>
+
+      <div id="crmList"></div>
+
+      <div style="margin-top:40px">
+        <div class="section-header" style="margin-bottom:20px">
+          <div class="section-title" style="font-size:28px">OUTREACH TEMPLATES</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card" style="padding:20px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px">COLD OUTREACH</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:16px">Hi [Name], I'm the founder of CryptValt — the world's first encrypted idea marketplace. We're raising $500K seed at a $5M valuation. The platform is fully built and live. Would love 15 minutes to show you what we've built.</div>
+            <button class="btn btn-secondary btn-sm" onclick="copyTemplate('cold')">Copy Message</button>
+          </div>
+          <div class="card" style="padding:20px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">FOLLOW UP</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:16px">Hi [Name], following up on CryptValt. 8 smart contracts ready, CVT token designed, exchange listing prep complete. Still have allocation in our seed round. Happy to send the full deck.</div>
+            <button class="btn btn-secondary btn-sm" onclick="copyTemplate('followup')">Copy Message</button>
+          </div>
+          <div class="card" style="padding:20px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:10px">DECK SHARE</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:16px">Hi [Name], here's our investor deck: dhatway.github.io/CryptValt/investor — Raising $500K seed at $5M valuation. 10% equity. Platform fully live. Happy to answer any questions.</div>
+            <button class="btn btn-secondary btn-sm" onclick="copyTemplate('deck')">Copy Message</button>
+          </div>
+          <div class="card" style="padding:20px">
+            <div style="font-family:var(--mono);font-size:10px;color:#ff6fff;letter-spacing:2px;margin-bottom:10px">CLOSING</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:16px">Hi [Name], closing our seed round this week. Minimum check $25K for 0.5% equity. Platform deployed and live. Last chance to get in at $5M valuation before Series A.</div>
+            <button class="btn btn-secondary btn-sm" onclick="copyTemplate('closing')">Copy Message</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD INVESTOR MODAL -->
+  <div class="modal-overlay" id="investorModal">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <div class="modal-title" id="investorModalTitle">ADD INVESTOR</div>
+        <button class="modal-close" onclick="closeModal('investorModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Name *</label><input type="text" class="form-input" id="invName" placeholder="Investor full name"></div>
+        <div class="form-group"><label class="form-label">Fund / Company</label><input type="text" class="form-input" id="invFund" placeholder="e.g. Multicoin Capital, Angel Investor..."></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="invEmail" placeholder="investor@fund.com"></div>
+        <div class="form-group"><label class="form-label">Twitter / LinkedIn</label><input type="text" class="form-input" id="invSocial" placeholder="@handle or linkedin.com/in/..."></div>
+        <div class="form-group"><label class="form-label">Focus</label><input type="text" class="form-input" id="invFocus" placeholder="e.g. Web3, DeFi, IP, Early Stage..."></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="invStatus">
+            <option value="new">New — Not Yet Contacted</option>
+            <option value="contacted">Contacted</option>
+            <option value="interested">Interested</option>
+            <option value="committed">Committed</option>
+            <option value="passed">Passed</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="invNotes" style="min-height:80px" placeholder="Conversation history, follow-up dates, anything relevant..."></textarea></div>
+        <input type="hidden" id="invEditId">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <button class="btn btn-secondary" onclick="closeModal('investorModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveInvestor()">Save Investor</button>
         </div>
       </div>
     </div>
@@ -3350,6 +3441,152 @@ window.addEventListener('load', () => {
     if (input) input.value = saved;
   }
 });
+
+
+// ============================================================
+// INVESTOR CRM
+// ============================================================
+let investors = JSON.parse(localStorage.getItem('cv_investors') || '[]');
+
+const STATUS_COLORS = { new:'var(--text-muted)', contacted:'var(--cyan)', interested:'var(--gold)', committed:'var(--green)', passed:'var(--red)' };
+const STATUS_LABELS = { new:'NEW', contacted:'CONTACTED', interested:'INTERESTED', committed:'COMMITTED', passed:'PASSED' };
+
+function saveCRMData() { localStorage.setItem('cv_investors', JSON.stringify(investors)); }
+
+function openAddInvestor() {
+  document.getElementById('investorModalTitle').textContent = 'ADD INVESTOR';
+  ['invName','invFund','invEmail','invSocial','invFocus','invNotes','invEditId'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('invStatus').value = 'new';
+  document.getElementById('investorModal').classList.add('active');
+}
+
+function editInvestor(id) {
+  const inv = investors.find(i => i.id === id);
+  if (!inv) return;
+  document.getElementById('investorModalTitle').textContent = 'EDIT INVESTOR';
+  document.getElementById('invName').value   = inv.name   || '';
+  document.getElementById('invFund').value   = inv.fund   || '';
+  document.getElementById('invEmail').value  = inv.email  || '';
+  document.getElementById('invSocial').value = inv.social || '';
+  document.getElementById('invFocus').value  = inv.focus  || '';
+  document.getElementById('invStatus').value = inv.status || 'new';
+  document.getElementById('invNotes').value  = inv.notes  || '';
+  document.getElementById('invEditId').value = id;
+  document.getElementById('investorModal').classList.add('active');
+}
+
+function saveInvestor() {
+  const name = document.getElementById('invName').value.trim();
+  if (!name) { notify('error','Name Required','Enter the investor name.'); return; }
+  const editId = document.getElementById('invEditId').value;
+  const data = {
+    name: name,
+    fund: document.getElementById('invFund').value.trim(),
+    email: document.getElementById('invEmail').value.trim(),
+    social: document.getElementById('invSocial').value.trim(),
+    focus: document.getElementById('invFocus').value.trim(),
+    status: document.getElementById('invStatus').value,
+    notes: document.getElementById('invNotes').value.trim(),
+    updated: new Date().toISOString(),
+  };
+  if (editId) {
+    const idx = investors.findIndex(i => i.id === editId);
+    if (idx >= 0) investors[idx] = { ...investors[idx], ...data };
+  } else {
+    data.id = 'INV-' + Date.now().toString(36).toUpperCase();
+    data.created = new Date().toISOString();
+    investors.push(data);
+  }
+  saveCRMData();
+  closeModal('investorModal');
+  renderCRM();
+  notify('success','✓ Saved', name + ' added to CRM.');
+}
+
+function deleteInvestor(id) {
+  investors = investors.filter(i => i.id !== id);
+  saveCRMData();
+  renderCRM();
+  notify('info','Removed','Investor removed from CRM.');
+}
+
+function updateStatus(id, status) {
+  const inv = investors.find(i => i.id === id);
+  if (inv) { inv.status = status; inv.updated = new Date().toISOString(); }
+  saveCRMData();
+  renderCRM();
+}
+
+let crmFilter = 'all';
+function filterCRM(filter, btn) {
+  crmFilter = filter;
+  document.querySelectorAll('#page-crm .tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderCRM();
+}
+
+function renderCRM() {
+  const list = document.getElementById('crmList');
+  if (!list) return;
+  let filtered = (crmFilter === 'all' ? investors : investors.filter(i => i.status === crmFilter))
+    .sort((a,b) => new Date(b.updated||b.created) - new Date(a.updated||a.created));
+
+  document.getElementById('crmTotal').textContent      = investors.length;
+  document.getElementById('crmContacted').textContent  = investors.filter(i=>i.status==='contacted').length;
+  document.getElementById('crmInterested').textContent = investors.filter(i=>i.status==='interested').length;
+  document.getElementById('crmCommitted').textContent  = investors.filter(i=>i.status==='committed').length;
+  document.getElementById('crmCount').textContent      = investors.length + ' CONTACTS';
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No Investors Yet</div><div class="empty-sub">Add your first investor contact</div></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(inv => `
+    <div class="card" style="margin-bottom:12px;padding:20px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+            <div style="font-size:17px;font-weight:700;letter-spacing:1px">${inv.name}</div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:2px 8px;border:1px solid;color:${STATUS_COLORS[inv.status]};border-color:${STATUS_COLORS[inv.status]}">${STATUS_LABELS[inv.status]}</div>
+          </div>
+          ${inv.fund   ? `<div style="font-family:var(--mono);font-size:10px;color:var(--cyan);margin-bottom:4px">${inv.fund}</div>` : ''}
+          ${inv.focus  ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Focus: ${inv.focus}</div>` : ''}
+          ${inv.email  ? `<div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">✉ ${inv.email}</div>` : ''}
+          ${inv.social ? `<div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">⬡ ${inv.social}</div>` : ''}
+          ${inv.notes  ? `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;padding:8px;background:var(--surface3);border-left:2px solid var(--border-bright)">${inv.notes}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <select onchange="updateStatus('${inv.id}',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:4px 6px">
+            <option value="new"        ${inv.status==='new'        ?'selected':''}>NEW</option>
+            <option value="contacted"  ${inv.status==='contacted'  ?'selected':''}>CONTACTED</option>
+            <option value="interested" ${inv.status==='interested' ?'selected':''}>INTERESTED</option>
+            <option value="committed"  ${inv.status==='committed'  ?'selected':''}>COMMITTED</option>
+            <option value="passed"     ${inv.status==='passed'     ?'selected':''}>PASSED</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="editInvestor('${inv.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInvestor('${inv.id}')">Remove</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+const TEMPLATES = {
+  cold:     "Hi [Name], I'm the founder of CryptValt — the world's first encrypted idea marketplace. We're raising $500K seed at a $5M valuation. The platform is fully built and live at dhatway.github.io/CryptValt. Would love 15 minutes to show you what we've built.",
+  followup: "Hi [Name], following up on CryptValt. 8 smart contracts ready, CVT token designed, exchange listing prep complete. Still have allocation in our seed round. Happy to send the full deck: dhatway.github.io/CryptValt/investor",
+  deck:     "Hi [Name], here's our investor deck: dhatway.github.io/CryptValt/investor — Raising $500K seed at $5M valuation. 10% equity. Platform fully live. Happy to answer any questions.",
+  closing:  "Hi [Name], closing our seed round this week. Minimum check $25K for 0.5% equity. Platform deployed and live. Last chance at $5M valuation before Series A.",
+};
+
+function copyTemplate(type) {
+  const text = TEMPLATES[type];
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => notify('success','✓ Copied','Message copied to clipboard.'));
+  } else {
+    notify('info','Copy Manually', text.slice(0,60) + '...');
+  }
+}
+
+window.addEventListener('load', () => { setTimeout(renderCRM, 100); });
 
 </script>
 </body>
