@@ -1297,6 +1297,7 @@ main {
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
     <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
     <button class="nav-btn" onclick="showPage('crm')" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">CRM</button>
+    <button class="nav-btn" onclick="showPage('scout')" style="color:var(--green);border-color:rgba(0,255,157,0.4)">Scout</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
       <div class="wallet-dot"></div>
@@ -1976,6 +1977,151 @@ main {
           <button class="btn btn-primary btn-full" onclick="changeAdminPassword()">Update Password</button>
         </div>
       </div>
+    </div>
+  </div>
+
+
+  <!-- SCOUT PAGE -->
+  <div id="page-scout" class="page">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">SCOUT</div>
+        <div class="section-count">REFERRAL + OUTREACH</div>
+      </div>
+
+      <div class="tabs" style="margin-bottom:32px">
+        <button class="tab active" onclick="switchScoutTab('tabScoutReferral',this)">Referral Program</button>
+        <button class="tab" onclick="switchScoutTab('tabScoutOutreach',this)">Outreach Tools</button>
+      </div>
+
+      <!-- REFERRAL TAB -->
+      <div id="tabScoutReferral">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px">
+          <div class="card" style="padding:20px;border-left:3px solid var(--cyan)">
+            <div style="font-size:28px;margin-bottom:10px">🔗</div>
+            <div style="font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:6px">Get Your Link</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.6">Connect wallet to generate your unique referral link. Share with inventors and investors.</div>
+          </div>
+          <div class="card" style="padding:20px;border-left:3px solid var(--gold)">
+            <div style="font-size:28px;margin-bottom:10px">🎯</div>
+            <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:6px">Track Referrals</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.6">Every signup through your link is tracked on Vercel in real time across all users.</div>
+          </div>
+          <div class="card" style="padding:20px;border-left:3px solid var(--green)">
+            <div style="font-size:28px;margin-bottom:10px">💰</div>
+            <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:6px">Earn Commission</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.6">Earn from the platform's 20% fee — not from the inventor. Auto-paid on-chain after deployment.</div>
+          </div>
+        </div>
+
+        <!-- Commission rates -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px">
+          <div style="background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center">
+            <div style="font-family:var(--display);font-size:32px;color:var(--cyan)">5%</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">INVENTOR REFERRAL</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center">
+            <div style="font-family:var(--display);font-size:32px;color:var(--gold)">3%</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">INVESTOR REFERRAL</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center">
+            <div style="font-family:var(--display);font-size:32px;color:var(--green)">2%</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">RESALE BONUS</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center">
+            <div style="font-family:var(--display);font-size:32px;color:#ff6fff">+1%</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">CVT BOOST</div>
+          </div>
+        </div>
+
+        <!-- My link -->
+        <div style="background:var(--surface);border:1px solid var(--border-bright);padding:24px;margin-bottom:32px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:3px;margin-bottom:16px">MY REFERRAL LINK</div>
+          <div id="scoutConnectGate" style="text-align:center;padding:16px 0">
+            <button class="btn btn-primary btn-sm" onclick="connectWallet()">Connect Wallet to Generate Link</button>
+          </div>
+          <div id="scoutLinkPanel" style="display:none">
+            <div style="display:flex;gap:0;margin-bottom:10px">
+              <input type="text" class="form-input" id="scoutLinkDisplay" readonly style="border-right:none;font-family:var(--mono);font-size:11px;color:var(--cyan)">
+              <button onclick="copyScoutLink()" style="background:var(--cyan);color:var(--bg);border:none;padding:0 20px;font-family:var(--mono);font-size:11px;letter-spacing:2px;cursor:pointer">COPY</button>
+            </div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">// Tracked in real time on Vercel backend</div>
+          </div>
+        </div>
+
+        <!-- My stats -->
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">MY SCOUT STATS</div>
+        <div class="dashboard-grid" style="margin-bottom:32px">
+          <div class="dash-stat"><div class="dash-stat-label">Total Referrals</div><div class="dash-stat-value" id="scoutTotalRefs" style="color:var(--cyan)">0</div></div>
+          <div class="dash-stat"><div class="dash-stat-label">Active</div><div class="dash-stat-value" id="scoutActiveRefs" style="color:var(--gold)">0</div></div>
+          <div class="dash-stat"><div class="dash-stat-label">Completed Sales</div><div class="dash-stat-value" id="scoutSales" style="color:var(--green)">0</div></div>
+          <div class="dash-stat"><div class="dash-stat-label">Total Earned</div><div class="dash-stat-value" id="scoutEarned" style="color:#ff6fff">$0</div></div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">LEADERBOARD — ALL SCOUTS</div>
+        <div id="scoutLeaderboard"><div class="empty"><div class="empty-icon">🏆</div><div class="empty-title">No Scouts Yet</div><div class="empty-sub">Be the first</div></div></div>
+
+        <div style="background:var(--surface3);border:1px solid rgba(240,165,0,0.2);padding:14px;margin-top:24px;border-left:3px solid var(--gold)">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">⬡ NOTE</div>
+          <div style="font-size:13px;color:var(--text-dim);line-height:1.7">Commission payouts activate after mainnet deployment. All referrals tracked now will be credited retroactively at launch.</div>
+        </div>
+      </div>
+
+      <!-- OUTREACH TAB -->
+      <div id="tabScoutOutreach" style="display:none">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:20px">AI-POWERED OUTREACH GENERATOR</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+          <div class="form-group">
+            <label class="form-label">Target Type</label>
+            <select class="form-select" id="outreachTarget">
+              <option value="inventor">Inventor — Someone with ideas</option>
+              <option value="investor">Investor — Someone with capital</option>
+              <option value="scout">Scout — Someone to recruit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Platform</label>
+            <select class="form-select" id="outreachPlatform">
+              <option value="twitter">Twitter / X</option>
+              <option value="reddit">Reddit</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="discord">Discord</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Keywords / Category</label>
+          <input type="text" class="form-input" id="outreachKeywords" placeholder="e.g. tech startup, healthcare innovation, fintech...">
+        </div>
+
+        <button class="btn btn-primary btn-full" id="outreachGenBtn" onclick="generateOutreach()">Generate Outreach Content →</button>
+
+        <div id="outreachLoading" style="display:none" class="loading-state">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Generating</div>
+          <div class="loading-sub">Claude is crafting your outreach...</div>
+        </div>
+
+        <div id="outreachResult" style="display:none;margin-top:24px"></div>
+
+        <!-- Social post generator -->
+        <div style="margin-top:32px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;margin-bottom:16px">SOCIAL POST GENERATOR</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
+            <button class="btn btn-secondary btn-sm" onclick="generateSocialPost('twitter')">Twitter</button>
+            <button class="btn btn-secondary btn-sm" onclick="generateSocialPost('reddit')">Reddit</button>
+            <button class="btn btn-secondary btn-sm" onclick="generateSocialPost('linkedin')">LinkedIn</button>
+            <button class="btn btn-secondary btn-sm" onclick="generateSocialPost('discord')">Discord</button>
+            <button class="btn btn-secondary btn-sm" onclick="generateSocialPost('telegram')">Telegram</button>
+          </div>
+          <div id="socialPostResult" style="display:none"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -3704,6 +3850,184 @@ function clearRemLog(){localStorage.removeItem(REMEDIATION_LOG);renderAdminRemLo
 function saveApiConfig(){const pk=document.getElementById('cfgPinataKey').value.trim();const ps=document.getElementById('cfgPinataSecret').value.trim();const ak=document.getElementById('cfgAnthropicKey').value.trim();const ow=document.getElementById('cfgOwnerWallet').value.trim();if(pk){CONFIG.PINATA_API_KEY=pk;localStorage.setItem('cv_pinata_key',pk);}if(ps){CONFIG.PINATA_API_SECRET=ps;localStorage.setItem('cv_pinata_secret',ps);}if(ak){CONFIG.ANTHROPIC_API_KEY=ak;localStorage.setItem('cv_anthropic_key',ak);}if(ow){CONFIG.OWNER_WALLET=ow;localStorage.setItem('cv_owner_wallet',ow);}notify('success','✓ Config Saved','API configuration updated.');}
 function changeAdminPassword(){const current=document.getElementById('pwCurrent').value;const newPw=document.getElementById('pwNew').value;const confirm=document.getElementById('pwConfirm').value;if(current!==getAdminPassword()){notify('error','Wrong Password','Current password is incorrect.');return;}if(newPw.length<8){notify('error','Too Short','Password must be at least 8 characters.');return;}if(newPw!==confirm){notify('error','Mismatch','New passwords do not match.');return;}localStorage.setItem(ADMIN_PASS_KEY,newPw);['pwCurrent','pwNew','pwConfirm'].forEach(id=>document.getElementById(id).value='');notify('success','✓ Password Updated','Admin password changed successfully.');}
 window.addEventListener('load',()=>{const fee=localStorage.getItem('cv_platform_fee');const pk=localStorage.getItem('cv_pinata_key');const ps=localStorage.getItem('cv_pinata_secret');const ak=localStorage.getItem('cv_anthropic_key');const ow=localStorage.getItem('cv_owner_wallet');if(fee){CONFIG.PLATFORM_FEE=parseInt(fee)/100;CONFIG.INVENTOR_SHARE=1-CONFIG.PLATFORM_FEE;}if(pk)CONFIG.PINATA_API_KEY=pk;if(ps)CONFIG.PINATA_API_SECRET=ps;if(ak)CONFIG.ANTHROPIC_API_KEY=ak;if(ow)CONFIG.OWNER_WALLET=ow;});
+
+
+// ============================================================
+// SCOUT REFERRAL + OUTREACH SYSTEM
+// ============================================================
+const BACKEND = 'https://crypt-valt-backend-jkak.vercel.app';
+
+function switchScoutTab(tabId, btn) {
+  ['tabScoutReferral','tabScoutOutreach'].forEach(t => document.getElementById(t).style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+  document.querySelectorAll('#page-scout .tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function initScoutPage() {
+  if (!state.wallet) {
+    document.getElementById('scoutConnectGate').style.display = 'block';
+    document.getElementById('scoutLinkPanel').style.display = 'none';
+  } else {
+    document.getElementById('scoutConnectGate').style.display = 'none';
+    document.getElementById('scoutLinkPanel').style.display = 'block';
+    const code = generateScoutCode(state.wallet);
+    const link = window.location.origin + window.location.pathname.replace('index.html','') + '?ref=' + code;
+    document.getElementById('scoutLinkDisplay').value = link;
+    loadScoutStats(code);
+  }
+  loadScoutLeaderboard();
+}
+
+function generateScoutCode(wallet) {
+  return 'SC' + wallet.slice(2, 10).toUpperCase();
+}
+
+function copyScoutLink() {
+  const val = document.getElementById('scoutLinkDisplay').value;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(val).then(() => notify('success','✓ Copied','Referral link copied.'));
+  }
+}
+
+async function loadScoutStats(code) {
+  try {
+    const res = await fetch(BACKEND + '/api/referral/stats/' + code);
+    const data = await res.json();
+    if (data.success) {
+      const d = data.data;
+      document.getElementById('scoutTotalRefs').textContent  = d.totalReferrals;
+      document.getElementById('scoutActiveRefs').textContent = d.activeReferrals;
+      document.getElementById('scoutSales').textContent      = d.completedSales;
+      document.getElementById('scoutEarned').textContent     = '$' + (d.totalEarned||0).toLocaleString();
+    }
+  } catch(e) { console.warn('Scout stats:', e.message); }
+}
+
+async function loadScoutLeaderboard() {
+  const el = document.getElementById('scoutLeaderboard');
+  if (!el) return;
+  try {
+    const res = await fetch(BACKEND + '/api/referral/leaderboard');
+    const data = await res.json();
+    if (data.success && data.data.length) {
+      const medals = ['🥇','🥈','🥉'];
+      el.innerHTML = data.data.map((s,i) => `
+        <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px">
+          <div style="font-size:20px;width:28px;text-align:center">${medals[i]||(i+1)}</div>
+          <div style="flex:1">
+            <div style="font-family:var(--mono);font-size:11px;color:var(--cyan)">${s.code}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${s.sales} sale${s.sales!==1?'s':''}</div>
+          </div>
+          <div style="font-family:var(--display);font-size:24px;color:var(--gold)">$${s.earned.toLocaleString()}</div>
+        </div>`).join('');
+    }
+  } catch(e) { console.warn('Leaderboard:', e.message); }
+}
+
+async function checkReferralAndRegister() {
+  const active = localStorage.getItem('cv_active_referral');
+  if (active && state.wallet) {
+    try {
+      await fetch(BACKEND + '/api/referral/register', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'X-Wallet-Address': state.wallet },
+        body: JSON.stringify({ code: active })
+      });
+      addClaudeEntry('info','New Scout Referral','Wallet ' + shortenAddr(state.wallet) + ' registered via ' + active);
+    } catch(e) { console.warn('Referral register:', e.message); }
+  }
+}
+
+async function generateOutreach() {
+  const target   = document.getElementById('outreachTarget').value;
+  const platform = document.getElementById('outreachPlatform').value;
+  const keywords = document.getElementById('outreachKeywords').value.trim();
+  if (!keywords) { notify('error','Required','Enter keywords or category.'); return; }
+  if (!state.wallet) { notify('error','Wallet Required','Connect your wallet first.'); return; }
+
+  document.getElementById('outreachLoading').style.display = 'block';
+  document.getElementById('outreachResult').style.display = 'none';
+  document.getElementById('outreachGenBtn').disabled = true;
+
+  try {
+    const res = await fetch(BACKEND + '/api/outreach/pitch', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Wallet-Address': state.wallet },
+      body: JSON.stringify({ inventorDescription: keywords + ' (' + target + ')', platform })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const d = data.data;
+      document.getElementById('outreachResult').style.display = 'block';
+      document.getElementById('outreachResult').innerHTML = `
+        <div style="background:var(--surface2);border:1px solid var(--border-bright);padding:20px;margin-bottom:12px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px">SUBJECT LINE</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:16px">${d.subject||''}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:10px">MESSAGE</div>
+          <div style="font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:16px;white-space:pre-wrap">${d.fullMessage||''}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:8px">FOLLOW UP</div>
+          <div style="font-size:13px;color:var(--text-dim);line-height:1.6">${d.followUpMessage||''}</div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="copyOutreach()">Copy Message</button>
+            <button class="btn btn-secondary btn-sm" onclick="generateOutreach()">Regenerate</button>
+          </div>
+        </div>`;
+    }
+  } catch(e) {
+    notify('error','Failed','Could not generate outreach. Check connection.');
+  } finally {
+    document.getElementById('outreachLoading').style.display = 'none';
+    document.getElementById('outreachGenBtn').disabled = false;
+  }
+}
+
+function copyOutreach() {
+  const msg = document.querySelector('#outreachResult [style*="pre-wrap"]');
+  if (msg && navigator.clipboard) navigator.clipboard.writeText(msg.textContent).then(() => notify('success','✓ Copied','Message copied.'));
+}
+
+async function generateSocialPost(platform) {
+  if (!state.wallet) { notify('error','Wallet Required','Connect your wallet first.'); return; }
+  const el = document.getElementById('socialPostResult');
+  el.style.display = 'block';
+  el.innerHTML = '<div class="loading-state" style="padding:20px"><div class="loading-spinner" style="width:24px;height:24px;margin:0 auto 8px"></div><div class="loading-text">Generating...</div></div>';
+  try {
+    const res = await fetch(BACKEND + '/api/outreach/social', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Wallet-Address': state.wallet },
+      body: JSON.stringify({ platform, contentType: 'awareness' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const d = data.data;
+      el.innerHTML = `
+        <div style="background:var(--surface2);border:1px solid var(--border-bright);padding:20px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:10px">${platform.toUpperCase()} POST</div>
+          <div style="font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:12px;white-space:pre-wrap">${d.post||''}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--gold);margin-bottom:12px">${(d.hashtags||[]).join(' ')}</div>
+          <div style="font-size:13px;color:var(--green);margin-bottom:16px">${d.callToAction||''}</div>
+          <button class="btn btn-primary btn-sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.querySelector('#socialPostResult [style*=pre-wrap]').textContent).then(()=>notify('success','Copied','Post copied.'))">Copy Post</button>
+        </div>`;
+    }
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-family:var(--mono);font-size:11px;padding:12px">Failed to generate. Check connection.</div>';
+  }
+}
+
+// Wire into showPage
+const _origShowPageScout = showPage;
+function showPage(name) {
+  _origShowPageScout(name);
+  if (name === 'scout') initScoutPage();
+}
+
+// Wire into setWallet
+const _origSetWalletScout = setWallet;
+function setWallet(addr) {
+  _origSetWalletScout(addr);
+  checkReferralAndRegister();
+}
 
 </script>
 </body>
