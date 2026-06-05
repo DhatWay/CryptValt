@@ -3,808 +3,376 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CryptValt — The Future of Ideas</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<title>CryptValt — Investor Deck</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #020408;
-  --surface: #060c14;
-  --surface2: #0a1520;
-  --border: rgba(0,200,255,0.08);
-  --border-bright: rgba(0,200,255,0.2);
-  --cyan: #00c8ff;
-  --cyan-dim: rgba(0,200,255,0.1);
-  --gold: #f0a500;
-  --gold-dim: rgba(240,165,0,0.1);
-  --green: #00ff9d;
-  --red: #ff3b6b;
-  --text: #e8f4ff;
-  --text-dim: rgba(232,244,255,0.55);
-  --text-muted: rgba(232,244,255,0.25);
-  --mono: 'Share Tech Mono', monospace;
-  --display: 'Bebas Neue', sans-serif;
-  --body: 'Rajdhani', sans-serif;
-  --serif: 'DM Serif Display', serif;
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --gold:#f0a500; --green:#00ff9d; --red:#ff3b6b;
+  --text:#e8f4ff; --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
 }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);background-size:50px 50px;}
 
-* { margin:0; padding:0; box-sizing:border-box; scroll-behavior:smooth; }
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--body);
-  overflow-x: hidden;
-}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:60px;background:rgba(2,4,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:22px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-back{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);text-decoration:none;
+  padding:6px 14px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-back:hover{color:var(--cyan);border-color:var(--cyan);}
 
-/* Grid */
-body::before {
-  content:'';
-  position:fixed;
-  inset:0;
-  background-image:
-    linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
-  background-size:60px 60px;
-  pointer-events:none;
-  z-index:0;
-}
+main{position:relative;z-index:1;padding:80px 24px 60px;max-width:900px;margin:0 auto;}
 
-@keyframes fadeUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-@keyframes glow { 0%,100%{opacity:0.6} 50%{opacity:1} }
-@keyframes scan { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
-@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+/* SLIDES */
+.slide{background:var(--surface);border:1px solid var(--border);padding:48px;margin-bottom:32px;
+  animation:fadeIn 0.4s ease;position:relative;overflow:hidden;}
+.slide::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.slide-num{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:16px;}
+.slide-title{font-family:var(--display);font-size:clamp(36px,6vw,60px);letter-spacing:4px;
+  line-height:0.95;margin-bottom:20px;}
+.slide-sub{font-size:16px;color:var(--text-dim);line-height:1.7;margin-bottom:24px;}
 
-/* ── NAV ── */
-nav {
-  position:fixed; top:0; left:0; right:0; z-index:100;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 48px; height:68px;
-  background:rgba(2,4,8,0.85);
-  border-bottom:1px solid var(--border);
-  backdrop-filter:blur(20px);
-}
-.nav-logo { font-family:var(--display); font-size:26px; letter-spacing:4px; color:var(--cyan); text-shadow:0 0 20px rgba(0,200,255,0.4); }
-.nav-logo span { color:var(--gold); }
-.nav-links { display:flex; gap:8px; align-items:center; }
-.nav-link { font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-decoration:none; padding:8px 14px; border:1px solid transparent; transition:all 0.2s; text-transform:uppercase; }
-.nav-link:hover { color:var(--cyan); border-color:var(--border-bright); }
-.nav-cta { background:var(--cyan); color:var(--bg); font-family:var(--mono); font-size:10px; letter-spacing:2px; padding:10px 20px; text-decoration:none; font-weight:700; text-transform:uppercase; transition:all 0.2s; }
-.nav-cta:hover { background:#33d4ff; box-shadow:0 0 24px rgba(0,200,255,0.4); }
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0;}
+.metric{background:var(--surface2);border:1px solid var(--border-bright);padding:20px;text-align:center;}
+.metric-value{font-family:var(--display);font-size:40px;letter-spacing:2px;line-height:1;}
+.metric-label{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;
+  text-transform:uppercase;margin-top:6px;}
 
-/* ── TICKER ── */
-.ticker { background:var(--gold); overflow:hidden; height:32px; display:flex; align-items:center; position:relative; z-index:1; margin-top:68px; }
-.ticker-inner { display:flex; gap:0; animation:ticker 20s linear infinite; white-space:nowrap; }
-.ticker-item { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--bg); font-weight:700; padding:0 40px; text-transform:uppercase; }
-.ticker-sep { color:rgba(2,4,8,0.4); }
+/* TABLE */
+.table{width:100%;border-collapse:collapse;margin:20px 0;}
+.table th{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;
+  text-transform:uppercase;padding:10px 0;border-bottom:1px solid var(--border);text-align:left;}
+.table td{padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-dim);}
+.table td:last-child{text-align:right;font-family:var(--mono);font-size:12px;}
+.table tr:last-child td{border-bottom:none;}
 
-/* ── HERO ── */
-.hero {
-  position:relative; z-index:1;
-  min-height:calc(100vh - 100px);
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  text-align:center; padding:80px 32px;
-  overflow:hidden;
-}
+/* COMPARISON */
+.comparison{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:20px 0;}
+.comp-col{background:var(--surface2);border:1px solid var(--border);padding:20px;}
+.comp-col.highlight{border-color:rgba(0,200,255,0.4);background:rgba(0,200,255,0.04);}
+.comp-header{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.comp-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-dim);}
+.check{color:var(--green);}
+.cross{color:var(--red);}
 
-.hero-scan {
-  position:absolute; top:0; left:0; right:0;
-  height:2px; background:linear-gradient(90deg,transparent,var(--cyan),transparent);
-  animation:scan 6s linear infinite; opacity:0.3;
-}
+/* ROADMAP */
+.roadmap{position:relative;padding-left:24px;margin:20px 0;}
+.roadmap::before{content:'';position:absolute;left:4px;top:8px;bottom:8px;width:2px;background:var(--border);}
+.roadmap-item{position:relative;margin-bottom:24px;}
+.roadmap-item::before{content:'';position:absolute;left:-20px;top:6px;width:10px;height:10px;
+  border-radius:50%;border:2px solid var(--border-bright);}
+.roadmap-item.done::before{background:var(--green);border-color:var(--green);}
+.roadmap-item.active::before{background:var(--cyan);border-color:var(--cyan);}
+.roadmap-item.upcoming::before{background:transparent;}
+.roadmap-phase{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px;}
+.roadmap-title{font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:4px;}
+.roadmap-desc{font-size:13px;color:var(--text-dim);line-height:1.5;}
 
-.hero-eyebrow {
-  font-family:var(--mono); font-size:10px; letter-spacing:5px;
-  color:var(--cyan); margin-bottom:32px; opacity:0;
-  animation:fadeUp 0.8s ease 0.2s forwards;
-  display:flex; align-items:center; gap:16px;
-}
-.hero-eyebrow::before, .hero-eyebrow::after {
-  content:''; flex:1; max-width:60px; height:1px; background:var(--cyan); opacity:0.4;
-}
+/* USE OF FUNDS */
+.funds-bar{margin:8px 0;}
+.funds-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.funds-label{font-size:14px;width:160px;flex-shrink:0;}
+.funds-track{flex:1;height:8px;background:var(--surface3);overflow:hidden;}
+.funds-fill{height:100%;transition:width 1s ease;}
+.funds-pct{font-family:var(--mono);font-size:11px;width:36px;text-align:right;}
 
-.hero-title {
-  font-family:var(--display);
-  font-size:clamp(72px, 14vw, 160px);
-  letter-spacing:6px; line-height:0.85;
-  margin-bottom:32px; opacity:0;
-  animation:fadeUp 0.8s ease 0.4s forwards;
-}
-.hero-title .line1 { display:block; color:#fff; }
-.hero-title .line2 { display:block; color:var(--cyan); text-shadow:0 0 60px rgba(0,200,255,0.3); }
+/* CTA */
+.cta-box{background:linear-gradient(135deg,rgba(0,200,255,0.05),rgba(240,165,0,0.05));
+  border:1px solid var(--border-bright);padding:40px;text-align:center;margin-top:32px;}
+.cta-title{font-family:var(--display);font-size:48px;letter-spacing:4px;margin-bottom:12px;}
+.btn{font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:14px 36px;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;}
+.btn-primary{background:var(--cyan);color:var(--bg);}
+.btn-primary:hover{background:#33d4ff;box-shadow:0 0 24px rgba(0,200,255,0.4);}
+.btn-gold{background:var(--gold);color:var(--bg);}
+.btn-gold:hover{background:#ffb820;}
 
-.hero-sub {
-  font-family:var(--serif); font-size:clamp(18px,2.5vw,26px);
-  color:var(--text-dim); max-width:680px; line-height:1.5;
-  margin-bottom:56px; opacity:0; font-style:italic;
-  animation:fadeUp 0.8s ease 0.6s forwards;
-}
+.highlight-text{color:var(--cyan);}
+.gold-text{color:var(--gold);}
+.green-text{color:var(--green);}
 
-.hero-actions {
-  display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
-  opacity:0; animation:fadeUp 0.8s ease 0.8s forwards; margin-bottom:80px;
-}
-
-.btn-hero {
-  font-family:var(--mono); font-size:11px; letter-spacing:3px;
-  text-transform:uppercase; padding:16px 40px; cursor:pointer;
-  transition:all 0.2s; text-decoration:none; display:inline-block;
-}
-.btn-hero-primary { background:var(--cyan); color:var(--bg); font-weight:700; }
-.btn-hero-primary:hover { background:#33d4ff; box-shadow:0 0 40px rgba(0,200,255,0.5); transform:translateY(-2px); }
-.btn-hero-secondary { background:transparent; color:var(--text-dim); border:1px solid var(--border-bright); }
-.btn-hero-secondary:hover { color:var(--cyan); border-color:var(--cyan); background:var(--cyan-dim); }
-
-.hero-metrics {
-  display:flex; gap:64px; opacity:0;
-  animation:fadeUp 0.8s ease 1s forwards;
-}
-.metric { text-align:center; }
-.metric-num { font-family:var(--display); font-size:48px; color:var(--cyan); letter-spacing:2px; line-height:1; }
-.metric-label { font-family:var(--mono); font-size:9px; color:var(--text-muted); letter-spacing:3px; text-transform:uppercase; margin-top:4px; }
-
-/* ── SECTIONS ── */
-section { position:relative; z-index:1; }
-
-.section-inner { max-width:1200px; margin:0 auto; padding:120px 48px; }
-
-.section-label {
-  font-family:var(--mono); font-size:10px; letter-spacing:5px;
-  color:var(--cyan); text-transform:uppercase; margin-bottom:16px;
-  display:flex; align-items:center; gap:12px;
-}
-.section-label::before { content:''; width:32px; height:1px; background:var(--cyan); }
-
-.section-title {
-  font-family:var(--display); font-size:clamp(48px,6vw,80px);
-  letter-spacing:4px; line-height:0.95; margin-bottom:24px;
-}
-
-.section-body {
-  font-size:18px; font-weight:300; color:var(--text-dim);
-  line-height:1.8; max-width:680px; letter-spacing:0.5px;
-}
-
-/* ── PROBLEM ── */
-.problem { background:linear-gradient(180deg, var(--bg) 0%, #060810 100%); }
-
-.problem-grid { display:grid; grid-template-columns:1fr 1fr; gap:48px; margin-top:64px; }
-
-.problem-card {
-  border:1px solid var(--border); padding:32px;
-  position:relative; overflow:hidden;
-  transition:all 0.3s;
-}
-.problem-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg,transparent,var(--red),transparent);
-}
-.problem-card:hover { border-color:rgba(255,59,107,0.3); background:rgba(255,59,107,0.03); }
-.problem-num { font-family:var(--display); font-size:64px; color:rgba(255,59,107,0.15); letter-spacing:2px; line-height:1; margin-bottom:16px; }
-.problem-title { font-size:20px; font-weight:700; letter-spacing:1px; margin-bottom:12px; color:var(--text); }
-.problem-text { font-size:15px; color:var(--text-dim); line-height:1.7; }
-
-/* ── SOLUTION ── */
-.solution { background:var(--surface); }
-
-.solution-flow {
-  display:flex; flex-direction:column; gap:0; margin-top:64px;
-  position:relative;
-}
-.solution-flow::before {
-  content:''; position:absolute; left:24px; top:0; bottom:0; width:1px;
-  background:linear-gradient(180deg, var(--cyan), transparent);
-}
-
-.flow-step {
-  display:flex; gap:32px; align-items:flex-start; padding:32px 0;
-  border-bottom:1px solid var(--border);
-}
-.flow-step:last-child { border-bottom:none; }
-.flow-num {
-  width:48px; height:48px; border:1px solid var(--cyan);
-  display:flex; align-items:center; justify-content:center;
-  font-family:var(--display); font-size:22px; color:var(--cyan);
-  flex-shrink:0; background:rgba(0,200,255,0.05);
-  position:relative; z-index:1;
-}
-.flow-content { flex:1; }
-.flow-title { font-size:20px; font-weight:700; letter-spacing:1px; margin-bottom:8px; }
-.flow-text { font-size:15px; color:var(--text-dim); line-height:1.7; }
-.flow-badge {
-  display:inline-flex; align-items:center; gap:6px; margin-top:10px;
-  font-family:var(--mono); font-size:9px; letter-spacing:2px;
-  color:var(--green); border:1px solid rgba(0,255,157,0.2);
-  background:rgba(0,255,157,0.05); padding:4px 10px;
-}
-
-/* ── TECH ── */
-.tech-grid {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:64px;
-}
-.tech-card {
-  background:var(--surface2); border:1px solid var(--border);
-  padding:28px; transition:all 0.3s;
-}
-.tech-card:hover { border-color:var(--border-bright); transform:translateY(-4px); }
-.tech-icon { font-size:32px; margin-bottom:16px; }
-.tech-title { font-family:var(--mono); font-size:11px; letter-spacing:2px; color:var(--cyan); text-transform:uppercase; margin-bottom:10px; }
-.tech-text { font-size:14px; color:var(--text-dim); line-height:1.7; }
-
-/* ── WHITEPAPER ── */
-.whitepaper { background:linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%); }
-
-.wp-content {
-  display:grid; grid-template-columns:1fr 1fr; gap:64px;
-  margin-top:64px; align-items:start;
-}
-
-.wp-doc {
-  background:var(--surface2); border:1px solid var(--border);
-  padding:40px;
-}
-.wp-doc-header {
-  border-bottom:1px solid var(--border); padding-bottom:24px; margin-bottom:24px;
-}
-.wp-doc-title { font-family:var(--display); font-size:32px; letter-spacing:3px; margin-bottom:8px; }
-.wp-doc-sub { font-family:var(--mono); font-size:10px; color:var(--text-muted); letter-spacing:2px; }
-.wp-section { margin-bottom:24px; }
-.wp-section-title { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--cyan); text-transform:uppercase; margin-bottom:10px; }
-.wp-section-text { font-size:14px; color:var(--text-dim); line-height:1.8; }
-.wp-section-text strong { color:var(--text); }
-
-.wp-stats { display:flex; flex-direction:column; gap:24px; }
-.wp-stat-card {
-  background:var(--surface); border:1px solid var(--border); padding:24px;
-  display:flex; align-items:center; gap:20px;
-}
-.wp-stat-num { font-family:var(--display); font-size:48px; color:var(--gold); letter-spacing:2px; flex-shrink:0; }
-.wp-stat-label { font-size:16px; font-weight:600; letter-spacing:1px; margin-bottom:4px; }
-.wp-stat-text { font-size:13px; color:var(--text-muted); line-height:1.5; }
-
-/* ── TOKENOMICS ── */
-.token-grid { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:64px; }
-
-.revenue-split {
-  background:var(--surface2); border:1px solid var(--border); padding:32px;
-}
-.rev-title { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--cyan); text-transform:uppercase; margin-bottom:24px; }
-.rev-bar { margin-bottom:20px; }
-.rev-bar-header { display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; font-weight:600; letter-spacing:1px; }
-.rev-bar-track { height:8px; background:var(--surface3,#0f1e2e); overflow:hidden; }
-.rev-bar-fill { height:100%; transition:width 1.5s ease; }
-
-/* ── TWITTER THREADS ── */
-.threads { background:var(--surface); }
-.threads-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:64px; }
-.thread-card {
-  background:var(--bg); border:1px solid var(--border); padding:24px;
-  position:relative; transition:all 0.3s;
-}
-.thread-card:hover { border-color:var(--border-bright); transform:translateY(-4px); }
-.thread-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
-}
-.thread-platform { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--text-muted); margin-bottom:16px; text-transform:uppercase; }
-.thread-title { font-size:16px; font-weight:700; letter-spacing:1px; margin-bottom:12px; color:var(--cyan); }
-.thread-preview { font-size:14px; color:var(--text-dim); line-height:1.7; }
-.thread-count { font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-top:16px; letter-spacing:1px; }
-
-/* ── PRESS ── */
-.press-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; margin-top:64px; }
-.press-card { background:var(--surface2); border:1px solid var(--border); padding:28px; }
-.press-outlet { font-family:var(--mono); font-size:10px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; margin-bottom:12px; }
-.press-headline { font-size:18px; font-weight:700; letter-spacing:1px; margin-bottom:10px; line-height:1.4; }
-.press-lede { font-size:14px; color:var(--text-dim); line-height:1.7; }
-
-/* ── CTA ── */
-.cta-section {
-  background:linear-gradient(135deg, #020408 0%, #060c14 50%, #020408 100%);
-  border-top:1px solid var(--border);
-  text-align:center;
-}
-.cta-glow {
-  width:400px; height:400px;
-  background:radial-gradient(circle, rgba(0,200,255,0.06) 0%, transparent 70%);
-  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  pointer-events:none;
-}
-.cta-title { font-family:var(--display); font-size:clamp(48px,8vw,100px); letter-spacing:4px; line-height:0.9; margin-bottom:24px; }
-.cta-sub { font-family:var(--serif); font-size:20px; color:var(--text-dim); font-style:italic; margin-bottom:48px; max-width:500px; margin-left:auto; margin-right:auto; line-height:1.6; }
-
-/* ── FOOTER ── */
-footer {
-  background:var(--surface); border-top:1px solid var(--border);
-  padding:48px; position:relative; z-index:1;
-}
-.footer-inner { max-width:1200px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px; }
-.footer-logo { font-family:var(--display); font-size:24px; letter-spacing:4px; color:var(--cyan); }
-.footer-logo span { color:var(--gold); }
-.footer-links { display:flex; gap:24px; }
-.footer-link { font-family:var(--mono); font-size:10px; letter-spacing:2px; color:var(--text-muted); text-decoration:none; text-transform:uppercase; transition:color 0.2s; }
-.footer-link:hover { color:var(--cyan); }
-.footer-copy { font-family:var(--mono); font-size:9px; color:var(--text-muted); letter-spacing:2px; }
-
-/* ── RESPONSIVE ── */
-@media(max-width:768px) {
-  nav { padding:0 20px; }
-  .nav-links .nav-link { display:none; }
-  .section-inner { padding:80px 24px; }
-  .problem-grid, .tech-grid, .threads-grid, .press-grid, .token-grid, .wp-content { grid-template-columns:1fr; }
-  .hero-metrics { gap:32px; flex-wrap:wrap; justify-content:center; }
+@media(max-width:768px){
+  .metrics{grid-template-columns:1fr 1fr;}
+  .comparison{grid-template-columns:1fr;}
+  .slide{padding:28px 20px;}
+  nav{padding:0 16px;}
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
   <div class="nav-logo">CRYPT<span>VALT</span></div>
-  <div class="nav-links">
-    <a href="#problem" class="nav-link">Problem</a>
-    <a href="#solution" class="nav-link">Solution</a>
-    <a href="#whitepaper" class="nav-link">White Paper</a>
-    <a href="#press" class="nav-link">Press Kit</a>
-    <a href="https://dhatway.github.io/CryptValt" class="nav-cta" target="_blank">Launch App →</a>
-  </div>
+  <a href="../index.html" class="nav-back">← Back to App</a>
 </nav>
 
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-inner">
-    <span class="ticker-item">Encrypted Idea Marketplace <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Zero-Knowledge Auctions <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">AI-Powered Valuations <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Autonomous Smart Contracts <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">80% to Inventors <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Built on Ethereum <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Encrypted Idea Marketplace <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Zero-Knowledge Auctions <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">AI-Powered Valuations <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Autonomous Smart Contracts <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">80% to Inventors <span class="ticker-sep">◆</span></span>
-    <span class="ticker-item">Built on Ethereum <span class="ticker-sep">◆</span></span>
-  </div>
-</div>
+<main>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-scan"></div>
-  <div class="hero-eyebrow">The World's First Encrypted Idea Marketplace</div>
-  <h1 class="hero-title">
-    <span class="line1">YOUR IDEAS</span>
-    <span class="line2">PROTECTED</span>
-  </h1>
-  <p class="hero-sub">Submit encrypted ideas. Let AI score them without ever reading them. Sell to the highest bidder. Keep 80%. No middlemen. No exposure. No trust required.</p>
-  <div class="hero-actions">
-    <a href="https://dhatway.github.io/CryptValt" class="btn-hero btn-hero-primary" target="_blank">Launch CryptValt →</a>
-    <a href="#whitepaper" class="btn-hero btn-hero-secondary">Read White Paper</a>
+  <!-- SLIDE 1: COVER -->
+  <div class="slide">
+    <div class="slide-num">01 — Cover</div>
+    <h1 class="slide-title">THE WORLD'S FIRST<br><span class="highlight-text">ENCRYPTED</span><br>IDEA MARKETPLACE</h1>
+    <p class="slide-sub">CryptValt enables inventors to monetize their ideas with complete privacy, military-grade encryption, and autonomous AI valuation — without ever revealing the idea until the sale is complete.</p>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-top:24px">
+      SEED ROUND · $500,000 · 2024
+    </div>
   </div>
-  <div class="hero-metrics">
-    <div class="metric"><div class="metric-num">AES-256</div><div class="metric-label">Encryption Standard</div></div>
-    <div class="metric"><div class="metric-num">80%</div><div class="metric-label">Goes to Inventor</div></div>
-    <div class="metric"><div class="metric-num">0</div><div class="metric-label">Human Intermediaries</div></div>
-    <div class="metric"><div class="metric-num">∞</div><div class="metric-label">Royalties on Resale</div></div>
-  </div>
-</section>
 
-<!-- PROBLEM -->
-<section class="problem" id="problem">
-  <div class="section-inner">
-    <div class="section-label">The Problem</div>
-    <h2 class="section-title">IDEAS GET STOLEN.<br>INVENTORS GET NOTHING.</h2>
-    <p class="section-body">The global idea economy is broken. Brilliant people have groundbreaking concepts but nowhere safe to monetize them. The current system fails inventors at every turn.</p>
-
-    <div class="problem-grid">
-      <div class="problem-card">
-        <div class="problem-num">01</div>
-        <div class="problem-title">No Safe Marketplace Exists</div>
-        <div class="problem-text">To sell an idea today you must reveal it to potential buyers — who can simply take it without paying. There is no escrow for intellectual property. There is no trustless mechanism for idea transfer. Inventors are left exposed.</div>
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide">
+    <div class="slide-num">02 — The Problem</div>
+    <h2 class="slide-title">IDEAS ARE<br><span style="color:var(--red)">STOLEN</span><br>EVERY DAY</h2>
+    <p class="slide-sub">Inventors have no safe way to monetize ideas. Every existing marketplace requires full disclosure before sale — exposing ideas to theft, copying, and exploitation with zero recourse.</p>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" style="color:var(--red)">$500B</div>
+        <div class="metric-label">IP Theft Annually (US)</div>
       </div>
-      <div class="problem-card">
-        <div class="problem-num">02</div>
-        <div class="problem-title">Patent Systems Are Broken</div>
-        <div class="problem-text">Filing a patent costs $15,000–$50,000 and takes 2–3 years. Most inventors can't afford it. And even with a patent, enforcement requires expensive litigation. The system protects corporations, not individual creators.</div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--red)">87%</div>
+        <div class="metric-label">Inventors Fear Disclosure</div>
       </div>
-      <div class="problem-card">
-        <div class="problem-num">03</div>
-        <div class="problem-title">Ideas Have No Discoverable Value</div>
-        <div class="problem-text">There is no market price for raw ideas. Inventors don't know what their concepts are worth. Investors can't compare options objectively. No standardized scoring, no comparable sales data, no transparent valuation methodology.</div>
-      </div>
-      <div class="problem-card">
-        <div class="problem-num">04</div>
-        <div class="problem-title">Middlemen Extract All the Value</div>
-        <div class="problem-text">Brokers, licensing agents, and IP firms take 30–60% of any deal. They add friction, delay, and opacity. The inventor does all the creative work and gets the smallest share. This is the fundamental injustice of the current system.</div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--red)">0</div>
+        <div class="metric-label">Encrypted Marketplaces Exist</div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- SOLUTION -->
-<section class="solution" id="solution">
-  <div class="section-inner">
-    <div class="section-label">The Solution</div>
-    <h2 class="section-title">CRYPTVALT<br>CHANGES EVERYTHING</h2>
-    <p class="section-body">A fully autonomous, trustless protocol where ideas are encrypted before leaving the inventor's device, scored by AI without being read, and sold via sealed blind auction on Ethereum.</p>
-
-    <div class="solution-flow">
-      <div class="flow-step">
-        <div class="flow-num">01</div>
-        <div class="flow-content">
-          <div class="flow-title">Client-Side Encryption</div>
-          <div class="flow-text">The inventor's idea is encrypted with AES-256-GCM directly in their browser. The symmetric key never leaves their device. The encrypted blob is uploaded to IPFS — decentralized, permanent, uncensorable. No server ever sees the plaintext.</div>
-          <div class="flow-badge">⬡ AES-256-GCM · IPFS · Zero Server Knowledge</div>
-        </div>
+  <!-- SLIDE 3: SOLUTION -->
+  <div class="slide">
+    <div class="slide-num">03 — The Solution</div>
+    <h2 class="slide-title">SUBMIT IN<br><span class="highlight-text">TOTAL</span><br>PRIVACY</h2>
+    <p class="slide-sub">CryptValt encrypts ideas with AES-256-GCM directly in the inventor's browser. The idea never leaves their device in plaintext — not to the platform, not to the AI, not to anyone — until the buyer purchases the decryption key.</p>
+    <div class="comparison">
+      <div class="comp-col">
+        <div class="comp-header" style="color:var(--text-muted)">Traditional Platforms</div>
+        <div class="comp-row"><span class="cross">✕</span> Ideas exposed to platform</div>
+        <div class="comp-row"><span class="cross">✕</span> No encryption</div>
+        <div class="comp-row"><span class="cross">✕</span> Manual valuation</div>
+        <div class="comp-row"><span class="cross">✕</span> Centralized escrow</div>
+        <div class="comp-row"><span class="cross">✕</span> No royalties</div>
+        <div class="comp-row"><span class="cross">✕</span> High platform fees</div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">02</div>
-        <div class="flow-content">
-          <div class="flow-title">AI Valuation Without Decryption</div>
-          <div class="flow-text">Claude AI analyzes the idea's metadata — category, market context, problem statement — and generates a full investor report: Marketability, Scalability, Consumer Potential, Competitive Moat, Revenue Model, and an estimated dollar value range. The full idea text remains encrypted throughout.</div>
-          <div class="flow-badge">⬡ Multi-Dimensional Scoring · Dollar Value Estimate · Investor Report</div>
-        </div>
+      <div class="comp-col highlight">
+        <div class="comp-header" style="color:var(--cyan)">CryptValt</div>
+        <div class="comp-row"><span class="check">✓</span> End-to-end encrypted</div>
+        <div class="comp-row"><span class="check">✓</span> AES-256-GCM</div>
+        <div class="comp-row"><span class="check">✓</span> AI-powered valuation</div>
+        <div class="comp-row"><span class="check">✓</span> Ethereum smart contract</div>
+        <div class="comp-row"><span class="check">✓</span> Perpetual royalties</div>
+        <div class="comp-row"><span class="check">✓</span> 80% to inventor</div>
       </div>
-      <div class="flow-step">
-        <div class="flow-num">03</div>
-        <div class="flow-content">
-          <div class="flow-title">Sealed Blind Auction</div>
-          <div class="flow-text">Investors submit cryptographic commitments — a hash of their bid amount, salt, and address. No one knows what anyone else bid. At auction end, bids are revealed and verified on-chain. The highest valid bid above the reserve price wins. Trustless. Tamper-proof.</div>
-          <div class="flow-badge">⬡ Commit-Reveal Scheme · On-Chain Verification · Anti-Sniping</div>
-        </div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">04</div>
-        <div class="flow-content">
-          <div class="flow-title">Autonomous Escrow & Key Transfer</div>
-          <div class="flow-text">The winning bid is held in escrow by the smart contract. The inventor encrypts their symmetric key with the buyer's public key and delivers it on-chain. Upon verified delivery, the contract automatically releases 80% to the inventor and 20% to the platform. No human involvement.</div>
-          <div class="flow-badge">⬡ Trustless Escrow · Automatic 80/20 Split · EIP-712 Signatures</div>
-        </div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-num">05</div>
-        <div class="flow-content">
-          <div class="flow-title">Perpetual Royalties on Resale</div>
-          <div class="flow-text">Every idea is minted as an NFT. The original inventor's royalty percentage is baked into the contract forever. Every future sale — no matter how many hands the idea passes through — automatically routes royalties back to the original creator. Forever. On-chain. Unstoppable.</div>
-          <div class="flow-badge">⬡ On-Chain Royalties · Secondary Market · Creator Economy</div>
-        </div>
+      <div class="comp-col">
+        <div class="comp-header" style="color:var(--text-muted)">Patent System</div>
+        <div class="comp-row"><span class="cross">✕</span> $10k-$50k cost</div>
+        <div class="comp-row"><span class="cross">✕</span> 2-5 year process</div>
+        <div class="comp-row"><span class="cross">✕</span> Public disclosure</div>
+        <div class="comp-row"><span class="cross">✕</span> No marketplace</div>
+        <div class="comp-row"><span class="cross">✕</span> Legal complexity</div>
+        <div class="comp-row"><span class="check">✓</span> Legal protection</div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- TECHNOLOGY -->
-<section style="background:var(--bg);position:relative;z-index:1" id="tech">
-  <div class="section-inner">
-    <div class="section-label">Technology Stack</div>
-    <h2 class="section-title">BUILT ON<br>REAL INFRASTRUCTURE</h2>
-    <p class="section-body">No shortcuts. Every component is production-grade, battle-tested, and chosen for security, decentralization, and longevity.</p>
-
-    <div class="tech-grid">
-      <div class="tech-card">
-        <div class="tech-icon">🔐</div>
-        <div class="tech-title">AES-256-GCM Encryption</div>
-        <div class="tech-text">Military-grade symmetric encryption via the Web Crypto API. Every idea encrypted locally with a unique key before any network transmission. Authentication tag prevents tampering.</div>
+  <!-- SLIDE 4: HOW IT WORKS -->
+  <div class="slide">
+    <div class="slide-num">04 — How It Works</div>
+    <h2 class="slide-title">FOUR<br><span class="highlight-text">STEPS</span></h2>
+    <div style="margin:24px 0">
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--display);font-size:48px;color:var(--cyan);line-height:1;flex-shrink:0">01</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Inventor Submits</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Idea encrypts in browser with AES-256-GCM. Encrypted blob uploads to IPFS. Only the inventor holds the key.</div></div>
       </div>
-      <div class="tech-card">
-        <div class="tech-icon">⬡</div>
-        <div class="tech-title">Ethereum Smart Contracts</div>
-        <div class="tech-text">Three specialized Solidity contracts handle the core protocol: CryptValt (escrow + auctions), Governor (fraud detection + reputation), Valuation (pricing algorithm). EIP-712 typed signatures throughout.</div>
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--display);font-size:48px;color:var(--gold);line-height:1;flex-shrink:0">02</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">AI Scores Without Seeing</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Claude AI analyzes the public teaser and metadata across 14 dimensions to generate a dollar valuation. The encrypted idea is never decrypted.</div></div>
       </div>
-      <div class="tech-card">
-        <div class="tech-icon">🌐</div>
-        <div class="tech-title">IPFS Decentralized Storage</div>
-        <div class="tech-text">Encrypted idea blobs stored on IPFS via Pinata. Content-addressed via CID stored on-chain. Ideas survive platform shutdown. Permanently accessible. Censorship-resistant.</div>
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--display);font-size:48px;color:var(--green);line-height:1;flex-shrink:0">03</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Investors Bid Blind</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Sealed blind auction on Ethereum. Investors commit bids without seeing others. Winning bid held in smart contract escrow.</div></div>
       </div>
-      <div class="tech-card">
-        <div class="tech-icon">🤖</div>
-        <div class="tech-title">Claude AI Scoring Engine</div>
-        <div class="tech-text">Anthropic's Claude performs multi-dimensional idea valuation: 6-factor weighted scoring, TAM/SAM/SOM market modeling, competitive landscape analysis, and full investor-grade narrative reports.</div>
-      </div>
-      <div class="tech-card">
-        <div class="tech-icon">🛡️</div>
-        <div class="tech-title">Governing Algorithm</div>
-        <div class="tech-text">On-chain autonomous governance with 1000-point wallet reputation scoring, sybil detection via behavioral fingerprinting, wash trading detection, collusion ring analysis, and automatic fraud response.</div>
-      </div>
-      <div class="tech-card">
-        <div class="tech-icon">📊</div>
-        <div class="tech-title">Self-Improving Valuation</div>
-        <div class="tech-text">On-chain valuation algorithm recalibrates with every real sale. Exponential moving averages, category multipliers, competitive moat scoring, and market timing all update dynamically as the platform grows.</div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="font-family:var(--display);font-size:48px;color:#ff6fff;line-height:1;flex-shrink:0">04</div>
+        <div><div style="font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Key Delivered, Funds Released</div><div style="font-size:14px;color:var(--text-dim);line-height:1.6">Inventor delivers decryption key. Smart contract releases 80% to inventor automatically. 20% to platform. Royalties on every future resale.</div></div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- WHITE PAPER -->
-<section class="whitepaper" id="whitepaper">
-  <div class="section-inner">
-    <div class="section-label">White Paper</div>
-    <h2 class="section-title">THE CRYPTVALT<br>PROTOCOL</h2>
-
-    <div class="wp-content">
-      <div class="wp-doc">
-        <div class="wp-doc-header">
-          <div class="wp-doc-title">CRYPTVALT</div>
-          <div class="wp-doc-sub">Technical White Paper — v2.0 · 2025</div>
-        </div>
-
-        <div class="wp-section">
-          <div class="wp-section-title">Abstract</div>
-          <div class="wp-section-text">CryptValt introduces a trustless protocol for the buying and selling of encrypted intellectual property. Using client-side AES-256-GCM encryption, Ethereum smart contracts, and AI-powered valuation, the protocol enables inventors to monetize their ideas without exposure while providing investors with objective, AI-generated valuations and a sealed-bid auction mechanism that eliminates information asymmetry.</div>
-        </div>
-
-        <div class="wp-section">
-          <div class="wp-section-title">Market Opportunity</div>
-          <div class="wp-section-text">The global intellectual property market is estimated at <strong>$180 billion annually</strong>, with patent licensing alone representing $45B. Despite this, individual inventors receive less than 12% of total IP value. CryptValt targets the $21B+ market of independent inventors, early-stage idea sellers, and IP investors currently underserved by existing platforms.</div>
-        </div>
-
-        <div class="wp-section">
-          <div class="wp-section-title">Protocol Design Principles</div>
-          <div class="wp-section-text"><strong>1. Zero Trust Architecture:</strong> The platform operator has no special privileges. No admin can read ideas, override auctions, or redirect funds. Smart contracts enforce all rules.<br><br><strong>2. Cryptographic Privacy:</strong> Ideas are encrypted before upload. The symmetric key is only transferred after payment is confirmed and escrowed.<br><br><strong>3. Objective Valuation:</strong> AI scoring removes subjective human judgment from valuation. The algorithm improves with every real sale.<br><br><strong>4. Autonomous Operation:</strong> The protocol runs without human intervention. Auctions open and close autonomously. Funds split and release automatically.</div>
-        </div>
-
-        <div class="wp-section">
-          <div class="wp-section-title">Revenue Model</div>
-          <div class="wp-section-text">CryptValt collects a <strong>20% protocol fee</strong> on every primary sale, automatically distributed by the escrow smart contract. Secondary market sales generate an additional <strong>20% platform fee</strong> in addition to inventor royalties. No subscription, no listing fees, no hidden costs. The platform earns only when inventors earn.</div>
-        </div>
-
-        <div class="wp-section">
-          <div class="wp-section-title">Security Architecture</div>
-          <div class="wp-section-text">Three-layer security: (1) Cryptographic — AES-256-GCM with random IV, EIP-712 signatures, commit-reveal bid scheme. (2) Smart Contract — reentrancy guards, role-based access control, circuit breakers, pull-over-push payments. (3) Governance — on-chain reputation system, behavioral fraud detection, autonomous freeze/unfreeze mechanisms.</div>
-        </div>
+  <!-- SLIDE 5: MARKET -->
+  <div class="slide">
+    <div class="slide-num">05 — Market Opportunity</div>
+    <h2 class="slide-title">$2.9T<br><span class="highlight-text">ADDRESSABLE</span><br>MARKET</h2>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" style="color:var(--cyan)">$2.9T</div>
+        <div class="metric-label">Global IP Market (TAM)</div>
       </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--gold)">$340B</div>
+        <div class="metric-label">IP Licensing Market (SAM)</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">$4.2B</div>
+        <div class="metric-label">Year 5 Target (SOM)</div>
+      </div>
+    </div>
+    <p class="slide-sub">The global IP market grows at 8.3% annually. Web3 IP marketplaces are an entirely new category with zero dominant players. CryptValt is positioned to define this market.</p>
+  </div>
 
-      <div class="wp-stats">
-        <div class="wp-stat-card">
-          <div class="wp-stat-num">$180B</div>
-          <div>
-            <div class="wp-stat-label">Global IP Market</div>
-            <div class="wp-stat-text">Annual intellectual property licensing and sales market. CryptValt targets the underserved independent inventor segment.</div>
-          </div>
-        </div>
-        <div class="wp-stat-card">
-          <div class="wp-stat-num">12%</div>
-          <div>
-            <div class="wp-stat-label">What Inventors Currently Get</div>
-            <div class="wp-stat-text">The average independent inventor receives less than 12% of their idea's commercial value through existing channels. CryptValt gives them 80%.</div>
-          </div>
-        </div>
-        <div class="wp-stat-card">
-          <div class="wp-stat-num">3.5M</div>
-          <div>
-            <div class="wp-stat-label">Patent Applications Per Year</div>
-            <div class="wp-stat-text">Annually worldwide — most representing inventors with no viable monetization path for their ideas beyond the patent itself.</div>
-          </div>
-        </div>
-        <div class="wp-stat-card">
-          <div class="wp-stat-num">80%</div>
-          <div>
-            <div class="wp-stat-label">Goes Directly to the Inventor</div>
-            <div class="wp-stat-text">Enforced by smart contract code. No negotiation. No intermediary. Automatic on every sale. The most inventor-friendly split in the industry.</div>
-          </div>
-        </div>
+  <!-- SLIDE 6: BUSINESS MODEL -->
+  <div class="slide">
+    <div class="slide-num">06 — Business Model</div>
+    <h2 class="slide-title">MULTIPLE<br><span class="gold-text">REVENUE</span><br>STREAMS</h2>
+    <table class="table">
+      <tr><th>Revenue Stream</th><th>Details</th><th>Rate</th></tr>
+      <tr><td>Primary Auction Fee</td><td>Fee on every idea sale</td><td style="color:var(--gold)">20% of sale</td></tr>
+      <tr><td>Secondary Market Fee</td><td>Fee on resales</td><td style="color:var(--gold)">5% of sale</td></tr>
+      <tr><td>NFT Membership Mint</td><td>Bronze/Gold/Platinum</td><td style="color:var(--gold)">0.05–0.50 ETH</td></tr>
+      <tr><td>Founder NFT Mint</td><td>100 genesis tokens</td><td style="color:var(--gold)">1 ETH each</td></tr>
+      <tr><td>CVT Token</td><td>Platform token utility</td><td style="color:var(--gold)">Ecosystem value</td></tr>
+      <tr><td>Enterprise Licensing</td><td>White-label solution</td><td style="color:var(--gold)">$50k-$500k/yr</td></tr>
+    </table>
+  </div>
+
+  <!-- SLIDE 7: TRACTION -->
+  <div class="slide">
+    <div class="slide-num">07 — Traction</div>
+    <h2 class="slide-title">BUILT &<br><span class="green-text">READY</span><br>TO LAUNCH</h2>
+    <div class="metrics" style="grid-template-columns:repeat(2,1fr)">
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">8</div>
+        <div class="metric-label">Smart Contracts Written</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">14</div>
+        <div class="metric-label">AI Scoring Dimensions</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">100%</div>
+        <div class="metric-label">Platform Built</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" style="color:var(--green)">$50</div>
+        <div class="metric-label">To Go Live (Gas Cost)</div>
+      </div>
+    </div>
+    <p class="slide-sub">CryptValt is fully built. Smart contracts compile and are ready for deployment. The frontend PWA is live at dhatway.github.io/CryptValt. Backend API is deployed on Vercel. The only barrier to launch is gas fees for contract deployment.</p>
+  </div>
+
+  <!-- SLIDE 8: ROADMAP -->
+  <div class="slide">
+    <div class="slide-num">08 — Roadmap</div>
+    <h2 class="slide-title">PATH TO<br><span class="highlight-text">SCALE</span></h2>
+    <div class="roadmap">
+      <div class="roadmap-item done">
+        <div class="roadmap-phase">Phase 1 — Complete</div>
+        <div class="roadmap-title">Foundation</div>
+        <div class="roadmap-desc">Full platform built. Smart contracts written. AI scoring. Backend API. Security monitor. Promotional system.</div>
+      </div>
+      <div class="roadmap-item active">
+        <div class="roadmap-phase">Phase 2 — In Progress</div>
+        <div class="roadmap-title">Launch</div>
+        <div class="roadmap-desc">Contract deployment. NFT Membership. Founder collection. Revenue sharing. DAO governance. CVT token.</div>
+      </div>
+      <div class="roadmap-item upcoming">
+        <div class="roadmap-phase">Phase 3 — Q2 2025</div>
+        <div class="roadmap-title">Growth</div>
+        <div class="roadmap-desc">First 100 idea listings. $1M platform volume. Twitter API integration. Scout referral program. Exchange listing for CVT.</div>
+      </div>
+      <div class="roadmap-item upcoming">
+        <div class="roadmap-phase">Phase 4 — Q4 2025</div>
+        <div class="roadmap-title">Scale</div>
+        <div class="roadmap-desc">Mobile app. Patent database integration. Enterprise licensing. $10M platform volume. Series A fundraise.</div>
       </div>
     </div>
   </div>
-</section>
 
-<!-- REVENUE / TOKENOMICS -->
-<section style="background:var(--surface);position:relative;z-index:1">
-  <div class="section-inner">
-    <div class="section-label">Economics</div>
-    <h2 class="section-title">DESIGNED FOR<br>INVENTORS FIRST</h2>
-
-    <div class="token-grid">
-      <div class="revenue-split">
-        <div class="rev-title">Primary Sale Split</div>
-        <div class="rev-bar">
-          <div class="rev-bar-header"><span>Inventor</span><span style="color:var(--green)">80%</span></div>
-          <div class="rev-bar-track"><div class="rev-bar-fill" style="width:80%;background:var(--green)"></div></div>
-        </div>
-        <div class="rev-bar">
-          <div class="rev-bar-header"><span>Platform Protocol</span><span style="color:var(--cyan)">20%</span></div>
-          <div class="rev-bar-track"><div class="rev-bar-fill" style="width:20%;background:var(--cyan)"></div></div>
-        </div>
-        <div style="margin-top:24px;font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;line-height:1.8">
-          Split enforced by Solidity smart contract.<br>
-          No admin can alter it. No exceptions.
-        </div>
+  <!-- SLIDE 9: USE OF FUNDS -->
+  <div class="slide">
+    <div class="slide-num">09 — Use of Funds</div>
+    <h2 class="slide-title">$500K<br><span class="gold-text">SEED</span><br>ROUND</h2>
+    <div class="funds-bar">
+      <div class="funds-row">
+        <div class="funds-label">Engineering</div>
+        <div class="funds-track"><div class="funds-fill" style="width:35%;background:var(--cyan)"></div></div>
+        <div class="funds-pct" style="color:var(--cyan)">35%</div>
       </div>
-
-      <div class="revenue-split">
-        <div class="rev-title">Secondary Sale Split</div>
-        <div class="rev-bar">
-          <div class="rev-bar-header"><span>Current Seller</span><span style="color:var(--text)">75%</span></div>
-          <div class="rev-bar-track"><div class="rev-bar-fill" style="width:75%;background:var(--text-dim)"></div></div>
-        </div>
-        <div class="rev-bar">
-          <div class="rev-bar-header"><span>Original Inventor Royalty</span><span style="color:var(--gold)">Up to 10%</span></div>
-          <div class="rev-bar-track"><div class="rev-bar-fill" style="width:10%;background:var(--gold)"></div></div>
-        </div>
-        <div class="rev-bar">
-          <div class="rev-bar-header"><span>Platform Fee</span><span style="color:var(--cyan)">20%</span></div>
-          <div class="rev-bar-track"><div class="rev-bar-fill" style="width:20%;background:var(--cyan)"></div></div>
-        </div>
-        <div style="margin-top:24px;font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:1px;line-height:1.8">
-          Inventor earns forever on every resale.<br>
-          Royalty % set by inventor at listing time.
-        </div>
+      <div class="funds-row">
+        <div class="funds-label">Marketing & Growth</div>
+        <div class="funds-track"><div class="funds-fill" style="width:25%;background:var(--gold)"></div></div>
+        <div class="funds-pct" style="color:var(--gold)">25%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Legal & Compliance</div>
+        <div class="funds-track"><div class="funds-fill" style="width:15%;background:var(--green)"></div></div>
+        <div class="funds-pct" style="color:var(--green)">15%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Operations</div>
+        <div class="funds-track"><div class="funds-fill" style="width:15%;background:#ff6fff"></div></div>
+        <div class="funds-pct" style="color:#ff6fff">15%</div>
+      </div>
+      <div class="funds-row">
+        <div class="funds-label">Reserve</div>
+        <div class="funds-track"><div class="funds-fill" style="width:10%;background:var(--text-muted)"></div></div>
+        <div class="funds-pct" style="color:var(--text-muted)">10%</div>
       </div>
     </div>
+    <p class="slide-sub" style="margin-top:20px">$175k engineering accelerates mobile app and enterprise features. $125k marketing drives inventor and investor acquisition. $75k legal ensures IP protection and regulatory compliance.</p>
   </div>
-</section>
 
-<!-- TWITTER THREADS -->
-<section class="threads" id="press">
-  <div class="section-inner">
-    <div class="section-label">Launch Content</div>
-    <h2 class="section-title">READY TO<br>PUBLISH</h2>
-    <p class="section-body">Copy-ready launch content for every major channel. Craft the narrative. Own the conversation.</p>
+  <!-- SLIDE 10: TEAM -->
+  <div class="slide">
+    <div class="slide-num">10 — Team</div>
+    <h2 class="slide-title">BUILT BY<br><span class="highlight-text">ONE</span></h2>
+    <p class="slide-sub">CryptValt was conceived, designed, and built entirely by a solo independent creator — from an Android phone. No VC backing. No team. No office. Just vision, execution, and 6 months of building.</p>
+    <div style="background:var(--surface2);border:1px solid var(--border-bright);padding:24px;margin:20px 0">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:12px">FOUNDER</div>
+      <div style="font-size:20px;font-weight:700;letter-spacing:1px;margin-bottom:6px">Michael Venable</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;margin-bottom:12px">@iamthevgod · DhatWay</div>
+      <div style="font-size:14px;color:var(--text-dim);line-height:1.7">Independent music artist, developer, and entrepreneur. Built CryptValt as part of the DhatWay creative and technology umbrella. Proof that one person with a vision and the right tools can build something that changes an industry.</div>
+    </div>
+    <p class="slide-sub">Seed funding will be used to expand the team with 2 engineers and 1 marketing lead to accelerate growth.</p>
+  </div>
 
-    <div class="threads-grid">
-      <div class="thread-card">
-        <div class="thread-platform">𝕏 / Twitter — Launch Thread</div>
-        <div class="thread-title">The idea theft problem just got solved.</div>
-        <div class="thread-preview">
-          🧵 1/ We just launched CryptValt — the world's first encrypted idea marketplace.<br><br>
-          Here's what that means and why it matters 👇<br><br>
-          2/ The problem: You have a brilliant idea. You want to sell it. But to sell it, you have to show it. And the moment you show it, it can be stolen.<br><br>
-          3/ CryptValt fixes this with cryptography. Your idea never leaves your device unencrypted. Ever. Not to us. Not to the AI. Not to investors. Only the buyer who wins the auction receives the decryption key — after payment is locked in escrow.<br><br>
-          4/ The AI scores your idea without reading it. Marketability. Scalability. Consumer demand. Competitive moat. Dollar value estimate. Full investor report. All generated from metadata only.<br><br>
-          5/ Investors bid blind — sealed auction, cryptographic commitments. Winner pays, gets the key, reads the idea. 80% goes to you automatically. Smart contract. No humans.<br><br>
-          6/ This is the future of the creator economy. Ideas deserve a marketplace. That marketplace is here.
-        </div>
-        <div class="thread-count">6 tweets · Est. reach: 50K+</div>
+  <!-- SLIDE 11: THE ASK -->
+  <div class="cta-box">
+    <div class="cta-title">JOIN THE<br><span style="color:var(--gold)">REVOLUTION</span></div>
+    <p style="font-size:16px;color:var(--text-dim);line-height:1.7;max-width:500px;margin:0 auto 32px">CryptValt is the first encrypted idea marketplace. We are raising $500,000 in seed funding to deploy, grow, and dominate a market that has never existed before.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px">
+      <div style="text-align:center">
+        <div style="font-family:var(--display);font-size:40px;color:var(--cyan)">$500K</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">RAISING</div>
       </div>
-
-      <div class="thread-card">
-        <div class="thread-platform">Reddit — r/ethereum / r/web3</div>
-        <div class="thread-title">We built a trustless idea marketplace on Ethereum</div>
-        <div class="thread-preview">
-          <strong>Title:</strong> Built CryptValt — an encrypted idea auction protocol where the AI scores ideas without ever decrypting them. Looking for feedback from the community.<br><br>
-          <strong>Body:</strong> Hey r/ethereum — I've been working on a protocol that solves a problem I couldn't find a good solution to: how do you sell an idea without revealing it?<br><br>
-          The answer: AES-256 client-side encryption + commit-reveal auctions + trustless escrow.<br><br>
-          The interesting part is the AI valuation. Claude scores the idea across 6 dimensions using only the metadata — category, problem statement, target market. The full encrypted blob is never sent to the API.<br><br>
-          Smart contracts handle everything: escrow, 80/20 split, royalties on secondary sales. No admin controls. No way to rug.<br><br>
-          Full white paper and source code on GitHub. Would love technical feedback from this community.
-        </div>
-        <div class="thread-count">r/ethereum · r/web3 · r/entrepreneur</div>
+      <div style="text-align:center">
+        <div style="font-family:var(--display);font-size:40px;color:var(--gold)">10%</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">EQUITY OFFERED</div>
       </div>
-
-      <div class="thread-card">
-        <div class="thread-platform">Product Hunt — Launch Post</div>
-        <div class="thread-title">CryptValt — Sell your ideas without revealing them</div>
-        <div class="thread-preview">
-          <strong>Tagline:</strong> The world's first encrypted idea marketplace<br><br>
-          <strong>Description:</strong> CryptValt lets inventors sell their ideas on-chain without ever exposing them. Ideas are encrypted in the browser, scored by AI, and sold via sealed blind auction. Smart contracts handle escrow, payment, and key transfer automatically. Inventors keep 80%.<br><br>
-          <strong>First comment:</strong> Hey Product Hunt 👋 I built CryptValt because I had ideas I couldn't safely sell anywhere. The problem with every existing platform is that you have to reveal the idea to sell it — which means it can be stolen. CryptValt is the first marketplace where the product being sold is never exposed until the buyer has paid and the smart contract has verified the transaction. Would love your feedback.
-        </div>
-        <div class="thread-count">Product Hunt · HackerNews · IndieHackers</div>
+      <div style="text-align:center">
+        <div style="font-family:var(--display);font-size:40px;color:var(--green)">$5M</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px">PRE-MONEY VALUATION</div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- PRESS RELEASES -->
-<section style="background:var(--bg);position:relative;z-index:1">
-  <div class="section-inner">
-    <div class="section-label">Press Kit</div>
-    <h2 class="section-title">FOR MEDIA<br>& INVESTORS</h2>
-
-    <div class="press-grid">
-      <div class="press-card">
-        <div class="press-outlet">Press Release — Crypto Media</div>
-        <div class="press-headline">CryptValt Launches First Trustless Encrypted Idea Marketplace on Ethereum</div>
-        <div class="press-lede">FOR IMMEDIATE RELEASE — CryptValt, a new decentralized protocol built on Ethereum, has launched the world's first marketplace for the buying and selling of encrypted intellectual property. The platform uses client-side AES-256-GCM encryption, AI-powered valuation, and sealed blind auctions to enable inventors to monetize their ideas without revealing them to potential buyers. Smart contracts autonomously handle escrow, payment distribution (80% inventor / 20% platform), and cryptographic key transfer. The platform operates with zero human intervention after deployment.<br><br>
-        "We've built something that didn't exist before — a way to sell an idea without showing it," said the founder. "Cryptography solves the exposure problem. The blockchain solves the trust problem. AI solves the valuation problem. Put them together and you have CryptValt."</div>
-      </div>
-
-      <div class="press-card">
-        <div class="press-outlet">Investor One-Pager</div>
-        <div class="press-headline">CryptValt: The Infrastructure Layer for the Idea Economy</div>
-        <div class="press-lede"><strong>Problem:</strong> The $180B IP market has no trustless mechanism for individual inventors to safely sell ideas.<br><br>
-        <strong>Solution:</strong> CryptValt — an encrypted, AI-scored, blockchain-settled idea marketplace.<br><br>
-        <strong>Traction:</strong> Live on Ethereum. Open source. Fully functional MVP with encryption, AI scoring, sealed auctions, escrow, and royalties.<br><br>
-        <strong>Business Model:</strong> 20% protocol fee on all sales. Autonomous. Zero operational overhead.<br><br>
-        <strong>Market:</strong> $180B IP market. 3.5M patent applications/year. Independent inventors grossly underserved.<br><br>
-        <strong>Moat:</strong> First mover in encrypted idea marketplace category. Network effects from both inventor supply and investor demand sides. Self-improving AI valuation algorithm.</div>
-      </div>
-
-      <div class="press-card">
-        <div class="press-outlet">Discord / Telegram Announcement</div>
-        <div class="press-headline">CryptValt is Live — The Encrypted Idea Marketplace</div>
-        <div class="press-lede">🔐 <strong>CryptValt is now live.</strong><br><br>
-        The first marketplace where you can sell your ideas without revealing them.<br><br>
-        ✅ AES-256 encrypted — idea never exposed<br>
-        ✅ AI scores your idea without reading it<br>
-        ✅ Sealed blind auction — no bid manipulation<br>
-        ✅ Smart contract escrow — no trust needed<br>
-        ✅ 80% goes to the inventor automatically<br>
-        ✅ Perpetual royalties on every resale<br><br>
-        This is what Web3 was built for. True trustless value exchange for intellectual property.<br><br>
-        🚀 Launch it: dhatway.github.io/CryptValt<br>
-        📄 White paper: cryptvalt.io/whitepaper</div>
-      </div>
-
-      <div class="press-card">
-        <div class="press-outlet">Email Outreach — VC / Angel Investors</div>
-        <div class="press-headline">Subject: CryptValt — Encrypted Idea Marketplace (Pre-Seed)</div>
-        <div class="press-lede">Hi [Name],<br><br>
-        I'm reaching out because you've invested in [Web3/IP/Creator Economy companies].<br><br>
-        I built CryptValt — the first trustless marketplace for selling encrypted intellectual property on Ethereum. The core insight: you can't safely sell an idea without revealing it. We solve this with AES-256 encryption, AI valuation, and sealed blind auctions on-chain.<br><br>
-        <strong>Why now:</strong> The creator economy has reached ideas. Millions of inventors have no viable monetization path. CryptValt is the infrastructure layer they've been missing.<br><br>
-        <strong>Traction:</strong> Live MVP. Fully autonomous. Source code public. Looking for a seed investor who sees the $180B IP market and wants to own the infrastructure.<br><br>
-        Happy to send the full white paper or hop on a 20-minute call.<br><br>
-        Michael Venable<br>
-        Founder, CryptValt</div>
-      </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:2px;margin-bottom:20px">
+      CONTACT · dhatway2024@gmail.com · dhatway.github.io/CryptValt
     </div>
+    <a href="../index.html" class="btn btn-primary">View Live Platform →</a>
   </div>
-</section>
 
-<!-- CTA -->
-<section class="cta-section">
-  <div class="section-inner" style="position:relative">
-    <div class="cta-glow"></div>
-    <div class="section-label" style="justify-content:center">Ready to Launch</div>
-    <h2 class="cta-title">YOUR IDEAS<br><span style="color:var(--cyan)">DESERVE</span><br>A MARKET</h2>
-    <p class="cta-sub">The infrastructure is live. The smart contracts are deployed. The AI is running. All that's missing is you.</p>
-    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-      <a href="https://dhatway.github.io/CryptValt" class="btn-hero btn-hero-primary" target="_blank">Launch CryptValt →</a>
-      <a href="https://github.com/DhatWay/CryptValt" class="btn-hero btn-hero-secondary" target="_blank">View on GitHub</a>
-    </div>
-  </div>
-</section>
+</main>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-logo">CRYPT<span>VALT</span></div>
-    <div class="footer-links">
-      <a href="https://dhatway.github.io/CryptValt" class="footer-link">App</a>
-      <a href="https://github.com/DhatWay/CryptValt" class="footer-link">GitHub</a>
-      <a href="#whitepaper" class="footer-link">White Paper</a>
-      <a href="#press" class="footer-link">Press</a>
-    </div>
-    <div class="footer-copy">© 2025 CryptValt · Built by DhatWay · Powered by Ethereum + Anthropic</div>
-  </div>
-</footer>
-
-<script>
-// Animate elements on scroll
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.problem-card, .flow-step, .tech-card, .wp-stat-card, .thread-card, .press-card').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(30px)';
-  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-  observer.observe(el);
-});
-
-// Animate revenue bars
-const barObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.querySelectorAll('.rev-bar-fill').forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0%';
-        setTimeout(() => { bar.style.width = width; }, 100);
-      });
-    }
-  });
-}, { threshold: 0.3 });
-
-document.querySelectorAll('.revenue-split').forEach(el => barObserver.observe(el));
-</script>
 </body>
 </html>
