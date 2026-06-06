@@ -420,6 +420,10 @@ CryptValt changes this with three technologies working together:
 
 🔐 **Cryptography** — your idea encrypts in your browser with AES-256. Nobody reads it until the buyer pays.
 
+🔑 **Licensing Marketplace** — Inventors license ideas instead of selling outright. Non-exclusive, exclusive, time-limited, territory licenses. Recurring monthly or annual payments. Keep ownership forever.
+
+🏢 **Enterprise Tools** — Bulk idea submission for companies. Team accounts, role-based access, white-label platform, custom contract terms. Post-funding availability.
+
 🤖 **AI Valuation** — Claude generates a full investor report: marketability, scalability, consumer potential, dollar value estimate. From metadata only. Your idea stays encrypted.
 
 ⬡ **Blockchain** — Ethereum smart contracts handle escrow, payment (80% to you), and key transfer autonomously. No intermediaries.
