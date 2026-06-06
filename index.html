@@ -3246,17 +3246,18 @@ async function runPatentSearch(keywords, category, title, description) {
     let usptoResults = [];
     try {
       const q = encodeURIComponent(keywords.split(',')[0].trim());
-      const res = await fetch(`https://developer.uspto.gov/ibd-api/v1/patent/application?searchText=${q}&start=0&rows=5`);
+      const res = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/patent/search?q=' + q);
       if (res.ok) {
         const data = await res.json();
-        usptoResults = (data?.response?.docs || []).map(d => ({
-          title: d.inventionTitle || 'Patent',
-          number: d.patentNumber || d.applicationNumber || '',
-          date: d.grantDate || d.filingDate || '',
-          abstract: d.briefSummary || ''
+        usptoResults = (data?.data?.results || []).map(d => ({
+          title:    d.title    || 'Patent',
+          number:   d.number   || '',
+          date:     d.date     || '',
+          abstract: d.abstract || '',
+          url:      d.url      || null
         }));
       }
-    } catch(e) { /* USPTO may have CORS - silent fail */ }
+    } catch(e) { /* silent fail */ }
 
     // Ask Claude to analyze results and give verdict
     const analysisPrompt = `You are a patent analyst for CryptValt. 
