@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptValt — Enterprise Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#020408; --surface:#060c14; --surface2:#0a1520; --surface3:#0f1e2e;
+  --border:rgba(0,200,255,0.08); --border-bright:rgba(0,200,255,0.2);
+  --cyan:#00c8ff; --gold:#f0a500; --green:#00ff9d; --red:#ff3b6b; --pink:#ff6fff;
+  --text:#e8f4ff; --text-dim:rgba(232,244,255,0.55); --text-muted:rgba(232,244,255,0.25);
+  --mono:'Share Tech Mono',monospace; --display:'Bebas Neue',sans-serif; --body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);background-size:50px 50px;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;
+  justify-content:space-between;padding:0 24px;height:56px;
+  background:rgba(2,4,8,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--display);font-size:20px;letter-spacing:4px;color:var(--cyan);}
+.nav-logo span{color:var(--gold);}
+.nav-links{display:flex;gap:16px;align-items:center;}
+.nav-link{font-family:var(--mono);font-size:10px;color:var(--text-muted);text-decoration:none;letter-spacing:2px;}
+.nav-link:hover{color:var(--cyan);}
+.nav-cta{background:var(--cyan);color:var(--bg);font-family:var(--mono);font-size:10px;
+  letter-spacing:2px;padding:7px 16px;text-decoration:none;}
+
+main{position:relative;z-index:1;padding:72px 20px 60px;max-width:1100px;margin:0 auto;}
+
+.hero{text-align:center;padding:60px 0 48px;}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:5px;color:var(--gold);margin-bottom:16px;}
+.hero-title{font-family:var(--display);font-size:clamp(52px,10vw,96px);letter-spacing:4px;line-height:0.9;margin-bottom:20px;
+  background:linear-gradient(135deg,var(--gold),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:18px;color:var(--text-dim);max-width:600px;margin:0 auto 40px;line-height:1.7;}
+
+.coming-soon{background:linear-gradient(135deg,rgba(240,165,0,0.08),rgba(0,200,255,0.08));
+  border:1px solid rgba(240,165,0,0.3);padding:16px 24px;display:inline-flex;align-items:center;
+  gap:12px;margin-bottom:48px;}
+.coming-soon-text{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:2px;}
+
+.section{margin-bottom:56px;}
+.section-label{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:4px;
+  text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:40px;}
+.feature-card{background:var(--surface);border:1px solid var(--border);padding:28px;
+  position:relative;overflow:hidden;transition:all 0.3s;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.3s;}
+.feature-card:hover{border-color:var(--border-bright);transform:translateY(-3px);}
+.feature-card:hover::before{opacity:1;}
+.feature-card.gold::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.feature-card.cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.feature-card.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.feature-card.pink::before{background:linear-gradient(90deg,transparent,var(--pink),transparent);}
+.feature-icon{font-size:36px;margin-bottom:14px;}
+.feature-title{font-size:18px;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
+.feature-desc{font-size:14px;color:var(--text-dim);line-height:1.7;}
+.feature-tag{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:3px 10px;
+  border:1px solid;display:inline-block;margin-top:12px;}
+
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px;}
+.pricing-card{background:var(--surface);border:1px solid var(--border);padding:28px;text-align:center;
+  position:relative;transition:all 0.3s;}
+.pricing-card.featured{border-color:rgba(240,165,0,0.5);background:rgba(240,165,0,0.04);}
+.pricing-card.featured::before{content:'MOST POPULAR';position:absolute;top:-1px;left:50%;
+  transform:translateX(-50%);background:var(--gold);color:var(--bg);font-family:var(--mono);
+  font-size:9px;letter-spacing:2px;padding:3px 12px;}
+.pricing-tier{font-family:var(--mono);font-size:11px;letter-spacing:3px;margin-bottom:8px;}
+.pricing-price{font-family:var(--display);font-size:48px;letter-spacing:2px;line-height:1;margin-bottom:6px;}
+.pricing-period{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:20px;}
+.pricing-stake{font-family:var(--mono);font-size:10px;margin-bottom:20px;padding:8px;
+  background:var(--surface2);border:1px solid var(--border);}
+.pricing-features{text-align:left;margin-bottom:24px;}
+.pricing-feature{font-size:13px;color:var(--text-dim);padding:6px 0;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;}
+.pricing-feature:last-child{border-bottom:none;}
+.check{color:var(--green);}
+.pricing-btn{width:100%;font-family:var(--mono);font-size:11px;letter-spacing:2px;padding:12px;
+  border:none;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+.pricing-btn.active{background:var(--gold);color:var(--bg);border-color:var(--gold);}
+
+.comparison{overflow-x:auto;margin-bottom:40px;}
+.comp-table{width:100%;border-collapse:collapse;min-width:600px;}
+.comp-table th{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;
+  padding:12px;border-bottom:1px solid var(--border);text-align:center;}
+.comp-table th:first-child{text-align:left;}
+.comp-table td{padding:12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-dim);text-align:center;}
+.comp-table td:first-child{text-align:left;font-weight:600;color:var(--text);}
+.comp-table tr:last-child td{border-bottom:none;}
+.comp-table .highlight{color:var(--gold);}
+
+.form-group{margin-bottom:16px;}
+.form-label{font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;
+  display:block;margin-bottom:8px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--body);font-size:14px;padding:12px 14px;outline:none;transition:border-color 0.2s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--cyan);}
+.form-textarea{min-height:100px;resize:vertical;}
+.form-select option{background:var(--surface2);}
+.btn{font-family:var(--body);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:14px 32px;border:none;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#ff8c00);color:var(--bg);}
+.btn-primary:hover{box-shadow:0 0 24px rgba(240,165,0,0.4);transform:translateY(-2px);}
+.btn-secondary{background:transparent;color:var(--cyan);border:1px solid var(--cyan);}
+.btn-full{width:100%;}
+
+.neon-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--cyan),transparent);
+  margin:48px 0;opacity:0.5;}
+
+.use-cases{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px;}
+.use-case{background:var(--surface);border:1px solid var(--border);padding:20px;border-left:3px solid var(--gold);}
+.use-case-title{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px;}
+.use-case-desc{font-size:13px;color:var(--text-dim);line-height:1.7;}
+
+.contact-box{background:linear-gradient(135deg,rgba(240,165,0,0.06),rgba(0,200,255,0.06));
+  border:1px solid rgba(240,165,0,0.3);padding:40px;text-align:center;margin-bottom:40px;}
+
+footer{position:relative;z-index:1;padding:32px 20px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.footer-logo{font-family:var(--display);font-size:18px;letter-spacing:4px;color:var(--cyan);}
+.footer-logo span{color:var(--gold);}
+.footer-copy{font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;}
+
+.notify{position:fixed;top:70px;right:16px;z-index:999;max-width:300px;
+  background:var(--surface);border:1px solid var(--border-bright);padding:14px 18px;display:none;}
+.notify-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.notify-msg{font-size:12px;color:var(--text-dim);}
+
+@media(max-width:768px){
+  .pricing-grid{grid-template-columns:1fr;}
+  .use-cases{grid-template-columns:1fr;}
+  nav{padding:0 16px;}
+  .nav-links{gap:10px;}
+}
+</style>
+</head>
+<body>
+
+<div class="notify" id="notify">
+  <div class="notify-title" id="notifyTitle"></div>
+  <div class="notify-msg" id="notifyMsg"></div>
+</div>
+
+<nav>
+  <div class="nav-logo">CRYPT<span>VALT</span></div>
+  <div class="nav-links">
+    <a href="../index.html" class="nav-link">App</a>
+    <a href="../investor/index.html" class="nav-link">Investors</a>
+    <a href="../promo/outreach.html" class="nav-link">Outreach</a>
+    <a href="mailto:dhatway2024@gmail.com" class="nav-cta">Contact Sales →</a>
+  </div>
+</nav>
+
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">⬡ Enterprise IP Management</div>
+    <h1 class="hero-title">ENTERPRISE<br>TOOLS</h1>
+    <p class="hero-sub">Institutional-grade IP management for companies, research institutions, and large inventor networks. Secure. Encrypted. Autonomous.</p>
+    <div class="coming-soon">
+      <span style="font-size:20px">⏳</span>
+      <span class="coming-soon-text">COMING SOON — AVAILABLE POST-FUNDING · PHASE 4</span>
+    </div>
+  </div>
+
+  <div class="neon-divider"></div>
+
+  <!-- FEATURES -->
+  <div class="section">
+    <div class="section-label">⬡ Enterprise Features</div>
+    <div class="features-grid">
+      <div class="feature-card gold">
+        <div class="feature-icon">📦</div>
+        <div class="feature-title" style="color:var(--gold)">Bulk Idea Submission</div>
+        <div class="feature-desc">Submit entire idea portfolios in a single batch. Import via CSV or JSON. Each idea encrypts individually with AES-256-GCM. All CIDs stored on-chain. Batch processing up to 1,000 ideas per submission.</div>
+        <span class="feature-tag" style="color:var(--gold);border-color:rgba(240,165,0,0.3)">CSV · JSON · BATCH</span>
+      </div>
+      <div class="feature-card cyan">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title" style="color:var(--cyan)">Team Accounts</div>
+        <div class="feature-desc">Multiple team members under one organization wallet. Role-based access control — Admins, Submitters, Viewers, and Auditors. Full activity log. Revoke access instantly.</div>
+        <span class="feature-tag" style="color:var(--cyan);border-color:rgba(0,200,255,0.3)">RBAC · MULTI-USER</span>
+      </div>
+      <div class="feature-card pink">
+        <div class="feature-icon">🏷️</div>
+        <div class="feature-title" style="color:var(--pink)">White-Label Platform</div>
+        <div class="feature-desc">Run your own branded encrypted IP marketplace on CryptValt infrastructure. Custom domain, custom logo, custom color scheme. Your brand, our technology. Full smart contract integration.</div>
+        <span class="feature-tag" style="color:var(--pink);border-color:rgba(255,111,255,0.3)">CUSTOM DOMAIN · BRANDED</span>
+      </div>
+      <div class="feature-card green">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title" style="color:var(--green)">Custom Contract Terms</div>
+        <div class="feature-desc">Custom NDA terms, royalty structures, and auction parameters for enterprise clients. Override default platform terms. Custom penalty fee structures. Territory and field-of-use restrictions.</div>
+        <span class="feature-tag" style="color:var(--green);border-color:rgba(0,255,157,0.3)">CUSTOM NDA · CUSTOM TERMS</span>
+      </div>
+      <div class="feature-card gold">
+        <div class="feature-icon">🔌</div>
+        <div class="feature-title" style="color:var(--gold)">API Access</div>
+        <div class="feature-desc">Full REST API for programmatic idea submission, bid management, and portfolio tracking. Webhooks for real-time events. SDKs for JavaScript, Python, and Solidity. Rate limits based on tier.</div>
+        <span class="feature-tag" style="color:var(--gold);border-color:rgba(240,165,0,0.3)">REST API · WEBHOOKS · SDKs</span>
+      </div>
+      <div class="feature-card cyan">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title" style="color:var(--cyan)">Advanced Analytics</div>
+        <div class="feature-desc">Portfolio performance dashboard. Idea scoring trends. Bid history and market comparisons. Revenue forecasting. Competitor activity monitoring. Export to CSV, PDF, or direct BI tool integration.</div>
+        <span class="feature-tag" style="color:var(--cyan);border-color:rgba(0,200,255,0.3)">PORTFOLIO · FORECASTING</span>
+      </div>
+      <div class="feature-card pink">
+        <div class="feature-icon">🛡️</div>
+        <div class="feature-title" style="color:var(--pink)">Dedicated Security</div>
+        <div class="feature-desc">Enterprise-grade security monitoring with dedicated Claude AI instance. Custom threat thresholds. Priority alert escalation. Monthly security audit reports. Dedicated incident response.</div>
+        <span class="feature-tag" style="color:var(--pink);border-color:rgba(255,111,255,0.3)">DEDICATED · PRIORITY</span>
+      </div>
+      <div class="feature-card green">
+        <div class="feature-icon">🤝</div>
+        <div class="feature-title" style="color:var(--green)">Dedicated Support</div>
+        <div class="feature-desc">Dedicated account manager. 24-hour response SLA. Direct line to the founder. Onboarding assistance. Custom training for your team. Quarterly business reviews.</div>
+        <span class="feature-tag" style="color:var(--green);border-color:rgba(0,255,157,0.3)">24HR SLA · DEDICATED AM</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="neon-divider"></div>
+
+  <!-- PRICING -->
+  <div class="section">
+    <div class="section-label">⬡ Enterprise Pricing</div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-tier" style="color:var(--cyan)">STARTER</div>
+        <div class="pricing-price" style="color:var(--cyan)">$50K</div>
+        <div class="pricing-period">PER YEAR</div>
+        <div class="pricing-stake" style="color:var(--text-muted)">Requires: <span style="color:var(--cyan)">100,000 CVT stake</span></div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><span class="check">✓</span> Bulk submission (up to 100/batch)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Team accounts (up to 10 users)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Priority support (48hr SLA)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Basic analytics dashboard</div>
+          <div class="pricing-feature"><span class="check">✓</span> Standard NDA templates</div>
+          <div class="pricing-feature" style="color:var(--text-muted)">✗ White-label platform</div>
+          <div class="pricing-feature" style="color:var(--text-muted)">✗ API access</div>
+          <div class="pricing-feature" style="color:var(--text-muted)">✗ Custom contract terms</div>
+        </div>
+        <button class="pricing-btn" onclick="openContact('Starter')">Contact Sales →</button>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="pricing-tier" style="color:var(--gold)">PROFESSIONAL</div>
+        <div class="pricing-price" style="color:var(--gold)">$150K</div>
+        <div class="pricing-period">PER YEAR</div>
+        <div class="pricing-stake" style="color:var(--text-muted)">Requires: <span style="color:var(--gold)">500,000 CVT stake</span></div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><span class="check">✓</span> Bulk submission (up to 500/batch)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Team accounts (up to 50 users)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Priority support (24hr SLA)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Advanced analytics suite</div>
+          <div class="pricing-feature"><span class="check">✓</span> White-label platform</div>
+          <div class="pricing-feature"><span class="check">✓</span> Full API access + webhooks</div>
+          <div class="pricing-feature"><span class="check">✓</span> Custom contract terms</div>
+          <div class="pricing-feature" style="color:var(--text-muted)">✗ Dedicated infrastructure</div>
+        </div>
+        <button class="pricing-btn active" onclick="openContact('Professional')">Contact Sales →</button>
+      </div>
+
+      <div class="pricing-card">
+        <div class="pricing-tier" style="color:var(--pink)">ENTERPRISE</div>
+        <div class="pricing-price" style="color:var(--pink)">$500K</div>
+        <div class="pricing-period">PER YEAR</div>
+        <div class="pricing-stake" style="color:var(--text-muted)">Requires: <span style="color:var(--pink)">2,000,000 CVT stake</span></div>
+        <div class="pricing-features">
+          <div class="pricing-feature"><span class="check">✓</span> Unlimited bulk submission</div>
+          <div class="pricing-feature"><span class="check">✓</span> Unlimited team accounts</div>
+          <div class="pricing-feature"><span class="check">✓</span> Dedicated support (4hr SLA)</div>
+          <div class="pricing-feature"><span class="check">✓</span> Custom analytics + BI integration</div>
+          <div class="pricing-feature"><span class="check">✓</span> White-label + custom domain</div>
+          <div class="pricing-feature"><span class="check">✓</span> Full API + custom SDKs</div>
+          <div class="pricing-feature"><span class="check">✓</span> Custom everything</div>
+          <div class="pricing-feature"><span class="check">✓</span> Dedicated infrastructure + SLA</div>
+        </div>
+        <button class="pricing-btn" onclick="openContact('Enterprise')">Contact Sales →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="neon-divider"></div>
+
+  <!-- USE CASES -->
+  <div class="section">
+    <div class="section-label">⬡ Enterprise Use Cases</div>
+    <div class="use-cases">
+      <div class="use-case">
+        <div class="use-case-title">Pharmaceutical Research</div>
+        <div class="use-case-desc">Protect drug compound discoveries and treatment methodologies. Submit entire R&D portfolios encrypted. License discoveries to multiple pharma companies simultaneously without disclosure risk.</div>
+      </div>
+      <div class="use-case">
+        <div class="use-case-title">Defense & Government</div>
+        <div class="use-case-desc">Classify and protect sensitive technical innovations. On-chain NDA enforcement. Territory-restricted licensing. Audit trails for compliance. Air-gapped deployment option available.</div>
+      </div>
+      <div class="use-case">
+        <div class="use-case-title">University Technology Transfer</div>
+        <div class="use-case-desc">Monetize faculty and student IP at scale. Automated royalty distribution to inventors. Bulk submission for entire research departments. Licensing marketplace for industry partnerships.</div>
+      </div>
+      <div class="use-case">
+        <div class="use-case-title">Startup Accelerators</div>
+        <div class="use-case-desc">Manage IP portfolios across your entire cohort. White-label the platform under your brand. Investors bid on ideas from your portfolio without disclosure. Automated royalty splits for co-founders.</div>
+      </div>
+      <div class="use-case">
+        <div class="use-case-title">Corporate R&D Departments</div>
+        <div class="use-case-desc">Manage thousands of internal inventions. Route ideas to the right buyers automatically. License non-core IP to generate revenue from dormant patents and innovations. Team accounts for every department.</div>
+      </div>
+      <div class="use-case">
+        <div class="use-case-title">IP Law Firms</div>
+        <div class="use-case-desc">Offer clients a secure way to monetize IP before or instead of patenting. White-label the platform under your firm brand. Automated NDA enforcement reduces legal overhead. New revenue stream for your practice.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="neon-divider"></div>
+
+  <!-- CONTACT FORM -->
+  <div class="section" id="contactSection">
+    <div class="section-label">⬡ Contact Enterprise Sales</div>
+    <div style="max-width:600px;margin:0 auto">
+      <div style="background:var(--surface);border:1px solid var(--border-bright);padding:32px">
+        <div style="font-family:var(--display);font-size:32px;letter-spacing:3px;color:var(--gold);margin-bottom:8px">GET IN TOUCH</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:24px">ENTERPRISE SALES · dhatway2024@gmail.com</div>
+        <div class="form-group"><label class="form-label">Company Name *</label><input type="text" class="form-input" id="entName" placeholder="Your company name"></div>
+        <div class="form-group"><label class="form-label">Your Name *</label><input type="text" class="form-input" id="entContact" placeholder="Your name and title"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input type="email" class="form-input" id="entEmail" placeholder="your@company.com"></div>
+        <div class="form-group"><label class="form-label">Interested Tier</label>
+          <select class="form-select" id="entTierSelect">
+            <option value="starter">Starter — $50K/yr</option>
+            <option value="professional" selected>Professional — $150K/yr</option>
+            <option value="enterprise">Enterprise — $500K/yr</option>
+            <option value="custom">Custom / White-Label</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Use Case</label><textarea class="form-textarea" id="entUseCase" placeholder="Describe your company and how you plan to use CryptValt Enterprise..."></textarea></div>
+        <button class="btn btn-primary btn-full" onclick="submitEnterpriseContact()">Submit Enterprise Inquiry →</button>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);text-align:center;margin-top:12px;letter-spacing:1px">We respond within 48 hours · All inquiries confidential</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-logo">CRYPT<span>VALT</span></div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">Enterprise · Post-Funding · Phase 4</div>
+  <div class="footer-copy">© 2024 CryptValt · DhatWay · dhatway2024@gmail.com</div>
+</footer>
+
+<script>
+function notify(type, title, msg) {
+  const colors = { success:'var(--green)', error:'var(--red)', info:'var(--cyan)' };
+  const el = document.getElementById('notify');
+  document.getElementById('notifyTitle').style.color = colors[type]||'var(--cyan)';
+  document.getElementById('notifyTitle').textContent = title;
+  document.getElementById('notifyMsg').textContent   = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+function openContact(tier) {
+  document.getElementById('entTierSelect').value = tier.toLowerCase();
+  document.getElementById('contactSection').scrollIntoView({ behavior:'smooth' });
+}
+
+function submitEnterpriseContact() {
+  const name    = document.getElementById('entName').value.trim();
+  const contact = document.getElementById('entContact').value.trim();
+  const email   = document.getElementById('entEmail').value.trim();
+  const tier    = document.getElementById('entTierSelect').value;
+  const usecase = document.getElementById('entUseCase').value.trim();
+
+  if (!name || !contact || !email) {
+    notify('error','Required','Please fill in company name, your name, and email.');
+    return;
+  }
+
+  // Log inquiry to localStorage
+  const inquiries = JSON.parse(localStorage.getItem('cv_enterprise_inquiries') || '[]');
+  inquiries.push({ name, contact, email, tier, usecase, submittedAt: new Date().toISOString() });
+  localStorage.setItem('cv_enterprise_inquiries', JSON.stringify(inquiries));
+
+  // Build mailto
+  const subject = encodeURIComponent('CryptValt Enterprise Inquiry — ' + tier.charAt(0).toUpperCase() + tier.slice(1) + ' — ' + name);
+  const body    = encodeURIComponent(
+    'Company: ' + name + '\n' +
+    'Contact: ' + contact + '\n' +
+    'Email: ' + email + '\n' +
+    'Tier: ' + tier + '\n\n' +
+    'Use Case:\n' + usecase
+  );
+  window.location.href = 'mailto:dhatway2024@gmail.com?subject=' + subject + '&body=' + body;
+
+  notify('success','✓ Inquiry Sent','We will respond within 48 hours.');
+}
+</script>
+</body>
+</html>
