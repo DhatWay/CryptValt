@@ -3733,10 +3733,75 @@ function renderCRM() {
 }
 
 const TEMPLATES = {
-  cold:     "Hi [Name], I'm the founder of CryptValt — the world's first encrypted idea marketplace. We're raising $500K seed at a $5M valuation. The platform is fully built and live at dhatway.github.io/CryptValt. Would love 15 minutes to show you what we've built.",
-  followup: "Hi [Name], following up on CryptValt. 8 smart contracts ready, CVT token designed, exchange listing prep complete. Still have allocation in our seed round. Happy to send the full deck: dhatway.github.io/CryptValt/investor",
-  deck:     "Hi [Name], here's our investor deck: dhatway.github.io/CryptValt/investor — Raising $500K seed at $5M valuation. 10% equity. Platform fully live. Happy to answer any questions.",
-  closing:  "Hi [Name], closing our seed round this week. Minimum check $25K for 0.5% equity. Platform deployed and live. Last chance at $5M valuation before Series A.",
+  cold: `Hi [Name],
+
+I built something that's never existed before — an encrypted idea marketplace where inventors sell their ideas without ever revealing them until payment is complete.
+
+CryptValt uses AES-256-GCM encryption and blind auctions on Ethereum. The idea stays private until the buyer pays. The inventor gets 80% automatically. No middlemen. No exposure risk.
+
+We're raising $500K seed at a $5M valuation. Platform is fully live at dhatway.github.io/CryptValt — everything is built, 8 smart contracts ready to deploy.
+
+Would love 15 minutes of your time. Is this week open?`,
+
+  followup: `Hi [Name],
+
+Following up on CryptValt — the encrypted IP marketplace I reached out about.
+
+Since we last spoke: exchange listing strategy complete, CVT platform token designed (100M supply), DAO governance built, AI-powered patent search integrated, and autonomous security monitor running.
+
+The seed round is still open. $500K at $5M valuation, 10% equity.
+
+Full investor deck: dhatway.github.io/CryptValt/investor
+
+Worth 15 minutes?`,
+
+  deck: `Hi [Name],
+
+Here's the CryptValt investor deck: dhatway.github.io/CryptValt/investor
+
+Key points:
+— World's first encrypted idea marketplace
+— AES-256-GCM client-side encryption
+— Claude AI valuation without reading the idea
+— 8 Ethereum smart contracts ready to deploy
+— CVT token, DAO governance, NFT membership
+— $500K seed · $5M valuation · 10% equity
+
+Whitepaper also available. Happy to walk you through it live. What works for you?`,
+
+  closing: `Hi [Name],
+
+We're closing the CryptValt seed round this week.
+
+$500K · $5M valuation · 10% equity · Minimum check $25K
+
+The platform is live. Contracts are ready. The only thing left is gas fees to deploy. Early investors get in at ground floor before we list CVT on exchanges.
+
+Once this round closes the valuation goes up. This is your window.
+
+Are you in?`,
+
+  inventor: `Hi [Name],
+
+You've had an idea that could change things — but sharing it is the risk. Once you pitch it, someone can take it.
+
+CryptValt solves that. Submit your idea encrypted. AI scores it. Investors bid blind. You get paid before anyone sees the idea.
+
+80% goes to you. Royalties on every future resale. On-chain NDA protects you permanently.
+
+Submit your first idea free at dhatway.github.io/CryptValt
+
+Your idea deserves to be protected.`,
+
+  scout: `Hey [Name],
+
+I'm building something in the IP space and looking for scouts — people who can connect inventors and investors to a new platform.
+
+You earn 5% commission on every inventor sale and 3% on every investor bid you bring in. Tracked automatically. Paid on-chain after mainnet launch.
+
+Takes 2 minutes to get your referral link: dhatway.github.io/CryptValt
+
+No cost. No commitment. Just share the link and earn.`,
 };
 
 function copyTemplate(type) {
