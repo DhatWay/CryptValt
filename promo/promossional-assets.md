@@ -311,9 +311,17 @@ CryptValt is live at dhatway.github.io/CryptValt. Source code is publicly availa
 
 ## INVESTOR EMAIL OUTREACH TEMPLATES
 
+> **Investment Structure:** CryptValt raises via CVT token sale — not traditional equity.
+> $500K buys 50M CVT at $0.01/token. CVT launches on Uniswap at $0.05 — immediate 5x for seed investors.
+> Payment: Send USDC or ETH to `0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504`
+> Email dhatway2024@gmail.com with wallet address + amount sent. CVT delivered at TGE.
+> **Minimum: $1,000 · No paperwork · No bank account required**
+
+
+
 ### Template 1 — Web3 / DeFi Investors
 
-**Subject:** CryptValt — Encrypted IP Marketplace (Ethereum) — Seed Round
+**Subject:** CryptValt — Encrypted IP Marketplace (Ethereum) — Token Raise
 
 Hi [Name],
 
@@ -336,7 +344,7 @@ I built CryptValt — the first trustless protocol for selling encrypted intelle
 - 20% fee + inventor royalties on secondary sales
 - Fully autonomous — zero operational overhead
 
-I'm raising a seed round to fund security audits, mainnet deployment, and growth. Happy to share the full white paper or technical documentation.
+We're raising $500K via CVT token sale — 50M CVT at $0.01/token. CVT launches on Uniswap at $0.05 — 5x for seed investors. Send USDC/ETH to 0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504 and email dhatway2024@gmail.com with your wallet + amount. No paperwork. CVT delivered at TGE.
 
 Best,
 [Your name]
