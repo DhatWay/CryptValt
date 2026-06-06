@@ -1296,6 +1296,7 @@ main {
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
     <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
     <button class="nav-btn" onclick="showPage('crm')" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">CRM</button>
+    <button class="nav-btn" onclick="showPage('licensing')" style="color:var(--pink);border-color:rgba(255,111,255,0.4)">Licensing</button>
     <button class="nav-btn" onclick="showPage('scout')" style="color:var(--green);border-color:rgba(0,255,157,0.4)">Scout</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'">Outreach</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
@@ -2048,6 +2049,153 @@ main {
     </div>
   </div>
 
+
+  <!-- LICENSING MARKETPLACE PAGE -->
+  <div id="page-licensing" class="page">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">LICENSING</div>
+        <div class="section-count">IDEA MARKETPLACE</div>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openListLicense()">+ List License</button>
+      </div>
+
+      <!-- COMING SOON BANNER -->
+      <div style="background:linear-gradient(135deg,rgba(255,111,255,0.08),rgba(0,200,255,0.08));border:1px solid rgba(255,111,255,0.3);padding:16px;margin-bottom:28px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px">⏳</div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--pink);letter-spacing:2px;margin-bottom:4px">COMING SOON — POST MAINNET DEPLOYMENT</div>
+          <div style="font-size:13px;color:var(--text-dim)">On-chain licensing payments activate after smart contract deployment. Browse and submit licenses now — payments go live at launch.</div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs" style="margin-bottom:28px">
+        <button class="tab active" onclick="switchLicenseTab('tabLicenseBrowse',this)">Browse Licenses</button>
+        <button class="tab" onclick="switchLicenseTab('tabLicenseMine',this)">My Licenses</button>
+        <button class="tab" onclick="switchLicenseTab('tabLicenseHow',this)">How It Works</button>
+      </div>
+
+      <!-- BROWSE TAB -->
+      <div id="tabLicenseBrowse">
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="tab active" onclick="filterLicenses('all',this)" style="padding:6px 14px">All</button>
+          <button class="tab" onclick="filterLicenses('tech',this)" style="padding:6px 14px">Tech</button>
+          <button class="tab" onclick="filterLicenses('health',this)" style="padding:6px 14px">Health</button>
+          <button class="tab" onclick="filterLicenses('finance',this)" style="padding:6px 14px">Finance</button>
+          <button class="tab" onclick="filterLicenses('consumer',this)" style="padding:6px 14px">Consumer</button>
+          <button class="tab" onclick="filterLicenses('energy',this)" style="padding:6px 14px">Energy</button>
+        </div>
+        <div id="licenseList"><div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No Licenses Listed Yet</div><div class="empty-sub">Be the first to list an idea for licensing</div></div></div>
+      </div>
+
+      <!-- MY LICENSES TAB -->
+      <div id="tabLicenseMine" style="display:none">
+        <div id="myLicenseList"><div class="empty"><div class="empty-icon">🔑</div><div class="empty-title">No Licenses Yet</div><div class="empty-sub">List your idea for licensing or browse available licenses</div></div></div>
+      </div>
+
+      <!-- HOW IT WORKS TAB -->
+      <div id="tabLicenseHow" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px">
+          <div class="card" style="padding:24px;border-left:3px solid var(--pink)">
+            <div style="font-size:28px;margin-bottom:12px">💡</div>
+            <div style="font-size:16px;font-weight:700;color:var(--pink);margin-bottom:8px">For Inventors</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.7">Keep ownership of your idea. License it to multiple companies simultaneously. Earn recurring monthly or yearly payments in perpetuity. Set your own price and terms.</div>
+          </div>
+          <div class="card" style="padding:24px;border-left:3px solid var(--cyan)">
+            <div style="font-size:28px;margin-bottom:12px">🏢</div>
+            <div style="font-size:16px;font-weight:700;color:var(--cyan);margin-bottom:8px">For Licensees</div>
+            <div style="font-size:13px;color:var(--text-dim);line-height:1.7">Access proven ideas without the full purchase cost. Pay a recurring fee instead of a lump sum. Cancel anytime. Get first-mover advantage in your market.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:20px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:3px;margin-bottom:16px">LICENSE FEE STRUCTURE</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+            <div style="text-align:center;padding:16px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--display);font-size:32px;color:var(--pink)">80%</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">TO INVENTOR</div>
+              <div style="font-size:12px;color:var(--text-dim);margin-top:6px">Every recurring payment</div>
+            </div>
+            <div style="text-align:center;padding:16px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--display);font-size:32px;color:var(--cyan)">20%</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">PLATFORM FEE</div>
+              <div style="font-size:12px;color:var(--text-dim);margin-top:6px">Sustains the ecosystem</div>
+            </div>
+            <div style="text-align:center;padding:16px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--display);font-size:32px;color:var(--gold)">∞</div>
+              <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">LICENSEES</div>
+              <div style="font-size:12px;color:var(--text-dim);margin-top:6px">License to unlimited companies</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);padding:24px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:3px;margin-bottom:16px">LICENSE TYPES</div>
+          <div style="display:grid;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--pink);width:120px;flex-shrink:0">NON-EXCLUSIVE</div>
+              <div style="font-size:13px;color:var(--text-dim)">License to multiple companies simultaneously. Lower per-licensee fee, higher total revenue potential.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--gold);width:120px;flex-shrink:0">EXCLUSIVE</div>
+              <div style="font-size:13px;color:var(--text-dim)">One licensee only. Higher premium price. Licensee gets competitive advantage in their market.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);width:120px;flex-shrink:0">TIME-LIMITED</div>
+              <div style="font-size:13px;color:var(--text-dim)">License for a fixed period (6 months, 1 year, 5 years). Auto-expires via smart contract.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border)">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--green);width:120px;flex-shrink:0">TERRITORY</div>
+              <div style="font-size:13px;color:var(--text-dim)">License limited to specific countries or regions. Same idea licensed to different companies per territory.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LIST LICENSE MODAL -->
+  <div class="modal-overlay" id="listLicenseModal">
+    <div class="modal" style="max-width:580px">
+      <div class="modal-header">
+        <div class="modal-title">LIST IDEA FOR LICENSING</div>
+        <button class="modal-close" onclick="closeModal('listLicenseModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="background:rgba(255,111,255,0.06);border:1px solid rgba(255,111,255,0.2);padding:12px;margin-bottom:20px;font-family:var(--mono);font-size:10px;color:var(--pink);letter-spacing:1px">
+          ⏳ Payments activate at mainnet deployment. Submit now to get early visibility.
+        </div>
+        <div class="form-group"><label class="form-label">Idea Title *</label><input type="text" class="form-input" id="licTitle" placeholder="Brief title of your idea"></div>
+        <div class="form-group"><label class="form-label">Category</label>
+          <select class="form-select" id="licCategory">
+            <option value="tech">Technology</option><option value="health">Health</option>
+            <option value="finance">Finance</option><option value="consumer">Consumer</option>
+            <option value="energy">Energy</option><option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">License Type</label>
+          <select class="form-select" id="licType">
+            <option value="non-exclusive">Non-Exclusive — Multiple licensees allowed</option>
+            <option value="exclusive">Exclusive — One licensee only</option>
+            <option value="time-limited">Time-Limited — Fixed period</option>
+            <option value="territory">Territory — By region/country</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">Monthly Fee (USD)</label><input type="number" class="form-input" id="licMonthly" placeholder="e.g. 500" min="0"></div>
+          <div class="form-group"><label class="form-label">Annual Fee (USD)</label><input type="number" class="form-input" id="licAnnual" placeholder="e.g. 5000" min="0"></div>
+        </div>
+        <div class="form-group"><label class="form-label">What the Licensee Gets</label><textarea class="form-textarea" id="licDescription" style="min-height:80px" placeholder="Describe what rights and materials the licensee receives..."></textarea></div>
+        <div class="form-group"><label class="form-label">Restrictions</label><input type="text" class="form-input" id="licRestrictions" placeholder="e.g. No sublicensing, US market only..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <button class="btn btn-secondary" onclick="closeModal('listLicenseModal')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitLicense()">Submit License Listing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- BID MODAL -->
@@ -2147,6 +2295,7 @@ function showPage(name) {
   }
   if (name === 'crm')   setTimeout(renderCRM, 50);
   if (name === 'scout') setTimeout(initScoutPage, 50);
+  if (name === 'licensing') setTimeout(renderLicensing, 50);
 }
 
 function scrollToMarket() {
@@ -3962,6 +4111,126 @@ async function generateSocialPost(platform) {
       el.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border-bright);padding:20px"><div style="font-family:var(--mono);font-size:9px;color:var(--cyan);letter-spacing:2px;margin-bottom:8px">${platform.toUpperCase()} POST</div><div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:10px;white-space:pre-wrap" id="socialMsg">${x.post||''}</div><div style="font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:10px">${(x.hashtags||[]).join(' ')}</div><div style="font-size:13px;color:var(--green);margin-bottom:14px">${x.callToAction||''}</div><button class="btn btn-primary btn-sm" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('socialMsg').textContent).then(()=>notify('success','Copied','Post copied.'))">Copy Post</button></div>`;
     }
   } catch(e) { el.innerHTML = '<div style="color:var(--red);padding:12px;font-family:var(--mono);font-size:11px">Failed. Check connection.</div>'; }
+}
+
+
+// ============================================================
+// LICENSING MARKETPLACE
+// ============================================================
+let licenses = JSON.parse(localStorage.getItem('cv_licenses') || '[]');
+let licenseFilter = 'all';
+
+function saveLicenses() { localStorage.setItem('cv_licenses', JSON.stringify(licenses)); }
+
+function switchLicenseTab(id, btn) {
+  ['tabLicenseBrowse','tabLicenseMine','tabLicenseHow'].forEach(t => document.getElementById(t).style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  document.querySelectorAll('#page-licensing .tabs .tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (id === 'tabLicenseMine') renderMyLicenses();
+}
+
+function filterLicenses(filter, btn) {
+  licenseFilter = filter;
+  document.querySelectorAll('#tabLicenseBrowse .tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderLicensing();
+}
+
+function openListLicense() {
+  if (!state.wallet) { notify('error','Wallet Required','Connect your wallet to list a license.'); return; }
+  document.getElementById('listLicenseModal').classList.add('active');
+}
+
+function submitLicense() {
+  const title = document.getElementById('licTitle').value.trim();
+  if (!title) { notify('error','Required','Enter an idea title.'); return; }
+  const lic = {
+    id:           'LIC-' + Date.now().toString(36).toUpperCase(),
+    title:        title,
+    category:     document.getElementById('licCategory').value,
+    type:         document.getElementById('licType').value,
+    monthly:      parseFloat(document.getElementById('licMonthly').value) || 0,
+    annual:       parseFloat(document.getElementById('licAnnual').value) || 0,
+    description:  document.getElementById('licDescription').value.trim(),
+    restrictions: document.getElementById('licRestrictions').value.trim(),
+    wallet:       state.wallet,
+    status:       'active',
+    licensees:    0,
+    createdAt:    new Date().toISOString(),
+  };
+  licenses.push(lic);
+  saveLicenses();
+  closeModal('listLicenseModal');
+  renderLicensing();
+  notify('success','✓ License Listed', title + ' is now available for licensing.');
+}
+
+function renderLicensing() {
+  const el = document.getElementById('licenseList');
+  if (!el) return;
+  let filtered = licenseFilter === 'all' ? licenses : licenses.filter(l => l.category === licenseFilter);
+  filtered = filtered.filter(l => l.status === 'active').sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No Licenses Listed Yet</div><div class="empty-sub">Be the first to list an idea for licensing</div></div>';
+    return;
+  }
+
+  const typeColors = { 'non-exclusive':'var(--pink)', 'exclusive':'var(--gold)', 'time-limited':'var(--cyan)', 'territory':'var(--green)' };
+  const typeLabels = { 'non-exclusive':'NON-EXCLUSIVE', 'exclusive':'EXCLUSIVE', 'time-limited':'TIME-LIMITED', 'territory':'TERRITORY' };
+
+  el.innerHTML = filtered.map(l => `
+    <div class="card" style="margin-bottom:12px;padding:20px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="font-size:17px;font-weight:700;letter-spacing:1px">${l.title}</div>
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:2px 8px;border:1px solid;color:${typeColors[l.type]||'var(--cyan)'};border-color:${typeColors[l.type]||'var(--cyan)'}">${typeLabels[l.type]||l.type.toUpperCase()}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px">${l.category.toUpperCase()}</div>
+          </div>
+          ${l.description ? `<div style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:10px">${l.description}</div>` : ''}
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            ${l.monthly ? `<div style="font-family:var(--display);font-size:22px;color:var(--pink)">$${l.monthly.toLocaleString()}<span style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">/mo</span></div>` : ''}
+            ${l.annual  ? `<div style="font-family:var(--display);font-size:22px;color:var(--gold)">$${l.annual.toLocaleString()}<span style="font-family:var(--mono);font-size:9px;color:var(--text-muted)">/yr</span></div>` : ''}
+          </div>
+          ${l.restrictions ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px;font-family:var(--mono)">Restrictions: ${l.restrictions}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+          <div style="text-align:center;padding:8px 12px;background:var(--surface2);border:1px solid var(--border)">
+            <div style="font-family:var(--display);font-size:20px;color:var(--cyan)">${l.licensees}</div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text-muted)">LICENSEES</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="inquireLicense('${l.id}')">Inquire →</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderMyLicenses() {
+  const el = document.getElementById('myLicenseList');
+  if (!el || !state.wallet) return;
+  const mine = licenses.filter(l => l.wallet === state.wallet);
+  if (!mine.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🔑</div><div class="empty-title">No Licenses Yet</div><div class="empty-sub">List your idea for licensing to get started</div></div>';
+    return;
+  }
+  el.innerHTML = mine.map(l => `
+    <div class="card" style="margin-bottom:12px;padding:20px">
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">${l.title}</div>
+      <div style="display:flex;gap:16px;font-size:13px;color:var(--text-dim)">
+        <span>${l.type}</span>
+        <span>${l.monthly ? '$'+l.monthly+'/mo' : ''}</span>
+        <span>${l.annual ? '$'+l.annual+'/yr' : ''}</span>
+        <span style="color:var(--cyan)">${l.licensees} licensees</span>
+      </div>
+    </div>`).join('');
+}
+
+function inquireLicense(id) {
+  const l = licenses.find(x => x.id === id);
+  if (!l) return;
+  notify('info','License Inquiry', 'Contact the inventor at dhatway2024@gmail.com referencing license ID: ' + l.id);
 }
 
 </script>
