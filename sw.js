@@ -3,7 +3,7 @@
  * Complete cache list — all pages, JS modules, and assets
  */
 
-const CACHE_NAME  = 'cryptvalt-v16';
+const CACHE_NAME  = 'cryptvalt-v17';
 const OFFLINE_URL = '/CryptValt/offline.html';
 
 const PRECACHE_ASSETS = [
@@ -23,6 +23,10 @@ const PRECACHE_ASSETS = [
   '/CryptValt/exchange/index.html',
   '/CryptValt/promo/index.html',
   '/CryptValt/promo/outreach.html',
+  '/CryptValt/enterprise/index.html',
+  '/CryptValt/analytics/index.html',
+  '/CryptValt/CryptValt_Whitepaper.pdf',
+  '/CryptValt/investor/token-purchase-agreement.pdf',
 ];
 
 // Always fetch live — never cache
