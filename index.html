@@ -2269,6 +2269,23 @@ window.addEventListener('load', () => {
   loadListingsFromDB();
 });
 
+async function loadListingsFromDB() {
+  try {
+    const r = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/db/listings');
+    const d = await r.json();
+    if (d.success && d.data.length) {
+      d.data.forEach(l => {
+        if (!state.listings.find(x => x.id === l.id)) {
+          state.listings.push(l);
+        }
+      });
+      localStorage.setItem('cv_listings', JSON.stringify(state.listings));
+      renderListings();
+      updateStats();
+    }
+  } catch(e) {}
+}
+
 function checkSavedWallet() {
   const saved = localStorage.getItem('cv_wallet');
   if (saved) setWallet(saved);
