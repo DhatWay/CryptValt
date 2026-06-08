@@ -2266,6 +2266,7 @@ window.addEventListener('load', () => {
   checkReferralCode();
   setTimeout(() => runRemediationScan(), 3000);
   setInterval(() => runRemediationScan(), 300000);
+  loadListingsFromDB();
 });
 
 function checkSavedWallet() {
