@@ -4234,6 +4234,103 @@ function inquireLicense(id) {
   notify('info','License Inquiry', 'Contact the inventor at dhatway2024@gmail.com referencing license ID: ' + l.id);
 }
 
+
+// ============================================================
+// SUPABASE DATABASE SYNC
+// ============================================================
+const DB_URL = 'https://crypt-valt-backend-jkak.vercel.app';
+
+async function dbLog(endpoint, data) {
+  try {
+    await fetch(DB_URL + endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+  } catch(e) { console.warn('[DB]', endpoint, e.message); }
+}
+
+// Log listing when submitted
+const _origAddListing = addListing;
+function addListing(listing) {
+  _origAddListing(listing);
+  dbLog('/api/db/listing', {
+    id: listing.id, wallet: listing.wallet, title: listing.title,
+    category: listing.category, teaser: listing.teaser,
+    problem_statement: listing.problemStatement,
+    target_market: listing.targetMarket, market_size: listing.marketSize,
+    reserve_price: listing.reserve || 0, royalty_pct: listing.royalty || 0,
+    status: listing.status || 'live', ipfs_cid: listing.ipfsCid || null,
+    key_hash: listing.keyHash || null, ends_at: listing.endsAt || null,
+    score: listing.score || null, patent_search: listing.patentSearch || null,
+    created_at: new Date().toISOString()
+  });
+}
+
+// Log bid when placed
+const _origAddBid = addBid;
+function addBid(bid) {
+  _origAddBid(bid);
+  dbLog('/api/db/bid', {
+    id: bid.id, listing_id: bid.listingId, wallet: bid.wallet,
+    amount: bid.amount, status: 'active', frozen: false,
+    created_at: new Date().toISOString()
+  });
+}
+
+// Log security events
+const _origLogRemediationDB = logRemediation;
+function logRemediation(level, threat, action, detail, wallet) {
+  _origLogRemediationDB(level, threat, action, detail, wallet);
+  dbLog('/api/db/security-event', {
+    id: 'SEC-' + Date.now().toString(36).toUpperCase(),
+    level, threat, detail: detail || '', action: action || '',
+    wallet: wallet || null,
+    alert_sent: (level === 'CRITICAL' || level === 'HIGH'),
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Log investor CRM saves
+const _origSaveInvestorDB = saveInvestor;
+function saveInvestor() {
+  _origSaveInvestorDB();
+  setTimeout(() => {
+    const investors = JSON.parse(localStorage.getItem('cv_investors') || '[]');
+    investors.forEach(inv => {
+      dbLog('/api/db/investor', {
+        id: inv.id, name: inv.name, fund: inv.fund || null,
+        email: inv.email || null, social: inv.social || null,
+        focus: inv.focus || null, status: inv.status,
+        notes: inv.notes || null,
+        updated_at: inv.updated || new Date().toISOString(),
+        created_at: inv.created || new Date().toISOString()
+      });
+    });
+  }, 500);
+}
+
+// Log license listings
+const _origSubmitLicenseDB = submitLicense;
+function submitLicense() {
+  _origSubmitLicenseDB();
+  setTimeout(() => {
+    const licenses = JSON.parse(localStorage.getItem('cv_licenses') || '[]');
+    const latest = licenses[licenses.length - 1];
+    if (latest) {
+      dbLog('/api/db/license', {
+        id: latest.id, title: latest.title, category: latest.category,
+        type: latest.type, monthly_fee: latest.monthly || 0,
+        annual_fee: latest.annual || 0, description: latest.description || null,
+        restrictions: latest.restrictions || null, wallet: latest.wallet,
+        status: 'active', licensees: 0, created_at: new Date().toISOString()
+      });
+    }
+  }, 300);
+}
+
+console.log('[CryptValt] Supabase DB sync active');
+
 </script>
 </body>
 </html>
