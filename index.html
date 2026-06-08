@@ -2710,9 +2710,14 @@ async function goToStep5() {
     status: 'live'
   };
 
-  state.listings.push(listing);
-  localStorage.setItem('cv_listings', JSON.stringify(state.listings));
-
+  dbLog('/api/db/listing', {
+    id: listing.id, wallet: listing.wallet, title: listing.title,
+    category: listing.category, teaser: listing.teaser,
+    reserve_price: listing.reserve || 0, royalty_pct: listing.royalty || 0,
+    status: 'live', ends_at: listing.endsAt || null,
+    created_at: new Date().toISOString()
+  });
+  
   document.getElementById('launchLoading').style.display = 'none';
   document.getElementById('launchSuccess').style.display = 'block';
   updateStats();
