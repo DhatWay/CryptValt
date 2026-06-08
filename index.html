@@ -2275,10 +2275,23 @@ async function loadListingsFromDB() {
     const d = await r.json();
     if (d.success && d.data.length) {
       d.data.forEach(l => {
-        if (!state.listings.find(x => x.id === l.id)) {
-          state.listings.push(l);
-        }
-      });
+  if (!state.listings.find(x => x.id === l.id)) {
+    state.listings.push({
+      ...l,
+      reserve: l.reserve_price || 0,
+      royalty: l.royalty_pct || 0,
+      bids: [],
+      endsAt: l.ends_at || Date.now() + 86400000,
+      created: new Date(l.created_at).getTime(),
+      score: typeof l.score === 'string' ? JSON.parse(l.score) : l.score || {
+        overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
+        scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
+        executiveSummary:'',marketability:'',scalability:'',consumerPotential:'',
+        competitiveMoat:'',revenueModel:'',riskFactors:'',investorVerdict:''
+      }
+    });
+  }
+});
       localStorage.setItem('cv_listings', JSON.stringify(state.listings));
       renderListings();
       updateStats();
