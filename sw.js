@@ -3,7 +3,7 @@
  * Complete cache list — all pages, JS modules, and assets
  */
 
-const CACHE_NAME  = 'cryptvalt-v27';
+const CACHE_NAME  = 'cryptvalt-v28';
 const OFFLINE_URL = '/CryptValt/offline.html';
 
 const PRECACHE_ASSETS = [
