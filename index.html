@@ -632,12 +632,11 @@ main {
   inset: 0;
   background: rgba(2,4,8,0.92);
   z-index: 200;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
   backdrop-filter: blur(10px);
-  display: none;
 }
 
 .modal-overlay.active { display: flex; }
@@ -1898,7 +1897,7 @@ main {
 
 
   <!-- ADMIN LOGIN MODAL -->
-<div class="modal-overlay" id="adminLoginModal" style="display:none">
+  <div class="modal-overlay" id="adminLoginModal">
     <div class="modal" style="max-width:420px">
       <div class="modal-header">
         <div class="modal-title">⬡ ADMIN ACCESS</div>
@@ -2275,22 +2274,28 @@ async function loadListingsFromDB() {
     const d = await r.json();
     if (d.success && d.data.length) {
       d.data.forEach(l => {
-  if (!state.listings.find(x => x.id === l.id)) {
-    state.listings.push({
-      ...l,
-      reserve: l.reserve_price || 0,
-      royalty: l.royalty_pct || 0,
-      bids: [],
-      endsAt: l.ends_at || Date.now() + 86400000,
-      created: new Date(l.created_at).getTime(),
-      score: typeof l.score === 'string' ? JSON.parse(l.score) : l.score || {
-        overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
-        scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
-        executiveSummary:'',marketability:'',scalability:'',consumerPotential:'',
-        competitiveMoat:'',revenueModel:'',riskFactors:'',investorVerdict:''
-      }
-    });
-  }
+        if (!state.listings.find(x => x.id === l.id)) {
+          state.listings.push({
+            ...l,
+            reserve: l.reserve_price || l.reserve || 0,
+            royalty: l.royalty_pct || l.royalty || 0,
+            bids: l.bids || [],
+            endsAt: l.ends_at || l.endsAt || (Date.now() + 86400000),
+            created: l.created_at ? new Date(l.created_at).getTime() : Date.now(),
+            score: (typeof l.score === 'string' ? JSON.parse(l.score) : l.score) || {
+              overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
+              scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
+              executiveSummary:'', marketability:'', scalability:'', consumerPotential:'',
+              competitiveMoat:'', revenueModel:'', riskFactors:'', investorVerdict:''
+            }
+          });
+        }
+      });
+      localStorage.setItem('cv_listings', JSON.stringify(state.listings));
+      renderListings();
+      updateStats();
+    }
+  } catch(e) { console.warn('[DB] loadListingsFromDB error:', e); }
 });
       localStorage.setItem('cv_listings', JSON.stringify(state.listings));
       renderListings();
@@ -2304,22 +2309,7 @@ function checkSavedWallet() {
   if (saved) setWallet(saved);
 }
 
-async function loadListingsFromDB() {
-  try {
-    const r = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/db/listings');
-    const d = await r.json();
-    if (d.success && d.data.length) {
-      d.data.forEach(l => {
-        if (!state.listings.find(x => x.id === l.id)) {
-          state.listings.push(l);
-        }
-      });
-      localStorage.setItem('cv_listings', JSON.stringify(state.listings));
-      renderListings();
-      updateStats();
-    }
-  } catch(e) {}
-}
+
 
 function timeNow() {
   return new Date().toLocaleTimeString('en-US', {hour12:false});
@@ -2914,7 +2904,7 @@ function renderListings(filter = 'all', sort = 'newest') {
 function renderListingCard(l) {
   const isLive = l.status === 'live' && l.endsAt > Date.now();
   const timeLeft = getTimeLeft(l.endsAt);
-  const topBid = l.bids && l.bids.length > 0 ? Math.max(...l.bids.map(b => b.amount)) : 0;
+  const topBid = l.bids.length > 0 ? Math.max(...l.bids.map(b => b.amount)) : 0;
   const score = (typeof l.score === 'string' ? JSON.parse(l.score) : l.score) || {
     overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
     scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
@@ -3568,8 +3558,8 @@ function checkReferralCode() {
   }
   if (params.get('admin') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => openAdmin(), 1000);
-}
+    openAdmin();
+  }
 }
 
 // ============================================================
@@ -4309,32 +4299,10 @@ async function dbLog(endpoint, data) {
 }
 
 // Log listing when submitted
-const _origAddListing = addListing;
-function addListing(listing) {
-  _origAddListing(listing);
-  dbLog('/api/db/listing', {
-    id: listing.id, wallet: listing.wallet, title: listing.title,
-    category: listing.category, teaser: listing.teaser,
-    problem_statement: listing.problemStatement,
-    target_market: listing.targetMarket, market_size: listing.marketSize,
-    reserve_price: listing.reserve || 0, royalty_pct: listing.royalty || 0,
-    status: listing.status || 'live', ipfs_cid: listing.ipfsCid || null,
-    key_hash: listing.keyHash || null, ends_at: listing.endsAt || null,
-    score: listing.score || null, patent_search: listing.patentSearch || null,
-    created_at: new Date().toISOString()
-  });
-}
+
 
 // Log bid when placed
-const _origAddBid = addBid;
-function addBid(bid) {
-  _origAddBid(bid);
-  dbLog('/api/db/bid', {
-    id: bid.id, listing_id: bid.listingId, wallet: bid.wallet,
-    amount: bid.amount, status: 'active', frozen: false,
-    created_at: new Date().toISOString()
-  });
-}
+
 
 // Log security events
 const _origLogRemediationDB = logRemediation;
