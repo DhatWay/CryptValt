@@ -2914,8 +2914,13 @@ function renderListings(filter = 'all', sort = 'newest') {
 function renderListingCard(l) {
   const isLive = l.status === 'live' && l.endsAt > Date.now();
   const timeLeft = getTimeLeft(l.endsAt);
-  const topBid = l.bids.length > 0 ? Math.max(...l.bids.map(b => b.amount)) : 0;
-  const score = l.score;
+  const topBid = l.bids && l.bids.length > 0 ? Math.max(...l.bids.map(b => b.amount)) : 0;
+  const score = (typeof l.score === 'string' ? JSON.parse(l.score) : l.score) || {
+    overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
+    scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
+    executiveSummary:'',marketability:'',scalability:'',consumerPotential:'',
+    competitiveMoat:'',revenueModel:'',riskFactors:'',investorVerdict:''
+  };
   const scoreColor = score.overallScore >= 75 ? 'var(--green)' : score.overallScore >= 50 ? 'var(--gold)' : 'var(--red)';
 
   return `
