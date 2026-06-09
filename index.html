@@ -3568,8 +3568,8 @@ function checkReferralCode() {
   }
   if (params.get('admin') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
-    openAdmin();
-  }
+    setTimeout(() => openAdmin(), 500);
+}
 }
 
 // ============================================================
