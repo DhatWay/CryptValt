@@ -3568,7 +3568,7 @@ function checkReferralCode() {
   }
   if (params.get('admin') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => openAdmin(), 500);
+    setTimeout(() => openAdmin(), 1000);
 }
 }
 
