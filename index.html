@@ -2752,6 +2752,8 @@ async function goToStep5() {
     created_at: new Date().toISOString()
   });
   
+  state.listings.push(listing);
+  localStorage.setItem('cv_listings', JSON.stringify(state.listings));
   document.getElementById('launchLoading').style.display = 'none';
   document.getElementById('launchSuccess').style.display = 'block';
   updateStats();
