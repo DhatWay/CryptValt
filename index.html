@@ -1296,7 +1296,7 @@ main {
     <button class="nav-btn" onclick="window.location.href='token/index.html'" style="color:var(--green);border-color:rgba(0,255,157,0.4)">CVT</button>
     <button class="nav-btn" onclick="window.location.href='investor/index.html'" style="color:var(--gold);border-color:rgba(240,165,0,0.4)">Investors</button>
     <button class="nav-btn" onclick="window.location.href='exchange/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Exchange</button>
-        <button class="nav-btn" onclick="window.location.href='dashboard/index.html'" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Dashboard</button></button>
+        <button class="nav-btn" onclick="showPage('dashboard')" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Dashboard</button></button>
     <button class="nav-btn" onclick="showPage('crm')" style="color:#ff6fff;border-color:rgba(255,111,255,0.4)">CRM</button>
     <button class="nav-btn" onclick="showPage('licensing')" style="color:var(--pink);border-color:rgba(255,111,255,0.4)">Licensing</button>
     <button class="nav-btn" onclick="showPage('scout')" style="color:var(--green);border-color:rgba(0,255,157,0.4)">Scout</button>
@@ -2305,22 +2305,7 @@ function checkSavedWallet() {
   if (saved) setWallet(saved);
 }
 
-async function loadListingsFromDB() {
-  try {
-    const r = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/db/listings');
-    const d = await r.json();
-    if (d.success && d.data.length) {
-      d.data.forEach(l => {
-        if (!state.listings.find(x => x.id === l.id)) {
-          state.listings.push(l);
-        }
-      });
-      localStorage.setItem('cv_listings', JSON.stringify(state.listings));
-      renderListings();
-      updateStats();
-    }
-  } catch(e) {}
-}
+
 
 function timeNow() {
   return new Date().toLocaleTimeString('en-US', {hour12:false});
