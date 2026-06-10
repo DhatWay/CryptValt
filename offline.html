@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CryptValt — Offline</title>
+<title>CryptValt â€” Offline</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -99,27 +99,27 @@ body::before {
 </head>
 <body>
   <div class="logo">CRYPT<span>VALT</span></div>
-  <div class="icon">🔐</div>
+  <div class="icon">ðŸ”</div>
   <div class="title">YOU'RE OFFLINE</div>
-  <p class="sub">No internet connection detected. Some features require connectivity — but your encrypted data is safe.</p>
+  <p class="sub">No internet connection detected. Some features require connectivity â€” but your encrypted data is safe.</p>
 
   <div class="features">
     <div class="feature">
-      <div class="feature-icon">✓</div>
+      <div class="feature-icon">âœ“</div>
       <div class="feature-text">
         <strong>Available Offline</strong>
         Browse your saved listings, view AI reports, manage your ideas
       </div>
     </div>
     <div class="feature">
-      <div class="feature-icon">✓</div>
+      <div class="feature-icon">âœ“</div>
       <div class="feature-text">
         <strong>Available Offline</strong>
         Read your dashboard, view bid history, check auction status
       </div>
     </div>
     <div class="feature">
-      <div class="feature-icon">✗</div>
+      <div class="feature-icon">âœ—</div>
       <div class="feature-text">
         <strong style="color:rgba(255,59,107,0.8)">Requires Connection</strong>
         Submit new ideas, place bids, AI scoring, IPFS upload, blockchain transactions
@@ -141,11 +141,11 @@ body::before {
     function updateStatus() {
       const el = document.getElementById('status');
       if (navigator.onLine) {
-        el.textContent = '● CONNECTION RESTORED — REDIRECTING...';
+        el.textContent = 'â— CONNECTION RESTORED â€” REDIRECTING...';
         el.style.color = '#00ff9d';
         setTimeout(() => window.location.href = '/CryptValt/', 1500);
       } else {
-        el.textContent = '● NO CONNECTION — WAITING...';
+        el.textContent = 'â— NO CONNECTION â€” WAITING...';
         el.style.color = 'rgba(255,59,107,0.6)';
       }
     }
