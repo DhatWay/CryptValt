@@ -57,7 +57,7 @@ This agreement is governed by the laws of the jurisdiction in which the Inventor
 6. ACKNOWLEDGMENT
 By signing this agreement via wallet signature, the Investor acknowledges they have read, understood, and agree to be bound by all terms above.
 
-Platform Owner Wallet: 0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504
+Platform Owner Wallet: 0x05248CD920dAeB2E5369A63Fe93367f9F1bf5677
 Agreement Hash: [COMPUTED AT SIGNING TIME]
 `.trim();
 
