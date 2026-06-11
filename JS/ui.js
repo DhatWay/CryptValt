@@ -277,6 +277,15 @@ function renderAIReport(score, title) {
           ${score.confidenceScore ? `<div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">CONFIDENCE: ${score.confidenceScore}%</div>` : ''}
         </div>
       </div>
+      <!-- Attestation Badge -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${score.teeVerified ? 'rgba(0,255,157,0.05)' : 'rgba(240,165,0,0.05)'};border:1px solid ${score.teeVerified ? 'rgba(0,255,157,0.2)' : 'rgba(240,165,0,0.2)'};margin-bottom:16px">
+        <div style="font-size:18px">${score.teeVerified ? '🔒' : '🔓'}</div>
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;color:${score.teeVerified ? 'var(--green)' : 'var(--gold)'};letter-spacing:2px;margin-bottom:2px">${score.teeVerified ? 'TEE-VERIFIED SCORING' : 'METADATA-ONLY SCORING'}</div>
+          <div style="font-size:12px;color:var(--text-dim)">${score.providerInfo?.attestNote || (score.teeVerified ? 'Score generated inside a trusted execution environment.' : 'Score based on public metadata only. Idea content never sent to any server.')}</div>
+        </div>
+        ${score.teeVerified ? `<div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:1px">✓ ATTESTED</div>` : `<div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--gold);letter-spacing:1px">${score.scoringProvider?.toUpperCase() || 'ANTHROPIC'}</div>`}
+      </div>
 
       <div class="dollar-value">
         <div class="dollar-label">AI Estimated Market Value</div>
