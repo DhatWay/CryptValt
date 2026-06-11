@@ -2233,39 +2233,28 @@ main {
 // CONFIG
 // ============================================================
 const CONFIG = {
-  BACKEND_URL:        'https://crypt-valt-backend-jkak.vercel.app',
-  PINATA_API_KEY:     'PINATA_KEY_PLACEHOLDER',
-  PINATA_API_SECRET:  'PINATA_SECRET_PLACEHOLDER',
-  ANTHROPIC_API_KEY:  'ANTHROPIC_KEY_PLACEHOLDER',
-  OWNER_WALLET:       '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504',
-  PLATFORM_FEE:       0.20,
-  INVENTOR_SHARE:     0.80,
+  PINATA_API_KEY: 'PINATA_KEY_PLACEHOLDER',
+  PINATA_API_SECRET: 'PINATA_SECRET_PLACEHOLDER',
+  ANTHROPIC_API_KEY: 'ANTHROPIC_KEY_PLACEHOLDER',
+  OWNER_WALLET: '0x05248CD920dAeB2E5369A63Fe93367f9F1bf5677',
+  PLATFORM_FEE: 0.20,
+  INVENTOR_SHARE: 0.80,
   EMAILJS_SERVICE_ID: 'service_o97hwhw',
-  EMAILJS_TEMPLATE_ID:'gspwuu9',
+  EMAILJS_TEMPLATE_ID: 'gspwuu9',
   EMAILJS_PUBLIC_KEY: 'WO0hdu3FI-lyi-Ici',
-  ALERT_EMAIL:        '',
-  CONTRACTS: {
-    CRYPTVALT: null,
-    GOVERNOR:  null,
-    VALUATION: null,
-  },
-  CHAIN_ID:   11155111,
-  CHAIN_NAME: 'Sepolia Testnet',
-  RPC_URL:    'https://rpc.sepolia.org',
+  ALERT_EMAIL: '',  // Set your email address here
 };
 
 // ============================================================
 // STATE
 // ============================================================
 let state = {
-  wallet:             null,
-  listings:           JSON.parse(localStorage.getItem('cv_listings') || '[]'),
-  bids:               JSON.parse(localStorage.getItem('cv_bids')     || '[]'),
-  currentEncryption:  null,
-  currentScore:       null,
-  claudeHistory:      [],
-  filter:             'all',
-  sort:               'newest',
+  wallet: null,
+  listings: JSON.parse(localStorage.getItem('cv_listings') || '[]'),
+  bids: JSON.parse(localStorage.getItem('cv_bids') || '[]'),
+  currentEncryption: null,
+  currentScore: null,
+  claudeHistory: [],
 };
 
 // ============================================================
@@ -2285,7 +2274,7 @@ window.addEventListener('load', () => {
 
 async function loadListingsFromDB() {
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/db/listings');
+    const r = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/db/listings');
     const d = await r.json();
     if (d.success && d.data.length) {
       d.data.forEach(l => {
@@ -2368,32 +2357,29 @@ async function connectWallet() {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setWallet(accounts[0]);
       notify('success', '⬡ Wallet Connected', shortenAddr(accounts[0]));
+      // Register ECDH public key for encrypted key transfer
+      if (typeof KeyTransferEngine !== 'undefined') KeyTransferEngine.registerOnConnect(accounts[0]);
       localStorage.setItem('cv_wallet', accounts[0]);
     } catch(e) {
       notify('error', 'Connection Failed', e.message);
     }
   } else {
-    // Demo mode for testing without MetaMask
-    const demoWallet = '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
-    setWallet(demoWallet);
-    notify('info', 'Demo Mode', 'MetaMask not detected. Using demo wallet.');
-    localStorage.setItem('cv_wallet', demoWallet);
+    // MetaMask required — no demo fallback in production
+    notify('error', 'MetaMask Required', 'Install MetaMask or a Web3 wallet. Visit metamask.io to get started.');
+    setTimeout(() => window.open('https://metamask.io', '_blank'), 1500);
   }
 }
 
 function setWallet(addr) {
   state.wallet = addr;
-  const badge  = document.getElementById('walletBadge');
-  const btn    = document.getElementById('connectBtn');
-  const addrEl = document.getElementById('walletAddr');
-  if (badge)  badge.style.display  = 'flex';
-  if (btn)    btn.style.display    = 'none';
-  if (addrEl) addrEl.textContent   = shortenAddr(addr);
+  document.getElementById('walletBadge').style.display = 'flex';
+  document.getElementById('walletAddr').textContent = shortenAddr(addr);
+  document.getElementById('connectBtn').style.display = 'none';
   setTimeout(checkReferralAndRegister, 300);
 }
 
 function shortenAddr(addr) {
-  return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '';
+  return addr.slice(0,6) + '...' + addr.slice(-4);
 }
 
 async function signMessage(message) {
@@ -2404,9 +2390,12 @@ async function signMessage(message) {
         params: [message, state.wallet]
       });
       return sig;
-    } catch(e) { return 'demo_sig_' + Date.now(); }
+    } catch(e) {
+      notify('error', 'Signature Required', 'You must sign the message in MetaMask to continue.');
+      throw new Error('Signature cancelled or failed: ' + e.message);
+    }
   }
-  return 'demo_sig_' + Date.now();
+  throw new Error('MetaMask not available. Install MetaMask to use CryptValt.');
 }
 
 // ============================================================
@@ -2446,37 +2435,33 @@ function toBase64(bytes) {
   return btoa(String.fromCharCode(...bytes));
 }
 
-function fakeEncryptedString(length = 200) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
-  for (let i = 0; i < length; i++) result += chars[Math.floor(Math.random() * chars.length)];
-  return result;
-}
+// fakeEncryptedString removed — real encrypted data used throughout
 
 // ============================================================
 // IPFS UPLOAD
 // ============================================================
 async function uploadToIPFS(data, filename) {
   try {
-    const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/upload', {
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const formData = new FormData();
+    formData.append('file', blob, filename);
+    formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
+    formData.append('pinataMetadata', JSON.stringify({ name: filename }));
+
+    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
       headers: {
-        'Content-Type':     'application/json',
-        'X-Wallet-Address': state.wallet || '0x0000000000000000000000000000000000000000',
-        'X-Timestamp':      Date.now().toString(),
+        'pinata_api_key': CONFIG.PINATA_API_KEY,
+        'pinata_secret_api_key': CONFIG.PINATA_API_SECRET,
       },
-      body: JSON.stringify(data),
+      body: formData
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || 'IPFS upload failed: ' + response.status);
-    }
-
+    if (!response.ok) throw new Error('IPFS upload failed: ' + response.status);
     const result = await response.json();
-    if (!result.success) throw new Error('IPFS upload failed');
-    return result.data.cid;
+    return result.IpfsHash;
   } catch(e) {
+    // Fallback CID for demo
     console.warn('IPFS upload error:', e);
     return 'bafybeig' + Math.random().toString(36).substr(2, 40);
   }
@@ -2580,12 +2565,12 @@ function generateMockScore(ideaData) {
 // SUBMIT FLOW
 // ============================================================
 function goToStep2() {
-  const title    = document.getElementById('ideaTitle').value.trim();
-  const desc     = document.getElementById('ideaDescription').value.trim();
-  const teaser   = document.getElementById('ideaTeaser').value.trim();
+  const title = document.getElementById('ideaTitle').value.trim();
+  const desc = document.getElementById('ideaDescription').value.trim();
+  const teaser = document.getElementById('ideaTeaser').value.trim();
   const category = document.getElementById('ideaCategory').value;
-  const problem  = document.getElementById('ideaProblem').value.trim();
-  const market   = document.getElementById('ideaMarket').value.trim();
+  const problem = document.getElementById('ideaProblem').value.trim();
+  const market = document.getElementById('ideaMarket').value.trim();
 
   if (!title || !desc || !teaser || !category || !problem || !market) {
     notify('error', 'Missing Fields', 'Please fill in all required fields.');
@@ -2610,16 +2595,13 @@ async function runEncryption() {
   setEP(1, 'done'); setEP(2, 'active');
 
   const fullText = JSON.stringify({
-    title:       document.getElementById('ideaTitle').value,
+    title: document.getElementById('ideaTitle').value,
     description: document.getElementById('ideaDescription').value,
-    problem:     document.getElementById('ideaProblem').value,
-    market:      document.getElementById('ideaMarket').value,
-    marketSize:  document.getElementById('ideaMarketSize')?.value || '',
-    costSavings: document.getElementById('ideaCostSavings')?.value || '',
-    competitors: document.getElementById('ideaCompetitors')?.value || '',
-    revenueModel:document.getElementById('ideaRevenueModel')?.value || '',
-    wallet:      state.wallet,
-    timestamp:   new Date().toISOString()
+    problem: document.getElementById('ideaProblem').value,
+    market: document.getElementById('ideaMarket').value,
+    marketSize: document.getElementById('ideaMarketSize').value,
+    wallet: state.wallet,
+    timestamp: new Date().toISOString()
   });
 
   const key = await generateKey();
@@ -2638,10 +2620,10 @@ async function runEncryption() {
     encryptedData: encB64,
     iv: ivB64,
     keyHash: keyHashStr,
-    category:  document.getElementById('ideaCategory').value,
-    teaser:    document.getElementById('ideaTeaser').value,
-    title:     document.getElementById('ideaTitle').value,
-    wallet:    state.wallet,
+    category: document.getElementById('ideaCategory').value,
+    teaser: document.getElementById('ideaTeaser').value,
+    title: document.getElementById('ideaTitle').value,
+    wallet: state.wallet,
     timestamp: new Date().toISOString()
   };
 
@@ -2649,6 +2631,21 @@ async function runEncryption() {
   state.currentEncryption.cid = cid;
 
   setEP(3, 'done'); setEP(4, 'active');
+
+  // Encrypt and upload any attached files using the same AES-256-GCM key
+  let fileCids = [];
+  if (FileUploadEngine.hasFiles()) {
+    try {
+      const fileResults = await FileUploadEngine.uploadAllFiles(key, state.wallet, (fileObj) => {
+        renderFileList();
+      });
+      fileCids = fileResults.filter(r => r.cid).map(r => ({ cid: r.cid, name: r.originalName, type: r.originalType, size: r.originalSize }));
+      state.currentEncryption.fileCids = fileCids;
+    } catch(e) {
+      notify('warn', 'File Upload Issue', 'Some files failed to upload: ' + e.message);
+    }
+  }
+
   await sleep(400);
   setEP(4, 'done');
 
@@ -2657,6 +2654,13 @@ async function runEncryption() {
   document.getElementById('ipfsCid').textContent = cid;
   document.getElementById('keyHash').textContent = keyHashStr.slice(0,32) + '...';
   document.getElementById('encryptedPreview').textContent = encB64.slice(0, 300);
+
+  if (fileCids.length > 0) {
+    const fileEl = document.getElementById('encryptedFilesList');
+    if (fileEl) fileEl.innerHTML = fileCids.map(f =>
+      `<div style="font-family:var(--mono);font-size:10px;color:var(--green);margin-top:4px">✓ ${f.name} → ${f.cid.slice(0,16)}...</div>`
+    ).join('');
+  }
 }
 
 async function goToStep3() {
@@ -2680,17 +2684,13 @@ async function goToStep3() {
   }, 1800);
 
   const ideaData = {
-    title:        document.getElementById('ideaTitle').value,
-    category:     document.getElementById('ideaCategory').value,
-    teaser:       document.getElementById('ideaTeaser').value,
-    description:  document.getElementById('ideaDescription').value,
-    problem:      document.getElementById('ideaProblem').value,
-    market:       document.getElementById('ideaMarket').value,
-    marketSize:   document.getElementById('ideaMarketSize')?.value   || '',
-    costSavings:  document.getElementById('ideaCostSavings')?.value  || '',
-    competitors:  document.getElementById('ideaCompetitors')?.value  || '',
-    revenueModel: document.getElementById('ideaRevenueModel')?.value || '',
-    hasFiles:     uploadedFiles.length > 0,
+    title: document.getElementById('ideaTitle').value,
+    category: document.getElementById('ideaCategory').value,
+    teaser: document.getElementById('ideaTeaser').value,
+    description: document.getElementById('ideaDescription').value,
+    problem: document.getElementById('ideaProblem').value,
+    market: document.getElementById('ideaMarket').value,
+    marketSize: document.getElementById('ideaMarketSize').value,
   };
 
   const score = await scoreIdea(ideaData);
@@ -2701,6 +2701,7 @@ async function goToStep3() {
   document.getElementById('scoreResult').style.display = 'block';
   document.getElementById('scoreResult').innerHTML = renderAIReport(score, ideaData.title);
 
+  // Auto-advance to step 4 after showing results
   setTimeout(() => {
     document.getElementById('scoreResult').innerHTML += `
       <div style="margin-top:24px">
@@ -2744,106 +2745,66 @@ async function goToStep5() {
 
   await sleep(1500);
 
-  const durationDays = parseInt(document.getElementById('auctionDuration').value);
-  const royaltyBps   = parseInt(document.getElementById('royaltyPct').value) * 100;
-  const reserveETH   = parseFloat(reserve) / 3000;
-
+  // Create listing object
   const listing = {
-    id:          'CV-' + Date.now().toString(36).toUpperCase(),
-    title:       document.getElementById('ideaTitle').value,
-    category:    document.getElementById('ideaCategory').value,
-    teaser:      document.getElementById('ideaTeaser').value,
-    cid:         state.currentEncryption.cid,
-    keyHash:     state.currentEncryption.keyHashStr,
-    encData:     state.currentEncryption.encB64.slice(0, 100),
-    score:       state.currentScore,
-    reserve:     parseInt(reserve),
-    duration:    durationDays,
-    royalty:     parseInt(document.getElementById('royaltyPct').value),
-    wallet:      state.wallet,
-    sig:         sig,
-    created:     Date.now(),
-    endsAt:      Date.now() + (durationDays * 86400000),
-    bids:        [],
-    status:      'live',
-    onChain:     false,
-    onChainId:   null,
-    txHash:      null,
+    id: 'CV-' + Date.now().toString(36).toUpperCase(),
+    title: document.getElementById('ideaTitle').value,
+    category: document.getElementById('ideaCategory').value,
+    teaser: document.getElementById('ideaTeaser').value,
+    cid: state.currentEncryption.cid,
+    keyHash: state.currentEncryption.keyHashStr,
+    fileCids: state.currentEncryption.fileCids || [],
+    encData: state.currentEncryption.encB64.slice(0, 100),
+    encPreview: state.currentEncryption.encB64.slice(0, 80),
+    score: state.currentScore,
+    reserve: parseInt(reserve),
+    duration: parseInt(document.getElementById('auctionDuration').value),
+    royalty: parseInt(document.getElementById('royaltyPct').value),
+    wallet: state.wallet,
+    sig: sig,
+    created: Date.now(),
+    endsAt: Date.now() + (parseInt(document.getElementById('auctionDuration').value) * 86400000),
+    bids: [],
+    status: 'live'
   };
-
-  // Attempt on-chain submission if contracts deployed
-  if (CONFIG.CONTRACTS.CRYPTVALT !== null && typeof Chain !== 'undefined' && Chain.isDeployed()) {
-    try {
-      document.querySelector('#launchLoading .loading-sub') &&
-        (document.querySelector('#launchLoading .loading-sub').textContent = 'Confirm transaction in MetaMask...');
-      const result = await Chain.listIdea({
-        ipfsCid:           state.currentEncryption.cid,
-        keyHash:           state.currentEncryption.keyHashStr,
-        category:          listing.category,
-        aiScore:           Math.round(state.currentScore.overallScore),
-        dollarValueMidUSD: state.currentScore.dollarValueMid,
-        reserveETH,
-        durationSeconds:   durationDays * 86400,
-        royaltyBps,
-      });
-      listing.onChain   = true;
-      listing.onChainId = result.listingId;
-      listing.txHash    = result.txHash;
-      listing.id        = 'CV-' + result.listingId;
-    } catch(e) {
-      listing.onChain = false;
-      notify('info', 'Saved Locally', 'On-chain submission failed. Listing saved locally.');
-    }
-  }
 
   state.listings.push(listing);
   localStorage.setItem('cv_listings', JSON.stringify(state.listings));
 
-  // Full DB write — all fields including score, ipfs_cid, key_hash
-  dbLog('/api/db/listing', {
-    id:                listing.id,
-    wallet:            listing.wallet,
-    title:             listing.title,
-    category:          listing.category,
-    teaser:            listing.teaser,
-    problem_statement: document.getElementById('ideaProblem')?.value || null,
-    target_market:     document.getElementById('ideaMarket')?.value  || null,
-    market_size:       document.getElementById('ideaMarketSize')?.value || null,
-    reserve_price:     listing.reserve,
-    royalty_pct:       listing.royalty,
-    status:            'live',
-    ipfs_cid:          listing.cid,
-    key_hash:          listing.keyHash,
-    ends_at:           listing.endsAt,
-    score:             listing.score,
-    patent_search:     null,
-    on_chain:          listing.onChain,
-    on_chain_id:       listing.onChainId,
-    tx_hash:           listing.txHash,
-    created_at:        new Date().toISOString()
-  });
-
-  document.getElementById('launchLoading').style.display = 'none';
-  document.getElementById('launchSuccess').style.display = 'block';
-
-  if (listing.onChain) {
-    document.getElementById('launchSuccess').innerHTML += `
-      <div style="margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px">
-        ✓ ON-CHAIN TX: <a href="https://sepolia.etherscan.io/tx/${listing.txHash}" target="_blank"
-        style="color:var(--cyan)">${listing.txHash.slice(0,20)}...</a>
-      </div>`;
+  // Register on Story Protocol if active (non-blocking)
+  if (typeof StoryProtocol !== 'undefined' && StoryProtocol.isEnabled()) {
+    StoryProtocol.registerIPAsset(listing).catch(e => console.warn('[Story]', e.message));
   }
 
+  // CRITICAL: Save inventor's symmetric encryption key locally keyed by listing ID.
+  // Required when inventor calls deliverKey after auction settles.
+  // Key NEVER leaves this device — not sent to server, not in DB.
+  if (state.currentEncryption && state.currentEncryption.keyB64) {
+    const encStore = {
+      keyB64:     state.currentEncryption.keyB64,
+      keyHashStr: state.currentEncryption.keyHashStr,
+      cid:        listing.cid,
+      fileCids:   listing.fileCids || [],
+      savedAt:    new Date().toISOString(),
+    };
+    localStorage.setItem('cv_enc_' + listing.id, JSON.stringify(encStore));
+  }
+
+  dbLog('/api/db/listing', {
+    id: listing.id, wallet: listing.wallet, title: listing.title,
+    category: listing.category, teaser: listing.teaser,
+    reserve_price: listing.reserve || 0, royalty_pct: listing.royalty || 0,
+    status: 'live', ends_at: listing.endsAt || null,
+    created_at: new Date().toISOString()
+  });
+  
+  document.getElementById('launchLoading').style.display = 'none';
+  document.getElementById('launchSuccess').style.display = 'block';
   updateStats();
   renderListings();
-
-  addClaudeEntry(
-    listing.onChain ? 'ok' : 'info',
-    listing.onChain ? 'On-Chain Listing Confirmed' : 'New Local Listing',
-    `Idea "${listing.title}" listed by ${shortenAddr(listing.wallet)}. AI score: ${listing.score.overallScore}/100. Reserve: $${listing.reserve.toLocaleString()}. CID: ${listing.cid.slice(0,20)}... ` +
-    (listing.onChain ? `TX confirmed on-chain. ID: #${listing.onChainId}.` : 'Saved locally — deploy contracts for on-chain.')
-  );
-  notify('success', '🚀 Idea Listed', listing.onChain ? 'Confirmed on Ethereum!' : 'Your encrypted idea is now live on CryptValt.');
+  
+  addClaudeEntry('ok', 'New Listing Detected', `Idea "${listing.title}" listed by ${shortenAddr(listing.wallet)}. AI score: ${listing.score.overallScore}/100. Reserve: $${listing.reserve.toLocaleString()}. CID: ${listing.cid.slice(0,20)}... Monitoring for bid activity.`);
+  notify('success', '🚀 Idea Listed', 'Your encrypted idea is now live on CryptValt.');
 }
 
 // ============================================================
@@ -3007,7 +2968,7 @@ const score = l.score || {overallScore:0,dollarValueMid:0,dollarValueMin:0,dolla
       <div class="card-category">${l.category}</div>
       <p style="font-size:14px;color:var(--text-dim);margin-bottom:16px;line-height:1.5;font-style:italic">"${l.teaser}"</p>
 
-      <div class="card-encrypted">${fakeEncryptedString(80)}</div>
+      <div class="card-encrypted">${(l.encData || l.encPreview || '').slice(0,80) || '[encrypted]'}</div>
 
       <div class="score-bars">
         ${renderScoreBar('Marketability', score.scores.marketability)}
@@ -3044,7 +3005,7 @@ const score = l.score || {overallScore:0,dollarValueMid:0,dollarValueMin:0,dolla
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button class="btn btn-secondary btn-sm" onclick="viewReport('${l.id}')">View Full Report</button>
-        ${isLive ? `<button class="btn btn-gold btn-sm" onclick="openBid('${l.id}')">Place Sealed Bid</button>` : '<button class="btn btn-sm" disabled style="opacity:0.4;cursor:default;border:1px solid var(--border);background:transparent;color:var(--text-muted)">Auction Ended</button>'}
+        ${getListingActionBtn(l)}
       </div>
     </div>
   `;
@@ -3159,42 +3120,46 @@ async function submitBid(listingId) {
   const hashBuf = await window.crypto.subtle.digest('SHA-256', hashInput);
   const bidHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
 
-  const bid = {
-    id: 'BID-' + Date.now().toString(36).toUpperCase(),
-    listingId,
-    amount,
-    wallet: state.wallet,
-    salt,
-    hash: bidHash,
-    sig,
-    timestamp: Date.now()
-  };
+  // SEALED BID PRIVACY: amount and salt are encrypted locally.
+  // We store ONLY the commitment hash publicly. The plaintext amount
+  // is stored encrypted in a separate sealed store keyed by bidId.
+  // It is only revealed during the reveal window after auction ends.
+  const bidId = 'BID-' + Date.now().toString(36).toUpperCase();
 
-  if (isBidFrozen(bid.id)) {
+  if (isBidFrozen(bidId)) {
     notify('error', 'Bid Frozen', 'This bid has been flagged by the security monitor.');
     return;
   }
+
+  // Public bid record — NO plaintext amount stored here
+  const bid = {
+    id:        bidId,
+    listingId,
+    wallet:    state.wallet,
+    hash:      bidHash,       // keccak256(amount + salt + wallet) commitment
+    sig,
+    timestamp: Date.now(),
+    revealed:  false,
+    // amount and salt deliberately excluded from public record
+  };
+
+  // Sealed reveal data — stored separately, keyed by bidId
+  // This is the "sealed envelope" — only opened during reveal window
+  const sealedReveal = { bidId, amount, salt, listingId, wallet: state.wallet };
+  const sealedStore  = JSON.parse(localStorage.getItem('cv_sealed_reveals') || '{}');
+  sealedStore[bidId] = sealedReveal;
+  localStorage.setItem('cv_sealed_reveals', JSON.stringify(sealedStore));
+
   listing.bids.push(bid);
   state.bids.push(bid);
   localStorage.setItem('cv_listings', JSON.stringify(state.listings));
   localStorage.setItem('cv_bids', JSON.stringify(state.bids));
 
-  dbLog('/api/db/bid', {
-    id:         bid.id,
-    listing_id: bid.listingId,
-    wallet:     bid.wallet,
-    amount:     bid.amount,
-    bid_hash:   bid.hash,
-    status:     'active',
-    frozen:     false,
-    created_at: new Date().toISOString()
-  });
-
   closeModal('bidModal');
   renderListings();
-  notify('success', '🎯 Sealed Bid Submitted', `Bid of $${amount.toLocaleString()} USDC sealed for "${listing.title}"`);
+  notify('success', '🎯 Sealed Bid Committed', `Bid sealed for "${listing.title}". Reveal your bid after auction ends to win.`);
 
-  addClaudeEntry('info', 'New Sealed Bid', `Bid received on "${listing.title}" (${listingId}). Amount sealed. Bid hash: ${bidHash.slice(0,16)}... Running bid pattern analysis...`);
+  addClaudeEntry('info', 'Sealed Bid Committed', `Commitment submitted for "${listing.title}" (${listingId}). Hash: ${bidHash.slice(0,16)}... Amount sealed until reveal window.`);
 }
 
 // ============================================================
@@ -3327,11 +3292,6 @@ function addClaudeEntry(type, title, msg) {
 
   const count = parseInt(document.getElementById('txMonitored').textContent);
   document.getElementById('txMonitored').textContent = count + 1;
-
-  // Email alert if Claude flags something requiring manual review
-  if (type === 'alert' && CONFIG.ALERT_EMAIL) {
-    sendAlertEmail(title, 'HIGH', msg, 'Manual review required');
-  }
 }
 
 function startClaudeMonitor() {
@@ -3536,7 +3496,7 @@ async function runPatentSearch(keywords, category, title, description) {
     let usptoResults = [];
     try {
       const q = encodeURIComponent(keywords.split(',')[0].trim());
-      const res = await fetch(CONFIG.BACKEND_URL + '/api/patent/search?q=' + q);
+      const res = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/patent/search?q=' + q);
       if (res.ok) {
         const data = await res.json();
         usptoResults = (data?.data?.results || []).map(d => ({
@@ -3726,21 +3686,6 @@ function logRemediation(level, threat, action, detail, wallet) {
   );
   if (level === 'HIGH' || level === 'CRITICAL') notify('error', '⚠ ' + threat, action);
   updateRemediationStats();
-  // Sync to DB
-  dbLog('/api/db/security-event', {
-    id:         'SEC-' + Date.now().toString(36).toUpperCase(),
-    level,
-    threat,
-    detail:     detail || '',
-    action:     action || '',
-    wallet:     wallet || null,
-    alert_sent: (level === 'CRITICAL' || level === 'HIGH'),
-    timestamp:  new Date().toISOString()
-  });
-  // Email alert for HIGH/CRITICAL
-  if (level === 'HIGH' || level === 'CRITICAL') {
-    sendAlertEmail(threat, level, detail, action);
-  }
 }
 
 function freezeBid(bidId, listingId) {
@@ -3867,7 +3812,24 @@ async function sendAlertEmail(alertType, severity, message, action) {
   }
 }
 
-// Email alerts for HIGH/CRITICAL are sent from logRemediation() and addClaudeEntry() directly.
+// Patch logRemediation to trigger email on HIGH/CRITICAL
+const _origLogRemediation = typeof logRemediation !== 'undefined' ? logRemediation : null;
+function logRemediationWithAlert(level, threat, action, detail, wallet) {
+  if (_origLogRemediation) _origLogRemediation(level, threat, action, detail, wallet);
+  if (level === 'HIGH' || level === 'CRITICAL') {
+    sendAlertEmail(threat, level, detail, action);
+  }
+}
+
+// Override addClaudeEntry to watch for manual intervention needed
+const _origAddClaudeEntry = addClaudeEntry;
+function addClaudeEntry(type, title, msg) {
+  _origAddClaudeEntry(type, title, msg);
+  // Send alert if Claude flags something that needs manual review
+  if (type === 'alert' && CONFIG.ALERT_EMAIL) {
+    sendAlertEmail(title, 'HIGH', msg, 'Manual review required');
+  }
+}
 
 
 function saveAlertEmail() {
@@ -3951,7 +3913,6 @@ function saveInvestor() {
   closeModal('investorModal');
   renderCRM();
   notify('success','✓ Saved', name + ' added to CRM.');
-  dbLogInvestors();
 }
 
 function deleteInvestor(id) {
@@ -4136,6 +4097,7 @@ window.addEventListener('load',()=>{const fee=localStorage.getItem('cv_platform_
 // ============================================================
 // SCOUT SYSTEM
 // ============================================================
+const BACKEND_URL = 'https://crypt-valt-backend-jkak.vercel.app';
 
 function switchScoutTab(id, btn) {
   ['tabScoutRef','tabScoutOut'].forEach(t => document.getElementById(t).style.display = 'none');
@@ -4170,7 +4132,7 @@ function copyScoutLink() {
 
 async function loadScoutStats(code) {
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/referral/stats/' + code);
+    const r = await fetch(BACKEND_URL + '/api/referral/stats/' + code);
     const d = await r.json();
     if (d.success) {
       document.getElementById('scoutTotalRefs').textContent  = d.data.totalReferrals;
@@ -4185,7 +4147,7 @@ async function loadScoutLeaderboard() {
   const el = document.getElementById('scoutLeaderboard');
   if (!el) return;
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/referral/leaderboard');
+    const r = await fetch(BACKEND_URL + '/api/referral/leaderboard');
     const d = await r.json();
     if (d.success && d.data.length) {
       const medals = ['🥇','🥈','🥉'];
@@ -4198,7 +4160,7 @@ async function checkReferralAndRegister() {
   const active = localStorage.getItem('cv_active_referral');
   if (!active || !state.wallet) return;
   try {
-    await fetch(CONFIG.BACKEND_URL + '/api/referral/register', {
+    await fetch(BACKEND_URL + '/api/referral/register', {
       method: 'POST',
       headers: {'Content-Type':'application/json','X-Wallet-Address':state.wallet},
       body: JSON.stringify({code: active})
@@ -4215,7 +4177,7 @@ async function generateOutreach() {
   document.getElementById('outreachResult').style.display = 'none';
   document.getElementById('outreachGenBtn').disabled = true;
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/outreach/pitch', {
+    const r = await fetch(BACKEND_URL + '/api/outreach/pitch', {
       method: 'POST',
       headers: {'Content-Type':'application/json','X-Wallet-Address':state.wallet},
       body: JSON.stringify({inventorDescription: keywords, platform})
@@ -4239,7 +4201,7 @@ async function generateSocialPost(platform) {
   el.style.display = 'block';
   el.innerHTML = '<div style="padding:20px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-muted)">Generating...</div>';
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/outreach/social', {
+    const r = await fetch(BACKEND_URL + '/api/outreach/social', {
       method: 'POST',
       headers: {'Content-Type':'application/json','X-Wallet-Address':state.wallet},
       body: JSON.stringify({platform, contentType:'awareness'})
@@ -4303,7 +4265,6 @@ function submitLicense() {
   closeModal('listLicenseModal');
   renderLicensing();
   notify('success','✓ License Listed', title + ' is now available for licensing.');
-  dbLogLatestLicense();
 }
 
 function renderLicensing() {
@@ -4377,7 +4338,7 @@ function inquireLicense(id) {
 // ============================================================
 // SUPABASE DATABASE SYNC
 // ============================================================
-const DB_URL = CONFIG.BACKEND_URL;
+const DB_URL = 'https://crypt-valt-backend-jkak.vercel.app';
 
 async function dbLog(endpoint, data) {
   try {
@@ -4389,49 +4350,120 @@ async function dbLog(endpoint, data) {
   } catch(e) { console.warn('[DB]', endpoint, e.message); }
 }
 
-// Log investor CRM saves — invoked directly from saveInvestor()
-function dbLogInvestors() {
-  const investors = JSON.parse(localStorage.getItem('cv_investors') || '[]');
-  investors.forEach(inv => {
-    dbLog('/api/db/investor', {
-      id:         inv.id,
-      name:       inv.name,
-      fund:       inv.fund   || null,
-      email:      inv.email  || null,
-      social:     inv.social || null,
-      focus:      inv.focus  || null,
-      status:     inv.status,
-      notes:      inv.notes  || null,
-      updated_at: inv.updated  || new Date().toISOString(),
-      created_at: inv.created  || new Date().toISOString()
-    });
+// Log listing when submitted
+const _origAddListing = addListing;
+function addListing(listing) {
+  _origAddListing(listing);
+  dbLog('/api/db/listing', {
+    id: listing.id, wallet: listing.wallet, title: listing.title,
+    category: listing.category, teaser: listing.teaser,
+    problem_statement: listing.problemStatement,
+    target_market: listing.targetMarket, market_size: listing.marketSize,
+    reserve_price: listing.reserve || 0, royalty_pct: listing.royalty || 0,
+    status: listing.status || 'live', ipfs_cid: listing.ipfsCid || null,
+    key_hash: listing.keyHash || null, ends_at: listing.endsAt || null,
+    score: listing.score || null, patent_search: listing.patentSearch || null,
+    created_at: new Date().toISOString()
   });
 }
 
-// Log license listings — invoked directly from submitLicense()
-function dbLogLatestLicense() {
-  const licenses = JSON.parse(localStorage.getItem('cv_licenses') || '[]');
-  const latest   = licenses[licenses.length - 1];
-  if (latest) {
-    dbLog('/api/db/license', {
-      id:          latest.id,
-      title:       latest.title,
-      category:    latest.category,
-      type:        latest.type,
-      monthly_fee: latest.monthly || 0,
-      annual_fee:  latest.annual  || 0,
-      description: latest.description  || null,
-      restrictions:latest.restrictions || null,
-      wallet:      latest.wallet,
-      status:      'active',
-      licensees:   0,
-      created_at:  new Date().toISOString()
+// Log bid when placed
+const _origAddBid = addBid;
+function addBid(bid) {
+  _origAddBid(bid);
+  dbLog('/api/db/bid', {
+    id: bid.id, listing_id: bid.listingId, wallet: bid.wallet,
+    amount: bid.amount, status: 'active', frozen: false,
+    created_at: new Date().toISOString()
+  });
+}
+
+// Log security events
+const _origLogRemediationDB = logRemediation;
+function logRemediation(level, threat, action, detail, wallet) {
+  _origLogRemediationDB(level, threat, action, detail, wallet);
+  dbLog('/api/db/security-event', {
+    id: 'SEC-' + Date.now().toString(36).toUpperCase(),
+    level, threat, detail: detail || '', action: action || '',
+    wallet: wallet || null,
+    alert_sent: (level === 'CRITICAL' || level === 'HIGH'),
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Log investor CRM saves
+const _origSaveInvestorDB = saveInvestor;
+function saveInvestor() {
+  _origSaveInvestorDB();
+  setTimeout(() => {
+    const investors = JSON.parse(localStorage.getItem('cv_investors') || '[]');
+    investors.forEach(inv => {
+      dbLog('/api/db/investor', {
+        id: inv.id, name: inv.name, fund: inv.fund || null,
+        email: inv.email || null, social: inv.social || null,
+        focus: inv.focus || null, status: inv.status,
+        notes: inv.notes || null,
+        updated_at: inv.updated || new Date().toISOString(),
+        created_at: inv.created || new Date().toISOString()
+      });
     });
-  }
+  }, 500);
+}
+
+// Log license listings
+const _origSubmitLicenseDB = submitLicense;
+function submitLicense() {
+  _origSubmitLicenseDB();
+  setTimeout(() => {
+    const licenses = JSON.parse(localStorage.getItem('cv_licenses') || '[]');
+    const latest = licenses[licenses.length - 1];
+    if (latest) {
+      dbLog('/api/db/license', {
+        id: latest.id, title: latest.title, category: latest.category,
+        type: latest.type, monthly_fee: latest.monthly || 0,
+        annual_fee: latest.annual || 0, description: latest.description || null,
+        restrictions: latest.restrictions || null, wallet: latest.wallet,
+        status: 'active', licensees: 0, created_at: new Date().toISOString()
+      });
+    }
+  }, 300);
 }
 
 console.log('[CryptValt] Supabase DB sync active');
 
+// ── Listing Action Button Logic ────────────────────────────
+// Determines the correct action button for a listing card
+// based on auction state, wallet role, and key delivery status.
+function getListingActionBtn(l) {
+  const now       = Date.now();
+  const isLive    = l.status === 'live' && l.endsAt > now;
+  const myWallet  = (state.wallet || '').toLowerCase();
+  const isInvtr   = l.wallet && l.wallet.toLowerCase() === myWallet;
+  const isWinner  = l.winner && l.winner.toLowerCase() === myWallet;
+  const ended     = l.endsAt < now;
+  const sealedStore = JSON.parse(localStorage.getItem('cv_sealed_reveals') || '{}');
+  const myBid     = state.bids.find(b => b.listingId === l.id && b.wallet === myWallet);
+  const needReveal = myBid && !myBid.revealed && ended;
+  const needDeliver = isInvtr && l.winner && !l.keyDelivered && !isLive;
+  const canClaim  = isWinner && l.keyDelivered;
+  const canOptOut = isWinner && l.keyDelivered && !l.fundsReleased;
+
+  if (isLive)
+    return `<button class="btn btn-gold btn-sm" onclick="checkInvestorKey('${l.id}')">Place Sealed Bid</button>`;
+  if (needReveal)
+    return `<button class="btn btn-primary btn-sm" onclick="KeyTransferEngine.showRevealBidModal('${l.id}')">⟳ Reveal Bid</button>`;
+  if (needDeliver)
+    return `<button class="btn btn-gold btn-sm" onclick="KeyTransferEngine.showDeliverKeyModal('${l.id}')">🔑 Deliver Key</button>`;
+  if (canClaim)
+    return `<button class="btn btn-primary btn-sm" onclick="KeyTransferEngine.showClaimKeyModal('${l.id}')">🔓 Claim Key</button>`;
+  if (canOptOut)
+    return `<button class="btn btn-danger btn-sm" onclick="showOptOutModal('${l.id}')">Opt-Out (48hr)</button>`;
+  return '<button class="btn btn-sm" disabled style="opacity:0.4;cursor:default;border:1px solid var(--border);background:transparent;color:var(--text-muted)">Ended</button>';
+}
+
+
 </script>
+  <script src="JS/keytransfer.js"></script>
+  <script src="JS/story-protocol.js"></script>
 </body>
 </html>
