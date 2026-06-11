@@ -27,10 +27,10 @@ const WalletManager = (() => {
       }
     } else {
       // Demo mode
-      const demo = '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
+      const demo = '0x05248CD920dAeB2E5369A63Fe93367f9F1bf5677';
       setWallet(demo);
       localStorage.setItem('cv_wallet', demo);
-      notify('info', 'Demo Mode', 'MetaMask not detected. Using demo wallet.');
+      notify('error', 'MetaMask Required', 'Install MetaMask or a Web3 wallet to use CryptValt.');
       return demo;
     }
   }
@@ -66,10 +66,10 @@ const WalletManager = (() => {
           params: [message, state.wallet]
         });
       } catch(e) {
-        return 'demo_sig_' + Date.now();
+        throw new Error('MetaMask required — no fallback signature in production.');
       }
     }
-    return 'demo_sig_' + Date.now();
+    throw new Error('MetaMask required — no fallback signature in production.');
   }
 
   function shortenAddr(addr) {
