@@ -18,11 +18,8 @@ async function connectWallet() {
       notify('error', 'Connection Failed', e.message);
     }
   } else {
-    // Demo mode for testing without MetaMask
-    const demoWallet = '0x26A01Cb4af917a8FD359738b48Dc60E92b1C6504';
-    setWallet(demoWallet);
-    notify('info', 'Demo Mode', 'MetaMask not detected. Using demo wallet.');
-    localStorage.setItem('cv_wallet', demoWallet);
+    notify('error', 'MetaMask Required', 'Install MetaMask or a Web3 wallet to use CryptValt.');
+    setTimeout(() => window.open('https://metamask.io', '_blank'), 1500);
   }
 }
 
@@ -41,9 +38,12 @@ async function signMessage(message) {
         params: [message, state.wallet]
       });
       return sig;
-    } catch(e) { return 'demo_sig_' + Date.now(); }
+    } catch(e) {
+      notify('error', 'Signature Required', 'You must sign in MetaMask to continue.');
+      throw new Error('Signature failed: ' + e.message);
+    }
   }
-  return 'demo_sig_' + Date.now();
+  throw new Error('MetaMask not available. Install MetaMask to use CryptValt.');
 }
 
 window.addEventListener('load', async () => {
