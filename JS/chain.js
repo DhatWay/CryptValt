@@ -255,6 +255,34 @@ const Chain = (() => {
 
   function isDeployed() { return CONFIG.CONTRACTS.CRYPTVALT !== null; }
 
-  return { init, listIdea, commitBid, deliverKey, withdraw, fetchOnChainListings, getWalletReputation, startEventListeners, isDeployed };
+  async function revealBid(listingId, amount, salt) {
+    if (!contracts.cryptvalt) return { onChain: false };
+    try {
+      notify('info', '⬡ Revealing Bid', 'Confirm in MetaMask...');
+      const tx      = await contracts.cryptvalt.revealBid(listingId, amount, salt);
+      const receipt = await tx.wait();
+      notify('success', '✓ Bid Revealed On-Chain', `TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+    } catch(e) {
+      notify('error', 'Reveal Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  async function settleAuction(listingId) {
+    if (!contracts.cryptvalt) return { onChain: false };
+    try {
+      notify('info', '⬡ Settling Auction', 'Confirm in MetaMask...');
+      const tx      = await contracts.cryptvalt.settleAuction(listingId);
+      const receipt = await tx.wait();
+      notify('success', '✓ Auction Settled', `TX: ${receipt.hash.slice(0,12)}...`);
+      return { onChain: true, txHash: receipt.hash };
+    } catch(e) {
+      notify('error', 'Settle Failed', e.reason || e.message);
+      throw e;
+    }
+  }
+
+  return { init, listIdea, commitBid, revealBid, settleAuction, deliverKey, withdraw, fetchOnChainListings, getWalletReputation, startEventListeners, isDeployed };
 
 })();
