@@ -2274,32 +2274,36 @@ window.addEventListener('load', () => {
 
 async function loadListingsFromDB() {
   try {
-    const r = await fetch('https://crypt-valt-backend-jkak.vercel.app/api/db/listings');
+    const r = await fetch(CONFIG.BACKEND_URL + '/api/db/listings');
     const d = await r.json();
-    if (d.success && d.data.length) {
+    if (d.success && Array.isArray(d.data)) {
       d.data.forEach(l => {
-  if (!state.listings.find(x => x.id === l.id)) {
-    state.listings.push({
-      ...l,
-      reserve: l.reserve_price || 0,
-      royalty: l.royalty_pct || 0,
-      bids: [],
-      endsAt: l.ends_at || Date.now() + 86400000,
-      created: new Date(l.created_at).getTime(),
-      score: typeof l.score === 'string' ? JSON.parse(l.score) : l.score || {
-        overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
-        scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
-        executiveSummary:'',marketability:'',scalability:'',consumerPotential:'',
-        competitiveMoat:'',revenueModel:'',riskFactors:'',investorVerdict:''
-      }
-    });
-  }
-});
+        if (!state.listings.find(x => x.id === l.id)) {
+          state.listings.push({
+            ...l,
+            reserve: l.reserve_price || 0,
+            royalty: l.royalty_pct  || 0,
+            bids:    [],
+            endsAt:  l.ends_at      || Date.now() + 86400000,
+            created: new Date(l.created_at).getTime(),
+            score: typeof l.score === 'string'
+              ? JSON.parse(l.score)
+              : l.score || {
+                  overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
+                  scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
+                  executiveSummary:'',marketability:'',scalability:'',consumerPotential:'',
+                  competitiveMoat:'',revenueModel:'',riskFactors:'',investorVerdict:''
+                }
+          });
+        }
+      });
       localStorage.setItem('cv_listings', JSON.stringify(state.listings));
       renderListings();
       updateStats();
     }
-  } catch(e) {}
+  } catch(e) {
+    console.warn('[DB] loadListingsFromDB failed:', e.message);
+  }
 }
 
 function checkSavedWallet() {
@@ -2442,28 +2446,35 @@ function toBase64(bytes) {
 // ============================================================
 async function uploadToIPFS(data, filename) {
   try {
-    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-    const formData = new FormData();
-    formData.append('file', blob, filename);
-    formData.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
-    formData.append('pinataMetadata', JSON.stringify({ name: filename }));
-
-    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+    // Route through backend proxy — Pinata keys stay server-side
+    const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/upload', {
       method: 'POST',
       headers: {
-        'pinata_api_key': CONFIG.PINATA_API_KEY,
-        'pinata_secret_api_key': CONFIG.PINATA_API_SECRET,
+        'Content-Type': 'application/json',
+        'X-Wallet-Address': state.wallet || '0x0000000000000000000000000000000000000000',
       },
-      body: formData
+      body: JSON.stringify({
+        encryptedData: data.encryptedData || data.encB64 || '',
+        iv:            data.iv           || data.ivB64  || '',
+        keyHash:       data.keyHash      || '',
+        category:      data.category     || 'other',
+        teaser:        data.teaser       || '',
+        title:         data.title        || '',
+        timestamp:     data.timestamp    || new Date().toISOString(),
+      })
     });
 
-    if (!response.ok) throw new Error('IPFS upload failed: ' + response.status);
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error('IPFS upload failed: ' + response.status + ' ' + err);
+    }
     const result = await response.json();
-    return result.IpfsHash;
+    if (!result.success) throw new Error(result.message || 'IPFS upload failed');
+    return result.data.cid;
   } catch(e) {
-    // Fallback CID for demo
-    console.warn('IPFS upload error:', e);
-    return 'bafybeig' + Math.random().toString(36).substr(2, 40);
+    console.error('[IPFS] Upload error:', e.message);
+    notify('error', 'IPFS Upload Failed', e.message);
+    throw e; // Don't silently fail — surface the error
   }
 }
 
@@ -2618,13 +2629,13 @@ async function runEncryption() {
 
   const ipfsPayload = {
     encryptedData: encB64,
-    iv: ivB64,
-    keyHash: keyHashStr,
-    category: document.getElementById('ideaCategory').value,
-    teaser: document.getElementById('ideaTeaser').value,
-    title: document.getElementById('ideaTitle').value,
-    wallet: state.wallet,
-    timestamp: new Date().toISOString()
+    iv:            ivB64,
+    keyHash:       keyHashStr,
+    category:      document.getElementById('ideaCategory').value,
+    teaser:        document.getElementById('ideaTeaser').value,
+    title:         document.getElementById('ideaTitle').value,
+    wallet:        state.wallet,
+    timestamp:     new Date().toISOString()
   };
 
   const cid = await uploadToIPFS(ipfsPayload, 'idea_' + Date.now() + '.json');
@@ -4081,7 +4092,20 @@ function refreshAdminData(){document.getElementById('adminStatListings').textCon
 function renderFeatureToggles(){const c=document.getElementById('featureToggles');if(!c)return;const features=[{key:'submissions',label:'Idea Submissions',color:'var(--cyan)'},{key:'bidding',label:'Bidding System',color:'var(--gold)'},{key:'aiScoring',label:'AI Scoring',color:'var(--green)'},{key:'patentSearch',label:'Patent Search',color:'var(--cyan)'},{key:'referrals',label:'Scout Referrals',color:'#ff6fff'},{key:'membership',label:'Membership Minting',color:'var(--gold)'}];c.innerHTML=features.map(f=>`<div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between"><div style="font-family:var(--mono);font-size:10px;color:${f.color};letter-spacing:1px">${f.label}</div><div onclick="toggleFeature('${f.key}')" style="cursor:pointer;padding:4px 12px;border:1px solid;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:${adminFeatures[f.key]?'var(--green)':'var(--red)'};border-color:${adminFeatures[f.key]?'rgba(0,255,157,0.4)':'rgba(255,59,107,0.4)'};background:${adminFeatures[f.key]?'var(--green-dim)':'var(--red-dim)'}">${adminFeatures[f.key]?'ON':'OFF'}</div></div>`).join('');}
 function toggleFeature(key){adminFeatures[key]=!adminFeatures[key];localStorage.setItem('cv_admin_features',JSON.stringify(adminFeatures));renderFeatureToggles();notify('info','Feature Updated',key+' is now '+(adminFeatures[key]?'ON':'OFF'));}
 function togglePlatformStatus(){const m=localStorage.getItem('cv_maintenance')==='true';localStorage.setItem('cv_maintenance',String(!m));document.getElementById('adminStatusLabel').textContent=!m?'Maintenance Mode':'Online';notify(!m?'error':'success','Platform Status',!m?'Maintenance mode enabled':'Platform back online');}
-function clearAllListings(){if(!confirm('Clear ALL listings? This cannot be undone.'))return;state.listings=[];state.bids=[];localStorage.setItem('cv_listings','[]');localStorage.setItem('cv_bids','[]');updateStats();renderListings();refreshAdminData();notify('info','Cleared','All listings removed.');}
+function clearAllListings(){
+  if(!confirm('Clear ALL listings? This cannot be undone.'))return;
+  // Clear localStorage
+  state.listings=[];
+  state.bids=[];
+  localStorage.setItem('cv_listings','[]');
+  localStorage.setItem('cv_bids','[]');
+  // Note: DB listings are managed server-side
+  // To clear DB listings, use the Supabase dashboard
+  updateStats();
+  renderListings();
+  refreshAdminData();
+  notify('info','Cleared','Local listings cleared. DB listings managed via Supabase dashboard.');
+}
 function savePlatformFee(){const fee=parseInt(document.getElementById('adminFeeInput').value);if(isNaN(fee)||fee<0||fee>50){notify('error','Invalid Fee','Enter 0-50%.');return;}CONFIG.PLATFORM_FEE=fee/100;CONFIG.INVENTOR_SHARE=1-CONFIG.PLATFORM_FEE;localStorage.setItem('cv_platform_fee',fee);notify('success','✓ Fee Updated','Platform fee set to '+fee+'%');}
 function saveAdminAlertEmail(){const email=document.getElementById('adminAlertEmail').value.trim();if(!email||!email.includes('@')){notify('error','Invalid Email','Enter a valid email.');return;}CONFIG.ALERT_EMAIL=email;localStorage.setItem('cv_alert_email',email);const input=document.getElementById('alertEmailInput');if(input)input.value=email;notify('success','✓ Alert Email Saved',email);}
 function adminBlockWalletFn(){const wallet=document.getElementById('adminBlockWallet').value.trim();const reason=document.getElementById('adminBlockReason').value.trim()||'Manually blocked by admin';if(!wallet){notify('error','Required','Enter a wallet address.');return;}const blocked=getBlocked();const existing=blocked.find(b=>b.wallet.toLowerCase()===wallet.toLowerCase());if(existing){existing.blocked=true;existing.reason=reason;}else blocked.push({wallet:wallet.toLowerCase(),reason,flaggedAt:new Date().toISOString(),blocked:true});localStorage.setItem(BLOCKED_KEY,JSON.stringify(blocked));document.getElementById('adminBlockWallet').value='';document.getElementById('adminBlockReason').value='';renderAdminBlockedList();refreshAdminData();notify('success','✓ Blocked',wallet.slice(0,10)+'...');}
