@@ -101,7 +101,7 @@ const FileUploadEngine = (() => {
   }
 
   // ── Upload Encrypted File to IPFS ─────────────────────
-  async function uploadEncryptedFile(file, cryptoKey, wallet) {
+  async function uploadEncryptedFile(file, cryptoKey, wallet, keyHash) {
     // Encrypt
     const { encrypted, iv, originalName, originalType, originalSize } = await encryptFile(file, cryptoKey);
 
@@ -109,7 +109,7 @@ const FileUploadEngine = (() => {
     const payload = {
       encryptedData: arrayBufferToBase64(encrypted),
       iv:            arrayBufferToBase64(iv),
-      keyHash:       '', // Will be set by caller
+      keyHash:       keyHash || ('file-' + Date.now().toString(36)),
       category:      'file',
       title:         originalName,
       teaser:        `Encrypted file: ${originalName}`,
@@ -236,7 +236,7 @@ const FileUploadEngine = (() => {
   function hasFiles() { return uploadedFiles.length > 0; }
 
   // ── Upload All Files ───────────────────────────────────
-  async function uploadAllFiles(cryptoKey, wallet, onProgress) {
+  async function uploadAllFiles(cryptoKey, wallet, onProgress, keyHash) {
     const results = [];
     for (let i = 0; i < uploadedFiles.length; i++) {
       const fileObj = uploadedFiles[i];
@@ -247,7 +247,7 @@ const FileUploadEngine = (() => {
         fileObj.status = 'uploading';
         if (onProgress) onProgress(fileObj, i, uploadedFiles.length);
 
-        const result = await uploadEncryptedFile(fileObj.file, cryptoKey, wallet);
+        const result = await uploadEncryptedFile(fileObj.file, cryptoKey, wallet, keyHash || fileObj.keyHash || ('file-' + Date.now().toString(36)));
         fileObj.status = 'done';
         fileObj.cid    = result.cid;
         results.push({ ...result, id: fileObj.id });
