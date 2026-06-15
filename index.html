@@ -82,11 +82,14 @@ body::after {
   top: 0; left: 0; right: 0;
   z-index: 101;
   height: 44px;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   background: rgba(2,4,8,0.97);
+  background-color: #020408;
   border-bottom: 1px solid var(--border);
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* NAVBAR */
@@ -94,16 +97,20 @@ nav {
   position: fixed;
   top: 44px; left: 0; right: 0;
   z-index: 100;
-  display: flex;
+  display: flex !important;
   align-items: center;
   padding: 0 6px;
   height: 44px;
-  background: rgba(2,4,8,0.95);
+  background: rgba(2,4,8,0.98);
+  background-color: #020408;
   border-bottom: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 nav::-webkit-scrollbar { display: none; }
 
