@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CryptValt — Encrypted Idea Marketplace</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -113,6 +113,31 @@ nav {
   opacity: 1 !important;
 }
 nav::-webkit-scrollbar { display: none; }
+
+/* Mobile Firefox fixes */
+@media screen and (max-width: 768px) {
+  .nav-btn {
+    min-height: 36px !important;
+    min-width: 44px !important;
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+  #connectBtn {
+    min-height: 36px !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+  }
+  .logo-bar {
+    height: 48px !important;
+  }
+  nav {
+    top: 48px !important;
+    height: 48px !important;
+  }
+  main {
+    padding-top: 100px !important;
+  }
+}
 
 .nav-logo {
   font-family: var(--display);
