@@ -1334,12 +1334,13 @@ main {
     <button class="nav-btn" onclick="showPage('licensing')" style="color:var(--cyan);border-color:rgba(0,200,255,0.4)">Licensing</button>
     <button class="nav-btn" onclick="showPage('scout')" style="color:var(--green);border-color:rgba(0,255,157,0.4)">Scout</button>
     <button class="nav-btn" onclick="window.location.href='promo/outreach.html'" style="border-color:rgba(255,111,255,0.4);color:#ff6fff">Outreach</button>
-    <button class="nav-btn" onclick="window.location.href='promo/index.html'" style="border-color:rgba(255,111,255,0.4);color:#ff6fff">Promo</button>
+    <button class="nav-btn primary" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
     <div id="walletBadge" style="display:none" class="wallet-badge">
       <div class="wallet-dot"></div>
       <span id="walletAddr">0x000...0000</span>
     </div>
-    <button class="nav-btn primary" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+    <button class="nav-btn" onclick="window.location.href='promo/index.html'" style="border-color:rgba(255,111,255,0.4);color:#ff6fff">Promo</button>
+
   </div>
 </nav>
 
