@@ -2512,66 +2512,35 @@ function toBase64(bytes) {
 // ============================================================
 async function uploadToIPFS(data, filename) {
   try {
-    // Step 1 — Get short-lived Pinata JWT from backend
-    const tokenRes = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/token', {
+    // Single backend call — backend handles everything server-side
+    // No direct browser-to-Pinata call needed
+    const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/upload', {
       method:  'POST',
       headers: {
         'Content-Type':     'application/json',
         'X-Wallet-Address': state.wallet || '0x0000000000000000000000000000000000000000',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({
+        encryptedData: data.encryptedData || data.encB64 || '',
+        iv:            data.iv           || data.ivB64  || '',
+        keyHash:       data.keyHash      || '',
+        category:      data.category     || 'other',
+        teaser:        data.teaser       || '',
+        title:         data.title        || '',
+        wallet:        state.wallet      || '',
+        timestamp:     data.timestamp    || new Date().toISOString(),
+      }),
     });
 
-    if (!tokenRes.ok) {
-      const err = await tokenRes.text();
-      throw new Error('Failed to get upload token: ' + tokenRes.status + ' ' + err);
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error('IPFS upload failed: ' + response.status + ' ' + err);
     }
 
-    const tokenData = await tokenRes.json();
-    if (!tokenData.success || !tokenData.data.JWT) {
-      throw new Error('Invalid token response from backend');
-    }
-
-    const JWT = tokenData.data.JWT;
-
-    // Step 2 — Build payload and upload directly to Pinata using JWT
-    const payload = {
-      encryptedData: data.encryptedData || data.encB64 || '',
-      iv:            data.iv           || data.ivB64  || '',
-      keyHash:       data.keyHash      || '',
-      category:      data.category     || 'other',
-      teaser:        data.teaser       || '',
-      title:         data.title        || '',
-      wallet:        state.wallet      || '',
-      timestamp:     data.timestamp    || new Date().toISOString(),
-      protocol:      'CryptValt-v3',
-    };
-
-    const blob     = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-    const fname    = filename || ('cv_idea_' + Date.now() + '.json');
-    const formData = new FormData();
-    formData.append('file', blob, fname);
-    formData.append('pinataOptions',  JSON.stringify({ cidVersion: 1 }));
-    formData.append('pinataMetadata', JSON.stringify({
-      name:      fname,
-      keyvalues: { wallet: state.wallet || '', protocol: 'CryptValt-v3' },
-    }));
-
-    const uploadRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-      method:  'POST',
-      headers: { 'Authorization': 'Bearer ' + JWT },
-      body:    formData,
-    });
-
-    if (!uploadRes.ok) {
-      const err = await uploadRes.text();
-      throw new Error('Pinata upload failed: ' + uploadRes.status + ' ' + err);
-    }
-
-    const result = await uploadRes.json();
-    const cid    = result.IpfsHash;
-    console.log('[IPFS] Uploaded CID:', cid);
-    return cid;
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || 'IPFS upload failed');
+    console.log('[IPFS] Uploaded CID:', result.data.cid);
+    return result.data.cid;
 
   } catch(e) {
     console.error('[IPFS] Upload error:', e.message);
