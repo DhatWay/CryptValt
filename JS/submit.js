@@ -1,19 +1,36 @@
-// SUBMIT FLOW
-// ============================================================
+/**
+ * CryptValt — Submission Flow v2.0
+ *
+ * New workflow:
+ * Step 1 — Inventor fills out idea form
+ * Step 2 — Idea sent to backend POST /api/ideas/submit
+ *           Backend encrypts server-side, runs full AI scoring,
+ *           runs USPTO patent search, returns score + ideaId
+ * Step 3 — Score displayed to inventor
+ * Step 4 — Inventor sets auction parameters
+ * Step 5 — Inventor signs with wallet, listing goes on-chain
+ *
+ * No IPFS. No browser encryption. Works in any Web3 browser.
+ */
+
 function goToStep2() {
-  const title       = document.getElementById('ideaTitle').value.trim();
-  const desc        = document.getElementById('ideaDescription').value.trim();
-  const teaser      = document.getElementById('ideaTeaser').value.trim();
-  const category    = document.getElementById('ideaCategory').value;
-  const problem     = document.getElementById('ideaProblem').value.trim();
-  const market      = document.getElementById('ideaMarket').value.trim();
-  const marketSize  = document.getElementById('ideaMarketSize')?.value?.trim() || '';
-  const costSavings = document.getElementById('ideaCostSavings')?.value?.trim() || '';
-  const competitors = document.getElementById('ideaCompetitors')?.value?.trim() || '';
+  const title        = document.getElementById('ideaTitle').value.trim();
+  const desc         = document.getElementById('ideaDescription').value.trim();
+  const teaser       = document.getElementById('ideaTeaser').value.trim();
+  const category     = document.getElementById('ideaCategory').value;
+  const problem      = document.getElementById('ideaProblem').value.trim();
+  const market       = document.getElementById('ideaMarket').value.trim();
+  const marketSize   = document.getElementById('ideaMarketSize')?.value?.trim()   || '';
+  const costSavings  = document.getElementById('ideaCostSavings')?.value?.trim()  || '';
+  const competitors  = document.getElementById('ideaCompetitors')?.value?.trim()  || '';
   const revenueModel = document.getElementById('ideaRevenueModel')?.value?.trim() || '';
 
   if (!title || !desc || !teaser || !category || !problem || !market) {
     notify('error', 'Missing Fields', 'Please fill in all required fields.');
+    return;
+  }
+  if (desc.length < 50) {
+    notify('error', 'Description Too Short', 'Please describe your idea in at least 50 characters.');
     return;
   }
   if (!state.wallet) {
@@ -21,288 +38,195 @@ function goToStep2() {
     return;
   }
 
+  state.currentIdea = { title, description: desc, teaser, category, problem, market, marketSize, costSavings, competitors, revenueModel };
+
   setStep(2);
   document.getElementById('submitStep1').style.display = 'none';
   document.getElementById('submitStep2').style.display = 'block';
-  runEncryption();
+  submitIdeaToBackend();
 }
 
-async function runEncryption() {
-  document.getElementById('encryptLoading').style.display = 'block';
-  document.getElementById('encryptResult').style.display = 'none';
+async function submitIdeaToBackend() {
+  const loadEl   = document.getElementById('encryptLoading');
+  const resultEl = document.getElementById('encryptResult');
+  if (loadEl)   loadEl.style.display   = 'block';
+  if (resultEl) resultEl.style.display = 'none';
 
-  await sleep(600);
-  setEP(1, 'done'); setEP(2, 'active');
+  setEP(1, 'active');
 
-  const fullText = JSON.stringify({
-    title: document.getElementById('ideaTitle').value,
-    description: document.getElementById('ideaDescription').value,
-    problem: document.getElementById('ideaProblem').value,
-    market: document.getElementById('ideaMarket').value,
-    marketSize: document.getElementById('ideaMarketSize').value,
-    wallet: state.wallet,
-    timestamp: new Date().toISOString()
-  });
+  const messages = ['Securing your idea...','Running AI analysis...','Searching patents...','Generating report...'];
+  let mi = 0;
+  const progressEl = document.getElementById('encryptStatus') || document.querySelector('.loading-sub');
+  const interval   = setInterval(() => {
+    if (mi < messages.length) {
+      setEP(mi + 1, 'done');
+      if (mi + 1 < 4) setEP(mi + 2, 'active');
+      if (progressEl) progressEl.textContent = messages[mi];
+      mi++;
+    }
+  }, 3500);
 
-  const key = await generateKey();
-  const { encrypted, iv } = await encryptData(key, fullText);
-  const keyB64 = await exportKey(key);
-  const keyHashStr = await hashKey(keyB64);
-  const encB64 = toBase64(encrypted);
-  const ivB64 = toBase64(iv);
+  try {
+    const response = await fetch(CONFIG.BACKEND_URL + '/api/ideas/submit', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Wallet-Address': state.wallet, 'X-Timestamp': Date.now().toString() },
+      body:    JSON.stringify({ ...state.currentIdea, reservePrice: 0, royaltyPct: 0, durationDays: 7 }),
+    });
 
-  state.currentEncryption = { key, keyB64, keyHashStr, encB64, ivB64, fullText };
+    clearInterval(interval);
 
-  await sleep(500);
-  setEP(2, 'done'); setEP(3, 'active');
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ message: 'Submission failed: ' + response.status }));
+      throw new Error(err.message || 'Submission failed');
+    }
 
-  const ipfsPayload = {
-    encryptedData: encB64,
-    iv: ivB64,
-    keyHash: keyHashStr,
-    category: document.getElementById('ideaCategory').value,
-    teaser: document.getElementById('ideaTeaser').value,
-    title: document.getElementById('ideaTitle').value,
-    wallet: state.wallet,
-    timestamp: new Date().toISOString()
-  };
+    const result = await response.json();
+    if (!result.success) throw new Error(result.message || 'Submission failed');
 
-  const cid = await uploadToIPFS(ipfsPayload, 'idea_' + Date.now() + '.json');
-  state.currentEncryption.cid = cid;
+    state.currentIdeaId   = result.data.ideaId;
+    state.currentIdeaHash = result.data.ideaHash;
+    state.currentScore    = result.data.score;
+    state.currentPatent   = result.data.patentResult;
 
-  setEP(3, 'done'); setEP(4, 'active');
-  await sleep(400);
-  setEP(4, 'done');
+    setEP(2, 'done'); setEP(3, 'done'); setEP(4, 'done');
+    if (loadEl)   loadEl.style.display   = 'none';
+    if (resultEl) resultEl.style.display = 'block';
 
-  document.getElementById('encryptLoading').style.display = 'none';
-  document.getElementById('encryptResult').style.display = 'block';
-  document.getElementById('ipfsCid').textContent = cid;
-  document.getElementById('keyHash').textContent = keyHashStr.slice(0,32) + '...';
-  document.getElementById('encryptedPreview').textContent = (state.currentEncryption && state.currentEncryption.encB64 ? state.currentEncryption.encB64.slice(0, 300) : 'Encrypting...');
+    const cidEl     = document.getElementById('ipfsCid');
+    const hashEl    = document.getElementById('keyHash');
+    const previewEl = document.getElementById('encryptedPreview');
+    if (cidEl)     cidEl.textContent     = result.data.ideaId;
+    if (hashEl)    hashEl.textContent    = result.data.ideaHash.slice(0,32) + '...';
+    if (previewEl) previewEl.textContent = 'Idea secured. SHA-256: ' + result.data.ideaHash.slice(0,32) + '...';
+
+    showPatentStatus(result.data.patentResult);
+    notify('success', 'Idea Secured & Scored', 'Your idea is encrypted and ready for listing.');
+
+  } catch(e) {
+    clearInterval(interval);
+    if (loadEl) loadEl.style.display = 'none';
+    notify('error', 'Submission Failed', e.message);
+    setStep(1);
+    document.getElementById('submitStep2').style.display = 'none';
+    document.getElementById('submitStep1').style.display = 'block';
+  }
 }
 
-async function goToStep3() {
+function showPatentStatus(patentResult) {
+  if (!patentResult) return;
+  const colors  = { CLEAR:'var(--green)', REVIEW_NEEDED:'var(--gold)', CONFLICT_LIKELY:'var(--red)', NOT_SEARCHED:'var(--text-muted)', SEARCH_FAILED:'var(--text-muted)' };
+  const labels  = { CLEAR:'CLEAR — No conflicting patents found', REVIEW_NEEDED:'REVIEW NEEDED — Similar patents exist', CONFLICT_LIKELY:'CONFLICT LIKELY — Close prior art found', NOT_SEARCHED:'Patent search not performed', SEARCH_FAILED:'Patent search temporarily unavailable' };
+  const container = document.getElementById('encryptResult');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.style.cssText = `margin-top:12px;padding:12px 16px;background:var(--surface2);border:1px solid ${colors[patentResult.status]||'var(--border)'};`;
+  el.innerHTML = `<div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:6px">USPTO PATENT SEARCH</div><div style="font-size:13px;color:${colors[patentResult.status]||'var(--text-muted)'};font-weight:600">${labels[patentResult.status]||patentResult.status}</div>${patentResult.results&&patentResult.results.length>0?`<div style="font-size:11px;color:var(--text-muted);margin-top:6px">${patentResult.results.length} related patent(s) found</div>`:''}`;
+  container.appendChild(el);
+}
+
+function goToStep3() {
   setStep(3);
   document.getElementById('submitStep2').style.display = 'none';
   document.getElementById('submitStep3').style.display = 'block';
-
-  const statuses = [
-    'Analyzing market context...',
-    'Evaluating scalability vectors...',
-    'Assessing consumer demand signals...',
-    'Modeling competitive landscape...',
-    'Calculating revenue scenarios...',
-    'Generating investor report...'
-  ];
-
-  let si = 0;
-  const statusEl = document.getElementById('scoringStatus');
-  const statusInterval = setInterval(() => {
-    if (si < statuses.length) statusEl.textContent = statuses[si++];
-  }, 1800);
-
-  const ideaData = {
-    title:        document.getElementById('ideaTitle').value,
-    category:     document.getElementById('ideaCategory').value,
-    teaser:       document.getElementById('ideaTeaser').value,
-    description:  document.getElementById('ideaDescription').value,
-    problem:      document.getElementById('ideaProblem').value,
-    market:       document.getElementById('ideaMarket').value,
-    marketSize:   document.getElementById('ideaMarketSize')?.value || '',
-    costSavings:  document.getElementById('ideaCostSavings')?.value || '',
-    competitors:  document.getElementById('ideaCompetitors')?.value || '',
-    revenueModel: document.getElementById('ideaRevenueModel')?.value || '',
-    hasFiles:     FileUploadEngine.hasFiles(),
-  };
-
-  const score = await scoreIdea(ideaData);
-  clearInterval(statusInterval);
-  state.currentScore = score;
-
   document.getElementById('scoringLoading').style.display = 'none';
-  document.getElementById('scoreResult').style.display = 'block';
-  document.getElementById('scoreResult').innerHTML = renderAIReport(score, ideaData.title);
-
-  // Auto-advance to step 4 after showing results
-  setTimeout(() => {
-    document.getElementById('scoreResult').innerHTML += `
-      <div style="margin-top:24px">
-        <button class="btn btn-primary btn-full" onclick="goToStep4()">Set Auction Parameters →</button>
-      </div>
-    `;
-  }, 500);
+  document.getElementById('scoreResult').style.display    = 'block';
+  if (state.currentScore) {
+    document.getElementById('scoreResult').innerHTML = renderAIReport(state.currentScore, state.currentIdea?.title||'');
+    setTimeout(() => {
+      document.getElementById('scoreResult').innerHTML += `<div style="margin-top:24px"><button class="btn btn-primary btn-full" onclick="goToStep4()">Set Auction Parameters →</button></div>`;
+    }, 300);
+  }
 }
 
 function goToStep4() {
   setStep(4);
   document.getElementById('submitStep3').style.display = 'none';
   document.getElementById('submitStep4').style.display = 'block';
-
-  // Suggest reserve price based on AI valuation
   if (state.currentScore) {
-    const suggested = Math.floor(state.currentScore.dollarValueMid * 0.3);
-    document.getElementById('reservePrice').value = suggested;
-    document.getElementById('reservePrice').placeholder = `Suggested: $${suggested.toLocaleString()} (30% of AI value)`;
+    const mid       = state.currentScore.dollarValueMid || state.currentScore.saleValuation?.dollarValueMid || 0;
+    const suggested = Math.floor(mid * 0.3);
+    const priceEl   = document.getElementById('reservePrice');
+    if (priceEl) { priceEl.value = suggested; priceEl.placeholder = `Suggested: $${suggested.toLocaleString()} (30% of AI value)`; }
   }
 }
 
 async function goToStep5() {
-  if (!document.getElementById('legalAgree').checked) {
-    notify('error', 'Agreement Required', 'You must agree to the legal terms.');
-    return;
-  }
-
+  if (!document.getElementById('legalAgree').checked) { notify('error','Agreement Required','You must agree to the legal terms.'); return; }
   const reserve = document.getElementById('reservePrice').value;
-  if (!reserve || reserve < 1) {
-    notify('error', 'Reserve Price Required', 'Enter a reserve price.');
-    return;
-  }
+  if (!reserve || reserve < 1) { notify('error','Reserve Price Required','Enter a reserve price.'); return; }
+  if (!state.currentIdeaId) { notify('error','Idea Not Submitted','Please complete Step 2 first.'); return; }
 
   setStep(5);
   document.getElementById('submitStep4').style.display = 'none';
   document.getElementById('submitStep5').style.display = 'block';
 
-  const durationDays = parseInt(document.getElementById('auctionDuration').value);
-  const royaltyBps   = parseInt(document.getElementById('royaltyPct').value) * 100;
-  const reserveETH   = parseFloat(reserve) / 3000; // Convert USD to ETH estimate
+  const durationDays = parseInt(document.getElementById('auctionDuration').value) || 7;
+  const royaltyPct   = parseInt(document.getElementById('royaltyPct').value)      || 0;
+  const royaltyBps   = royaltyPct * 100;
+  const reserveETH   = parseFloat(reserve) / 3000;
 
-  // Build listing object for local state
   const listing = {
-    id: 'CV-' + Date.now().toString(36).toUpperCase(),
-    title: document.getElementById('ideaTitle').value,
-    category: document.getElementById('ideaCategory').value,
-    teaser: document.getElementById('ideaTeaser').value,
-    cid: state.currentEncryption.cid,
-    keyHash: state.currentEncryption.keyHashStr,
-    score: state.currentScore,
-    reserve: parseInt(reserve),
-    duration: durationDays,
-    royalty: parseInt(document.getElementById('royaltyPct').value),
-    wallet: state.wallet,
-    created: Date.now(),
-    endsAt: Date.now() + (durationDays * 86400000),
-    bids: [],
-    status: 'live',
-    onChain: false,
-    onChainId: null,
-    txHash: null,
+    id: state.currentIdeaId, title: state.currentIdea.title,
+    category: state.currentIdea.category, teaser: state.currentIdea.teaser,
+    ideaHash: state.currentIdeaHash, score: state.currentScore, patent: state.currentPatent,
+    reserve: parseInt(reserve), duration: durationDays, royalty: royaltyPct,
+    wallet: state.wallet, created: Date.now(), endsAt: Date.now()+(durationDays*86400000),
+    bids: [], status: 'live', onChain: false, onChainId: null, txHash: null,
   };
 
-  // Attempt on-chain submission if contracts deployed
   if (Chain.isDeployed()) {
     try {
-      document.querySelector('#launchLoading .loading-sub').textContent =
-        'Confirm transaction in MetaMask...';
+      document.querySelector('#launchLoading .loading-sub').textContent = 'Confirm transaction in MetaMask...';
       const result = await Chain.listIdea({
-        ipfsCid:          state.currentEncryption.cid,
-        keyHash:          state.currentEncryption.keyHashStr,
-        category:         listing.category,
-        aiScore:          Math.round(state.currentScore.overallScore),
-        dollarValueMidUSD: state.currentScore.dollarValueMid,
-        reserveETH:       reserveETH,
-        durationSeconds:  durationDays * 86400,
-        royaltyBps:       royaltyBps,
+        ipfsCid: state.currentIdeaHash, keyHash: state.currentIdeaHash,
+        category: listing.category, aiScore: Math.round(state.currentScore.overallScore),
+        dollarValueMidUSD: state.currentScore.dollarValueMid || state.currentScore.saleValuation?.dollarValueMid || 0,
+        reserveETH, durationSeconds: durationDays*86400, royaltyBps,
       });
-      listing.onChain   = true;
-      listing.onChainId = result.listingId;
-      listing.txHash    = result.txHash;
-      listing.id        = 'CV-' + result.listingId;
+      listing.onChain = true; listing.onChainId = result.listingId; listing.txHash = result.txHash;
+      await fetch(CONFIG.BACKEND_URL+'/api/ideas/go-live', {
+        method:'PATCH', headers:{'Content-Type':'application/json','X-Wallet-Address':state.wallet},
+        body: JSON.stringify({ ideaId: state.currentIdeaId, onChainId: result.listingId, txHash: result.txHash }),
+      }).catch(()=>{});
     } catch(e) {
-      // On-chain failed — fall back to local
       listing.onChain = false;
-      notify('info', 'Saved Locally', 'On-chain submission failed. Listing saved locally.');
+      notify('info','Saved — On-Chain Failed', e.reason||e.message);
+      await fetch(CONFIG.BACKEND_URL+'/api/ideas/go-live', {
+        method:'PATCH', headers:{'Content-Type':'application/json','X-Wallet-Address':state.wallet},
+        body: JSON.stringify({ ideaId: state.currentIdeaId }),
+      }).catch(()=>{});
     }
+  } else {
+    await fetch(CONFIG.BACKEND_URL+'/api/ideas/go-live', {
+      method:'PATCH', headers:{'Content-Type':'application/json','X-Wallet-Address':state.wallet},
+      body: JSON.stringify({ ideaId: state.currentIdeaId }),
+    }).catch(()=>{});
   }
 
   state.listings.push(listing);
   localStorage.setItem('cv_listings', JSON.stringify(state.listings));
+  state.currentIdea = null; state.currentIdeaId = null; state.currentIdeaHash = null; state.currentScore = null; state.currentPatent = null;
 
   document.getElementById('launchLoading').style.display = 'none';
   document.getElementById('launchSuccess').style.display = 'block';
-
-  // Show tx hash if on-chain
   if (listing.onChain) {
-    document.getElementById('launchSuccess').innerHTML += `
-      <div style="margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px">
-        ✓ ON-CHAIN TX: <a href="https://sepolia.etherscan.io/tx/${listing.txHash}" target="_blank"
-        style="color:var(--cyan)">${listing.txHash.slice(0,20)}...</a>
-      </div>`;
+    document.getElementById('launchSuccess').innerHTML += `<div style="margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--green)">✓ ON-CHAIN TX: <a href="https://sepolia.etherscan.io/tx/${listing.txHash}" target="_blank" style="color:var(--cyan)">${listing.txHash.slice(0,20)}...</a></div>`;
   }
 
-  updateStats();
-  renderListings();
-
-  addClaudeEntry(
-    listing.onChain ? 'ok' : 'info',
-    listing.onChain ? 'On-Chain Listing Confirmed' : 'New Local Listing',
-    `Idea "${listing.title}" listed. AI score: ${listing.score.overallScore}/100. ` +
-    (listing.onChain ? `TX confirmed on-chain. ID: #${listing.onChainId}.` : 'Saved locally — deploy contracts for on-chain.')
-  );
-  notify('success', '🚀 Idea Listed', listing.onChain ? 'Confirmed on Ethereum!' : 'Live on CryptValt.');
-}
-// ── File Upload Handlers ───────────────────────────────────
-function handleDragOver(e) {
-  e.preventDefault();
-  document.getElementById('fileDropZone').style.borderColor = 'var(--cyan)';
-  document.getElementById('fileDropZone').style.background  = 'var(--cyan-dim)';
+  updateStats(); renderListings();
+  addClaudeEntry(listing.onChain?'ok':'info', listing.onChain?'On-Chain Listing Confirmed':'New Listing Live', `Idea "${listing.title}" listed. AI score: ${listing.score.overallScore}/100.`);
+  notify('success','Idea Listed!', listing.onChain?'Confirmed on Ethereum!':'Live on CryptValt.');
 }
 
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('fileDropZone').style.borderColor = 'rgba(0,200,255,0.2)';
-  document.getElementById('fileDropZone').style.background  = 'var(--surface2)';
-  const files = Array.from(e.dataTransfer.files);
-  files.forEach(addFileToUpload);
-}
-
-function handleFileSelect(e) {
-  const files = Array.from(e.target.files);
-  files.forEach(addFileToUpload);
-}
-
-function addFileToUpload(file) {
-  try {
-    const fileObj = FileUploadEngine.addFile(file);
-    renderFileList();
-    notify('success', '📎 File Added', file.name + ' (' + fileObj.sizeStr + ')');
-  } catch(e) {
-    notify('error', 'File Rejected', e.message);
-  }
-}
-
-function removeFile(id) {
-  FileUploadEngine.removeFile(id);
-  renderFileList();
-}
-
+function handleDragOver(e) { e.preventDefault(); document.getElementById('fileDropZone').style.borderColor='var(--cyan)'; }
+function handleDrop(e) { e.preventDefault(); document.getElementById('fileDropZone').style.borderColor='rgba(0,200,255,0.2)'; Array.from(e.dataTransfer.files).forEach(addFileToUpload); }
+function handleFileSelect(e) { Array.from(e.target.files).forEach(addFileToUpload); }
+function addFileToUpload(file) { try { FileUploadEngine.addFile(file); renderFileList(); notify('success','File Added',file.name); } catch(e) { notify('error','File Rejected',e.message); } }
+function removeFile(id) { FileUploadEngine.removeFile(id); renderFileList(); }
 function renderFileList() {
-  const list  = document.getElementById('fileList');
+  const list = document.getElementById('fileList');
   const files = FileUploadEngine.getFiles();
   if (!list) return;
-
-  if (files.length === 0) {
-    list.innerHTML = '';
-    return;
-  }
-
-  const statusColors = {
-    pending:    'var(--text-muted)',
-    encrypting: 'var(--gold)',
-    uploading:  'var(--cyan)',
-    done:       'var(--green)',
-    error:      'var(--red)',
-  };
-
-  list.innerHTML = files.map(f => `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);margin-bottom:6px">
-      <span style="font-size:20px;flex-shrink:0">${f.icon}</span>
-      <div style="flex:1;overflow:hidden">
-        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:${statusColors[f.status] || 'var(--text-muted)'};letter-spacing:1px;margin-top:2px">
-          ${f.sizeStr} · ${f.status.toUpperCase()}${f.cid ? ' · ' + f.cid.slice(0,12) + '...' : ''}${f.error ? ' · ' + f.error : ''}
-        </div>
-      </div>
-      ${f.status === 'pending' ? `<button onclick="removeFile('${f.id}')" style="background:transparent;border:1px solid var(--red);color:var(--red);padding:4px 8px;cursor:pointer;font-size:11px;font-family:var(--mono)">✕</button>` : ''}
-    </div>
-  `).join('');
+  if (!files.length) { list.innerHTML=''; return; }
+  list.innerHTML = files.map(f=>`<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);margin-bottom:6px"><span style="font-size:20px">${f.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:600">${f.name}</div><div style="font-size:9px;color:var(--text-muted)">${f.sizeStr}</div></div>${f.status==='pending'?`<button onclick="removeFile('${f.id}')" style="background:transparent;border:1px solid var(--red);color:var(--red);padding:4px 8px;cursor:pointer;font-size:11px">✕</button>`:''}</div>`).join('');
 }
