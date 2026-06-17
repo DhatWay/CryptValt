@@ -82,14 +82,11 @@ body::after {
   top: 0; left: 0; right: 0;
   z-index: 101;
   height: 44px;
-  display: flex !important;
+  display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(2,4,8,0.97);
-  background-color: #020408;
   border-bottom: 1px solid var(--border);
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
 /* NAVBAR */
@@ -97,20 +94,16 @@ nav {
   position: fixed;
   top: 44px; left: 0; right: 0;
   z-index: 100;
-  display: flex !important;
+  display: flex;
   align-items: center;
   padding: 0 6px;
   height: 44px;
-  background: rgba(2,4,8,0.98);
-  background-color: #020408;
+  background: rgba(2,4,8,0.95);
   border-bottom: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 nav::-webkit-scrollbar { display: none; }
 
@@ -1630,6 +1623,7 @@ main {
     <div class="section">
       <div class="section-header">
         <div class="section-title">DASHBOARD</div>
+        <button class="btn btn-secondary btn-sm" onclick="showDashTab('profile')" style="font-family:var(--mono);font-size:10px;letter-spacing:1px">👤 My Profile</button>
       </div>
 
       <div id="dashConnectGate" class="connect-screen" style="display:none">
@@ -1696,6 +1690,91 @@ main {
             <div class="empty-sub">Earnings appear here when your ideas sell</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- INVENTOR PROFILE PAGE -->
+  <div id="page-profile" class="page" style="display:none">
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">INVENTOR PROFILE</div>
+        <button class="btn btn-secondary btn-sm" onclick="showPage('dashboard')" style="font-family:var(--mono);font-size:10px">← Back to Dashboard</button>
+      </div>
+
+      <div style="max-width:600px;margin:0 auto">
+
+        <!-- Privacy Notice -->
+        <div style="background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.2);padding:16px;margin-bottom:24px">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--cyan);letter-spacing:2px;margin-bottom:6px">PRIVACY NOTICE</div>
+          <div style="font-size:13px;color:var(--text-dim);line-height:1.7">
+            Your profile information is <b style="color:var(--text)">never shown to investors</b>. It is encrypted and visible only to the platform admin for payout coordination and support. Your wallet address remains your public identity on the platform.
+          </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div style="background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:20px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;margin-bottom:20px">PAYOUT & CONTACT DETAILS</div>
+
+          <div style="margin-bottom:16px">
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;display:block;margin-bottom:6px">DISPLAY NAME (optional)</label>
+            <input id="profileName" type="text" class="form-input" placeholder="How you'd like to be addressed" maxlength="60">
+          </div>
+
+          <div style="margin-bottom:16px">
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;display:block;margin-bottom:6px">CONTACT EMAIL *</label>
+            <input id="profileEmail" type="email" class="form-input" placeholder="For payout notifications and support" maxlength="120">
+          </div>
+
+          <div style="margin-bottom:16px">
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;display:block;margin-bottom:6px">PAYOUT WALLET ADDRESS</label>
+            <input id="profilePayoutWallet" type="text" class="form-input" placeholder="0x... (defaults to connected wallet if blank)" maxlength="42">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Leave blank to receive payouts to your connected wallet</div>
+          </div>
+
+          <div style="margin-bottom:16px">
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;display:block;margin-bottom:6px">COUNTRY OF RESIDENCE</label>
+            <input id="profileCountry" type="text" class="form-input" placeholder="Required for tax compliance on payouts over $600" maxlength="60">
+          </div>
+
+          <div style="margin-bottom:20px">
+            <label style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;display:block;margin-bottom:6px">BIO (optional)</label>
+            <textarea id="profileBio" class="form-input" rows="3" placeholder="Brief background — inventor, engineer, entrepreneur..." maxlength="500" style="resize:vertical"></textarea>
+          </div>
+
+          <!-- Notification Preferences -->
+          <div style="background:var(--surface2);border:1px solid var(--border);padding:16px;margin-bottom:20px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:12px">EMAIL NOTIFICATIONS</div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px">
+              <input type="checkbox" id="notifyBid" checked style="accent-color:var(--cyan)">
+              <span style="font-size:13px;color:var(--text-dim)">New bid on my listings</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px">
+              <input type="checkbox" id="notifyWin" checked style="accent-color:var(--cyan)">
+              <span style="font-size:13px;color:var(--text-dim)">Auction won — payout ready</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="checkbox" id="notifyPlatform" style="accent-color:var(--cyan)">
+              <span style="font-size:13px;color:var(--text-dim)">Platform updates and announcements</span>
+            </label>
+          </div>
+
+          <div id="profileStatus" style="display:none;font-family:var(--mono);font-size:11px;letter-spacing:1px;margin-bottom:16px;padding:12px;border:1px solid var(--border)"></div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <button class="btn btn-secondary" onclick="loadInventorProfile()">↺ Reload</button>
+            <button class="btn btn-primary" onclick="saveInventorProfile()">Save Profile →</button>
+          </div>
+        </div>
+
+        <!-- Wallet Info (read-only) -->
+        <div style="background:var(--surface);border:1px solid var(--border);padding:20px">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-muted);letter-spacing:2px;margin-bottom:12px">CONNECTED WALLET (READ-ONLY)</div>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--cyan);word-break:break-all" id="profileWalletDisplay">Connect wallet to view</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px">This is your public identity on CryptValt. Investors see only your wallet address.</div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -2281,26 +2360,17 @@ window.addEventListener('load', () => {
 
 async function loadListingsFromDB() {
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/db/listings');
+    // Load from new ideas endpoint (server-side encrypted, score-only public view)
+    const r = await fetch(CONFIG.BACKEND_URL + '/api/ideas/listings');
     const d = await r.json();
     if (d.success && Array.isArray(d.data)) {
       d.data.forEach(l => {
         if (!state.listings.find(x => x.id === l.id)) {
           state.listings.push({
             ...l,
-            reserve: l.reserve_price || 0,
-            royalty: l.royalty_pct  || 0,
             bids:    [],
-            endsAt:  l.ends_at      || Date.now() + 86400000,
-            created: new Date(l.created_at).getTime(),
-            score: typeof l.score === 'string'
-              ? JSON.parse(l.score)
-              : l.score || {
-                  overallScore:0, dollarValueMid:0, dollarValueMin:0, dollarValueMax:0,
-                  scores:{marketability:0,scalability:0,consumerPotential:0,competitiveMoat:0,executionFeasibility:0,revenueClarity:0},
-                  executiveSummary:'',marketability:'',scalability:'',consumerPotential:'',
-                  competitiveMoat:'',revenueModel:'',riskFactors:'',investorVerdict:''
-                }
+            endsAt:  l.endsAt || Date.now() + 86400000,
+            created: new Date(l.createdAt || l.created_at).getTime(),
           });
         }
       });
@@ -2363,67 +2433,21 @@ function switchTab(tabId, btn) {
 // WALLET
 // ============================================================
 async function connectWallet() {
-  // Option 1 — MetaMask or injected wallet (MetaMask browser, Firefox+extension, Kiwi)
   if (typeof window.ethereum !== 'undefined') {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setWallet(accounts[0]);
       notify('success', '⬡ Wallet Connected', shortenAddr(accounts[0]));
+      // Register ECDH public key for encrypted key transfer
       if (typeof KeyTransferEngine !== 'undefined') KeyTransferEngine.registerOnConnect(accounts[0]);
       localStorage.setItem('cv_wallet', accounts[0]);
-      return;
     } catch(e) {
       notify('error', 'Connection Failed', e.message);
-      return;
     }
-  }
-
-  // Option 2 — WalletConnect (Chrome, Safari, any browser without MetaMask extension)
-  try {
-    notify('info', 'WalletConnect', 'Opening wallet connection — scan QR code with your MetaMask app...');
-
-    const WalletConnectProvider = window.WalletConnectProvider?.default || window.WalletConnectProvider;
-    if (!WalletConnectProvider) {
-      notify('error', 'No Wallet Found', 'Please install MetaMask or use a Web3 browser.');
-      return;
-    }
-
-    const provider = new WalletConnectProvider({
-      rpc: {
-        11155111: CONFIG.RPC_URL, // Sepolia
-        1:        'https://eth-mainnet.g.alchemy.com/v2/d9dDJRLcCVtzyTu2URTDk', // Mainnet
-      },
-      chainId: CONFIG.CHAIN_ID,
-    });
-
-    await provider.enable();
-
-    const accounts = provider.accounts;
-    if (!accounts || !accounts[0]) throw new Error('No accounts returned');
-
-    // Store provider for signing
-    window._wcProvider = provider;
-
-    setWallet(accounts[0]);
-    notify('success', '⬡ Wallet Connected via WalletConnect', shortenAddr(accounts[0]));
-    if (typeof KeyTransferEngine !== 'undefined') KeyTransferEngine.registerOnConnect(accounts[0]);
-    localStorage.setItem('cv_wallet', accounts[0]);
-
-    // Handle disconnect
-    provider.on('disconnect', () => {
-      state.wallet = null;
-      localStorage.removeItem('cv_wallet');
-      notify('info', 'Wallet Disconnected', 'WalletConnect session ended.');
-      document.getElementById('connectBtn').style.display = 'block';
-      document.getElementById('walletBadge').style.display = 'none';
-    });
-
-  } catch(e) {
-    if (e.message && e.message.includes('User closed')) {
-      notify('info', 'Cancelled', 'Wallet connection cancelled.');
-    } else {
-      notify('error', 'Connection Failed', e.message || 'Could not connect wallet.');
-    }
+  } else {
+    // MetaMask required — no demo fallback in production
+    notify('error', 'MetaMask Required', 'Install MetaMask or a Web3 wallet. Visit metamask.io to get started.');
+    setTimeout(() => window.open('https://metamask.io', '_blank'), 1500);
   }
 }
 
@@ -2440,7 +2464,6 @@ function shortenAddr(addr) {
 }
 
 async function signMessage(message) {
-  // MetaMask or injected provider
   if (typeof window.ethereum !== 'undefined') {
     try {
       const sig = await window.ethereum.request({
@@ -2449,23 +2472,11 @@ async function signMessage(message) {
       });
       return sig;
     } catch(e) {
-      notify('error', 'Signature Required', 'You must approve the signature in your wallet.');
+      notify('error', 'Signature Required', 'You must sign the message in MetaMask to continue.');
       throw new Error('Signature cancelled or failed: ' + e.message);
     }
   }
-  // WalletConnect fallback
-  if (window._wcProvider) {
-    try {
-      const { ethers } = await import('https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js');
-      const web3Provider = new ethers.providers.Web3Provider(window._wcProvider);
-      const signer = web3Provider.getSigner();
-      return await signer.signMessage(message);
-    } catch(e) {
-      notify('error', 'Signature Required', 'You must approve the signature in your wallet.');
-      throw new Error('WalletConnect signature failed: ' + e.message);
-    }
-  }
-  throw new Error('No wallet connected. Please connect your wallet first.');
+  throw new Error('MetaMask not available. Install MetaMask to use CryptValt.');
 }
 
 // ============================================================
@@ -2512,12 +2523,11 @@ function toBase64(bytes) {
 // ============================================================
 async function uploadToIPFS(data, filename) {
   try {
-    // Single backend call — backend handles everything server-side
-    // No direct browser-to-Pinata call needed
+    // Route through backend proxy — Pinata keys stay server-side
     const response = await fetch(CONFIG.BACKEND_URL + '/api/ipfs/upload', {
-      method:  'POST',
+      method: 'POST',
       headers: {
-        'Content-Type':     'application/json',
+        'Content-Type': 'application/json',
         'X-Wallet-Address': state.wallet || '0x0000000000000000000000000000000000000000',
       },
       body: JSON.stringify({
@@ -2527,25 +2537,21 @@ async function uploadToIPFS(data, filename) {
         category:      data.category     || 'other',
         teaser:        data.teaser       || '',
         title:         data.title        || '',
-        wallet:        state.wallet      || '',
         timestamp:     data.timestamp    || new Date().toISOString(),
-      }),
+      })
     });
 
     if (!response.ok) {
       const err = await response.text();
       throw new Error('IPFS upload failed: ' + response.status + ' ' + err);
     }
-
     const result = await response.json();
     if (!result.success) throw new Error(result.message || 'IPFS upload failed');
-    console.log('[IPFS] Uploaded CID:', result.data.cid);
     return result.data.cid;
-
   } catch(e) {
     console.error('[IPFS] Upload error:', e.message);
     notify('error', 'IPFS Upload Failed', e.message);
-    throw e;
+    throw e; // Don't silently fail — surface the error
   }
 }
 
@@ -2720,7 +2726,7 @@ async function runEncryption() {
     try {
       const fileResults = await FileUploadEngine.uploadAllFiles(key, state.wallet, (fileObj) => {
         renderFileList();
-      }, keyHashStr);
+      });
       fileCids = fileResults.filter(r => r.cid).map(r => ({ cid: r.cid, name: r.originalName, type: r.originalType, size: r.originalSize }));
       state.currentEncryption.fileCids = fileCids;
     } catch(e) {
@@ -4524,6 +4530,81 @@ function submitLicense() {
   }, 300);
 }
 
+// ── Inventor Profile ───────────────────────────────────────
+function showDashTab(tab) {
+  if (tab === 'profile') {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.getElementById('page-profile').style.display = 'block';
+    const walletEl = document.getElementById('profileWalletDisplay');
+    if (walletEl) walletEl.textContent = state.wallet || 'Connect wallet to view';
+    loadInventorProfile();
+  }
+}
+
+async function loadInventorProfile() {
+  if (!state.wallet) { notify('error', 'Wallet Required', 'Connect your wallet first.'); return; }
+  try {
+    const r    = await fetch(CONFIG.BACKEND_URL + '/api/inventors/profile', {
+      headers: { 'X-Wallet-Address': state.wallet },
+    });
+    const data = await r.json();
+    if (data.success && data.data) {
+      const p = data.data;
+      document.getElementById('profileName').value         = p.name         || '';
+      document.getElementById('profileEmail').value        = p.email        || '';
+      document.getElementById('profilePayoutWallet').value = p.payout_wallet|| '';
+      document.getElementById('profileCountry').value      = p.country      || '';
+      document.getElementById('profileBio').value          = p.bio          || '';
+      document.getElementById('notifyBid').checked         = p.notify_bid    !== false;
+      document.getElementById('notifyWin').checked         = p.notify_win    !== false;
+      document.getElementById('notifyPlatform').checked    = !!p.notify_platform;
+    }
+  } catch(e) { console.warn('[Profile] Load failed:', e.message); }
+}
+
+async function saveInventorProfile() {
+  if (!state.wallet) { notify('error', 'Wallet Required', 'Connect your wallet first.'); return; }
+
+  const email = document.getElementById('profileEmail').value.trim();
+  if (!email) { notify('error', 'Email Required', 'Contact email is required for payout notifications.'); return; }
+
+  const statusEl = document.getElementById('profileStatus');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.style.color   = 'var(--text-muted)';
+    statusEl.textContent   = 'Saving...';
+  }
+
+  try {
+    const r = await fetch(CONFIG.BACKEND_URL + '/api/inventors/profile', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Wallet-Address': state.wallet },
+      body:    JSON.stringify({
+        name:             document.getElementById('profileName').value.trim(),
+        email,
+        payout_wallet:    document.getElementById('profilePayoutWallet').value.trim() || state.wallet,
+        country:          document.getElementById('profileCountry').value.trim(),
+        bio:              document.getElementById('profileBio').value.trim(),
+        notify_bid:       document.getElementById('notifyBid').checked,
+        notify_win:       document.getElementById('notifyWin').checked,
+        notify_platform:  document.getElementById('notifyPlatform').checked,
+      }),
+    });
+
+    const data = await r.json();
+    if (data.success) {
+      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Profile saved successfully'; }
+      notify('success', 'Profile Saved', 'Your payout and contact details have been saved.');
+    } else {
+      throw new Error(data.message || 'Save failed');
+    }
+  } catch(e) {
+    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Error: ' + e.message; }
+    notify('error', 'Save Failed', e.message);
+  }
+}
+
+
 console.log('[CryptValt] Supabase DB sync active');
 
 // ── Listing Action Button Logic ────────────────────────────
@@ -4558,8 +4639,6 @@ function getListingActionBtn(l) {
 
 
 </script>
-  <!-- WalletConnect v2 -->
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
   <script src="JS/keytransfer.js"></script>
   <script src="JS/story-protocol.js"></script>
 </body>
