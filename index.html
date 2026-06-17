@@ -1340,6 +1340,7 @@ main {
       <div class="hero-actions">
         <button class="btn btn-primary" onclick="showPage('submit')">Submit an Idea</button>
         <button class="btn btn-secondary" onclick="scrollToMarket()">Browse Market</button>
+        <button id="heroConnectBtn" onclick="connectWallet()" style="background:var(--cyan);color:#000;font-family:var(--mono);font-size:13px;letter-spacing:2px;padding:14px 32px;border:none;cursor:pointer;margin-top:8px;width:100%;max-width:300px;font-weight:700;display:block">⬡ CONNECT WALLET</button>
       </div>
     </div>
 
@@ -2433,21 +2434,52 @@ function switchTab(tabId, btn) {
 // WALLET
 // ============================================================
 async function connectWallet() {
+  // Option 1 — MetaMask or injected wallet (MetaMask browser, Firefox+extension, Coinbase browser)
   if (typeof window.ethereum !== 'undefined') {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setWallet(accounts[0]);
       notify('success', '⬡ Wallet Connected', shortenAddr(accounts[0]));
-      // Register ECDH public key for encrypted key transfer
       if (typeof KeyTransferEngine !== 'undefined') KeyTransferEngine.registerOnConnect(accounts[0]);
       localStorage.setItem('cv_wallet', accounts[0]);
+      return;
     } catch(e) {
       notify('error', 'Connection Failed', e.message);
+      return;
     }
-  } else {
-    // MetaMask required — no demo fallback in production
-    notify('error', 'MetaMask Required', 'Install MetaMask or a Web3 wallet. Visit metamask.io to get started.');
-    setTimeout(() => window.open('https://metamask.io', '_blank'), 1500);
+  }
+
+  // Option 2 — WalletConnect (Chrome and any browser without injected wallet)
+  try {
+    const WalletConnectProvider = window.WalletConnectProvider?.default || window.WalletConnectProvider;
+    if (!WalletConnectProvider) {
+      notify('error', 'No Wallet Found', 'Please use MetaMask browser or a Web3 browser to connect.');
+      return;
+    }
+    notify('info', 'WalletConnect', 'Scan the QR code with your MetaMask app...');
+    const provider = new WalletConnectProvider({
+      rpc: { 11155111: CONFIG.RPC_URL, 1: 'https://eth-mainnet.g.alchemy.com/v2/d9dDJRLcCVtzyTu2URTDk' },
+      chainId: CONFIG.CHAIN_ID,
+    });
+    await provider.enable();
+    const accounts = provider.accounts;
+    if (!accounts || !accounts[0]) throw new Error('No accounts returned');
+    window._wcProvider = provider;
+    setWallet(accounts[0]);
+    notify('success', '⬡ Wallet Connected via WalletConnect', shortenAddr(accounts[0]));
+    if (typeof KeyTransferEngine !== 'undefined') KeyTransferEngine.registerOnConnect(accounts[0]);
+    localStorage.setItem('cv_wallet', accounts[0]);
+    provider.on('disconnect', () => {
+      state.wallet = null;
+      localStorage.removeItem('cv_wallet');
+      notify('info', 'Wallet Disconnected', 'WalletConnect session ended.');
+    });
+  } catch(e) {
+    if (e.message && e.message.toLowerCase().includes('user closed')) {
+      notify('info', 'Cancelled', 'Wallet connection cancelled.');
+    } else {
+      notify('error', 'Connection Failed', e.message || 'Could not connect wallet.');
+    }
   }
 }
 
@@ -2464,19 +2496,29 @@ function shortenAddr(addr) {
 }
 
 async function signMessage(message) {
+  // Injected wallet (MetaMask browser, Coinbase browser, Firefox extension)
   if (typeof window.ethereum !== 'undefined') {
     try {
-      const sig = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [message, state.wallet]
-      });
+      const sig = await window.ethereum.request({ method: 'personal_sign', params: [message, state.wallet] });
       return sig;
     } catch(e) {
-      notify('error', 'Signature Required', 'You must sign the message in MetaMask to continue.');
-      throw new Error('Signature cancelled or failed: ' + e.message);
+      notify('error', 'Signature Required', 'You must approve the signature in your wallet.');
+      throw new Error('Signature cancelled: ' + e.message);
     }
   }
-  throw new Error('MetaMask not available. Install MetaMask to use CryptValt.');
+  // WalletConnect fallback
+  if (window._wcProvider) {
+    try {
+      const ethers      = await import('https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js');
+      const web3Provider = new ethers.providers.Web3Provider(window._wcProvider);
+      const signer       = web3Provider.getSigner();
+      return await signer.signMessage(message);
+    } catch(e) {
+      notify('error', 'Signature Required', 'You must approve the signature in your wallet.');
+      throw new Error('WalletConnect signature failed: ' + e.message);
+    }
+  }
+  throw new Error('No wallet connected. Please connect your wallet first.');
 }
 
 // ============================================================
