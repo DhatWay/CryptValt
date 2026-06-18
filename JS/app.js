@@ -7,43 +7,14 @@ function checkSavedWallet() {
   if (saved) setWallet(saved);
 }
 
-async function connectWallet() {
-  if (typeof window.ethereum !== 'undefined') {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      setWallet(accounts[0]);
-      notify('success', '⬡ Wallet Connected', shortenAddr(accounts[0]));
-      localStorage.setItem('cv_wallet', accounts[0]);
-    } catch(e) {
-      notify('error', 'Connection Failed', e.message);
-    }
-  } else {
-    notify('error', 'MetaMask Required', 'Install MetaMask or a Web3 wallet to use CryptValt.');
-    setTimeout(() => window.open('https://metamask.io', '_blank'), 1500);
-  }
-}
+// connectWallet and signMessage are defined in index.html
+// and support both injected wallets and WalletConnect
 
 function setWallet(addr) {
   state.wallet = addr;
   document.getElementById('walletBadge').style.display = 'flex';
   document.getElementById('walletAddr').textContent = shortenAddr(addr);
   document.getElementById('connectBtn').style.display = 'none';
-}
-
-async function signMessage(message) {
-  if (typeof window.ethereum !== 'undefined') {
-    try {
-      const sig = await window.ethereum.request({
-        method: 'personal_sign',
-        params: [message, state.wallet]
-      });
-      return sig;
-    } catch(e) {
-      notify('error', 'Signature Required', 'You must sign in MetaMask to continue.');
-      throw new Error('Signature failed: ' + e.message);
-    }
-  }
-  throw new Error('MetaMask not available. Install MetaMask to use CryptValt.');
 }
 
 window.addEventListener('load', async () => {
