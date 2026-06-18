@@ -2274,7 +2274,7 @@ window.addEventListener('load', () => {
 
 async function loadListingsFromDB() {
   try {
-    const r = await fetch(CONFIG.BACKEND_URL + '/api/db/listings');
+    const r = await fetch(CONFIG.BACKEND_URL + '/api/ideas/listings');
     const d = await r.json();
     if (d.success && Array.isArray(d.data)) {
       d.data.forEach(l => {
